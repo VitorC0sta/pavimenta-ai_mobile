@@ -1,0 +1,21 @@
+name: pavimenta_ai_mobile
+description: "Aplicativo Android para o smoke test de infraestrutura da E0."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+  camera: 0.11.0+2
+  geolocator: 13.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

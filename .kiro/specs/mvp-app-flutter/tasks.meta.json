@@ -1,0 +1,896 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1. Verificar o repositório e o ambiente antes de qualquer criação": [
+      {
+        "executionId": "4246c9ce-708e-45fd-8f1f-acb3e719b19e",
+        "chatSessionId": "sess_02b203e1-bf89-4570-b67a-d73f97413863",
+        "timestamp": 1792350884304
+      },
+      {
+        "executionId": "c811f44d-8a79-42a5-9191-347825888979",
+        "chatSessionId": "sess_411494f3-25a1-48a7-93a1-e038a5a3246b",
+        "timestamp": 1792459899533
+      }
+    ],
+    "1.1 Registrar o estado inicial da raiz e os arquivos existentes, incluindo alterações não commitadas, sem modificar ou remover conteúdo.": [
+      {
+        "executionId": "096ba470-221d-46aa-a3bc-a25e76d6391d",
+        "chatSessionId": "sess_059580c9-94a0-4016-b1ad-9eb7998eeec5",
+        "timestamp": 1792457833827
+      },
+      {
+        "executionId": "a9e92aa5-b458-41c6-b720-a0c977419395",
+        "chatSessionId": "sess_d45a242a-f773-4f12-b448-843c5f089548",
+        "timestamp": 1792458145603
+      },
+      {
+        "executionId": "d66ec364-8b7d-4958-bc66-05cec999582e",
+        "chatSessionId": "sess_907ed389-6f63-4e97-a3f5-09b0d0947e53",
+        "timestamp": 1792458546868
+      },
+      {
+        "executionId": "d66ec364-8b7d-4958-bc66-05cec999582e",
+        "chatSessionId": "sess_907ed389-6f63-4e97-a3f5-09b0d0947e53",
+        "timestamp": 1792458695315
+      }
+    ],
+    "1.2 Procurar marcadores de projeto Flutter existente, incluindo `pubspec.yaml`, `.metadata`, `lib/` e `android/`.": [
+      {
+        "executionId": "802db05e-24c6-45dc-aa6b-9d88c9845771",
+        "chatSessionId": "sess_0b3d0dba-0818-4a64-9729-bf0eddab8fec",
+        "timestamp": 1792459444769
+      },
+      {
+        "executionId": "802db05e-24c6-45dc-aa6b-9d88c9845771",
+        "chatSessionId": "sess_0b3d0dba-0818-4a64-9729-bf0eddab8fec",
+        "timestamp": 1792459483774
+      }
+    ],
+    "1.3 Se existir projeto Flutter ou qualquer caminho que seria sobrescrito, interromper a criação e solicitar decisão do usuário; não executar `flutter create` sobre conteúdo conflitante.": [
+      {
+        "executionId": "4e0f403b-8b1b-48b0-a7a2-e1f00db0c741",
+        "chatSessionId": "sess_6acec823-e8cf-4573-9066-39bc947d7576",
+        "timestamp": 1792459743520
+      }
+    ],
+    "1.4 Executar `flutter --version` e registrar as versões de Flutter e Dart.": [
+      {
+        "executionId": "901df0f1-e98d-4b80-9fbd-3fe606fb3de2",
+        "chatSessionId": "sess_b18b132c-2df8-4f26-a87a-d22ad5b99cf7",
+        "timestamp": 1792460224821
+      },
+      {
+        "executionId": "901df0f1-e98d-4b80-9fbd-3fe606fb3de2",
+        "chatSessionId": "sess_b18b132c-2df8-4f26-a87a-d22ad5b99cf7",
+        "timestamp": 1792460308279
+      }
+    ],
+    "1.5 Executar `flutter doctor -v` e registrar o estado da toolchain Android, sem corrigir ou atualizar componentes automaticamente.": [
+      {
+        "executionId": "a2f5aabe-768e-4c89-bfc1-df94dbbcfa80",
+        "chatSessionId": "sess_1c1768a0-bc3f-443b-8e0b-1fdc2289e5af",
+        "timestamp": 1792460409722
+      }
+    ],
+    "1.6 Verificar a disponibilidade do Android SDK e dos componentes necessários ao build Android.": [
+      {
+        "executionId": "3b980000-70df-42b8-b565-95d9611c9958",
+        "chatSessionId": "sess_f4789e19-90cc-4d61-8b0e-4bab9d858de3",
+        "timestamp": 1792460508462
+      },
+      {
+        "executionId": "3b980000-70df-42b8-b565-95d9611c9958",
+        "chatSessionId": "sess_f4789e19-90cc-4d61-8b0e-4bab9d858de3",
+        "timestamp": 1792461427228
+      }
+    ],
+    "1.7 Verificar a disponibilidade do ADB no mesmo ambiente que executará o Flutter.": [
+      {
+        "executionId": "971c14f1-35f4-4070-94b7-30bb395d00fc",
+        "chatSessionId": "sess_78acb9f9-01c7-4f5e-a1d8-aa9e35767fa5",
+        "timestamp": 1792461447070
+      },
+      {
+        "executionId": "971c14f1-35f4-4070-94b7-30bb395d00fc",
+        "chatSessionId": "sess_78acb9f9-01c7-4f5e-a1d8-aa9e35767fa5",
+        "timestamp": 1792461900385
+      }
+    ],
+    "1.8 Confirmar se o Samsung Galaxy S25+ é reconhecido pelo Flutter/ADB desse ambiente.": [
+      {
+        "executionId": "1c9df60d-5b7c-4c61-a5e0-b9c6e251a8c5",
+        "chatSessionId": "sess_b12aa08c-256d-417d-805d-a967311f26fe",
+        "timestamp": 1792463218577
+      },
+      {
+        "executionId": "1c9df60d-5b7c-4c61-a5e0-b9c6e251a8c5",
+        "chatSessionId": "sess_b12aa08c-256d-417d-805d-a967311f26fe",
+        "timestamp": 1792463310680
+      }
+    ],
+    "1.9 Comparar, quando aplicável, o acesso ao aparelho pelo Windows e pelo WSL; registrar que reconhecimento no ADB do Windows não implica reconhecimento no ADB do WSL.": [
+      {
+        "executionId": "a7e2e2e6-6fd8-4744-82af-a2f28e2360d9",
+        "chatSessionId": "sess_36543d68-848a-4983-a6cc-9ebff2e5a8fb",
+        "timestamp": 1792463386018
+      },
+      {
+        "executionId": "a7e2e2e6-6fd8-4744-82af-a2f28e2360d9",
+        "chatSessionId": "sess_36543d68-848a-4983-a6cc-9ebff2e5a8fb",
+        "timestamp": 1792463749454
+      }
+    ],
+    "1.10 Relatar como bloqueio ou etapa manual qualquer ausência/incompatibilidade; não instalar, atualizar ou reconfigurar Flutter, SDK, Gradle, Java, ADB, drivers ou WSL sem autorização.": [
+      {
+        "executionId": "7c559a0c-1548-46f0-85b0-33ba884e10cc",
+        "chatSessionId": "sess_7ff7b965-7d85-456c-a2cd-5eda214db813",
+        "timestamp": 1792464637913
+      },
+      {
+        "executionId": "1a6e26e3-ce8f-4938-b87d-6fe15718e4d1",
+        "chatSessionId": "sess_7ff7b965-7d85-456c-a2cd-5eda214db813",
+        "timestamp": 1792464853481
+      },
+      {
+        "executionId": "1a6e26e3-ce8f-4938-b87d-6fe15718e4d1",
+        "chatSessionId": "sess_7ff7b965-7d85-456c-a2cd-5eda214db813",
+        "timestamp": 1792464856235
+      }
+    ],
+    "2. Criar o projeto Flutter Android diretamente na raiz": [
+      {
+        "executionId": "85cf3cec-c8e1-4d41-88e7-fa9a7ac16897",
+        "chatSessionId": "sess_5ce2e4ee-659d-4d8d-bb99-6fcaefb3f309",
+        "timestamp": 1792465040066
+      },
+      {
+        "executionId": "85cf3cec-c8e1-4d41-88e7-fa9a7ac16897",
+        "chatSessionId": "sess_5ce2e4ee-659d-4d8d-bb99-6fcaefb3f309",
+        "timestamp": 1792465461465
+      }
+    ],
+    "2.1 Executar, a partir da raiz atual, o comando equivalente a `flutter create --platforms=android --project-name pavimenta_ai_mobile --org com.vitor .`.": [
+      {
+        "executionId": "c06df080-6dcf-4057-97e4-cc77c8b29d9f",
+        "chatSessionId": "sess_2b64dcdd-19b4-4d1b-9318-0550dce4dec8",
+        "timestamp": 1792465504005
+      },
+      {
+        "executionId": "c06df080-6dcf-4057-97e4-cc77c8b29d9f",
+        "chatSessionId": "sess_2b64dcdd-19b4-4d1b-9318-0550dce4dec8",
+        "timestamp": 1792465562567
+      },
+      {
+        "executionId": "c06df080-6dcf-4057-97e4-cc77c8b29d9f",
+        "chatSessionId": "sess_2b64dcdd-19b4-4d1b-9318-0550dce4dec8",
+        "timestamp": 1792465603635
+      },
+      {
+        "executionId": "c06df080-6dcf-4057-97e4-cc77c8b29d9f",
+        "chatSessionId": "sess_2b64dcdd-19b4-4d1b-9318-0550dce4dec8",
+        "timestamp": 1792465624390
+      }
+    ],
+    "2.2 Confirmar que o projeto foi criado na raiz e que nenhum subdiretório `pavimenta_ai_mobile/` duplicado foi criado.": [
+      {
+        "executionId": "59629203-6303-46eb-b12d-307997bc29e8",
+        "chatSessionId": "sess_a5552d67-a21a-4c4f-82ad-821e3c67bdaa",
+        "timestamp": 1792465645371
+      },
+      {
+        "executionId": "59629203-6303-46eb-b12d-307997bc29e8",
+        "chatSessionId": "sess_a5552d67-a21a-4c4f-82ad-821e3c67bdaa",
+        "timestamp": 1792465696559
+      }
+    ],
+    "2.3 Confirmar no `pubspec.yaml` que o nome do projeto é `pavimenta_ai_mobile`.": [
+      {
+        "executionId": "aa098200-c176-4c2c-95e6-c3f734ced88e",
+        "chatSessionId": "sess_331e480c-b6b7-47b8-9319-ce503b209598",
+        "timestamp": 1792465705550
+      }
+    ],
+    "2.4 Confirmar na configuração Android gerada que o `applicationId` é exatamente `com.vitor.pavimenta_ai_mobile`.": [
+      {
+        "executionId": "d39fb9fd-d40a-4357-b9c9-bf02c26cb149",
+        "chatSessionId": "sess_10a1f706-5b73-4c4d-b429-386a525d3369",
+        "timestamp": 1792465717452
+      },
+      {
+        "executionId": "d39fb9fd-d40a-4357-b9c9-bf02c26cb149",
+        "chatSessionId": "sess_10a1f706-5b73-4c4d-b429-386a525d3369",
+        "timestamp": 1792465753786
+      }
+    ],
+    "2.5 Confirmar que somente a plataforma Android foi gerada e que os arquivos `.kiro` existentes foram preservados.": [
+      {
+        "executionId": "d377b7bd-56f6-4328-bb76-39580cc6aa85",
+        "chatSessionId": "sess_56d8dbb9-8626-411c-86d4-f050c491132b",
+        "timestamp": 1792465762833
+      },
+      {
+        "executionId": "d377b7bd-56f6-4328-bb76-39580cc6aa85",
+        "chatSessionId": "sess_56d8dbb9-8626-411c-86d4-f050c491132b",
+        "timestamp": 1792465846571
+      }
+    ],
+    "3. Fixar somente as dependências aprovadas para E0": [
+      {
+        "executionId": "c57317d6-6167-48a7-a2f0-01138ce6792e",
+        "chatSessionId": "sess_32f2a7b3-50f8-468d-a058-dff1b0ad15ef",
+        "timestamp": 1792466132329
+      },
+      {
+        "executionId": "c57317d6-6167-48a7-a2f0-01138ce6792e",
+        "chatSessionId": "sess_32f2a7b3-50f8-468d-a058-dff1b0ad15ef",
+        "timestamp": 1792467625382
+      }
+    ],
+    "3.1 Consultar a compatibilidade de `camera` e `geolocator` com a versão instalada do Flutter/Dart e com a configuração Android gerada.": [
+      {
+        "executionId": "c57317d6-6167-48a7-a2f0-01138ce6792e",
+        "chatSessionId": "sess_32f2a7b3-50f8-468d-a058-dff1b0ad15ef",
+        "timestamp": 1792467637302
+      }
+    ],
+    "3.2 Escolher e registrar versões exatas e mutuamente compatíveis de `camera` e `geolocator`.": [
+      {
+        "executionId": "c57317d6-6167-48a7-a2f0-01138ce6792e",
+        "chatSessionId": "sess_32f2a7b3-50f8-468d-a058-dff1b0ad15ef",
+        "timestamp": 1792467639780
+      }
+    ],
+    "3.3 Adicionar as duas versões ao `pubspec.yaml` sem `^`, intervalos ou resolução aberta de versão direta.": [
+      {
+        "executionId": "c57317d6-6167-48a7-a2f0-01138ce6792e",
+        "chatSessionId": "sess_32f2a7b3-50f8-468d-a058-dff1b0ad15ef",
+        "timestamp": 1792467641967
+      }
+    ],
+    "3.4 Não adicionar pacote de gerenciamento de estado, HTTP, conectividade, permissões, persistência, armazenamento seguro ou visão computacional.": [
+      {
+        "executionId": "c57317d6-6167-48a7-a2f0-01138ce6792e",
+        "chatSessionId": "sess_32f2a7b3-50f8-468d-a058-dff1b0ad15ef",
+        "timestamp": 1792467644201
+      }
+    ],
+    "3.5 Executar a resolução normal de pacotes somente depois das verificações da toolchain, sem atualização global de Flutter, SDK, Gradle ou Java.": [
+      {
+        "executionId": "c57317d6-6167-48a7-a2f0-01138ce6792e",
+        "chatSessionId": "sess_32f2a7b3-50f8-468d-a058-dff1b0ad15ef",
+        "timestamp": 1792467646639
+      }
+    ],
+    "3.6 Inspecionar `flutter pub deps` e confirmar que as únicas integrações diretas adicionadas para a aplicação são `camera` e `geolocator`.": [
+      {
+        "executionId": "c57317d6-6167-48a7-a2f0-01138ce6792e",
+        "chatSessionId": "sess_32f2a7b3-50f8-468d-a058-dff1b0ad15ef",
+        "timestamp": 1792467649111
+      }
+    ],
+    "4. Avaliar e limitar os artefatos do template Flutter": [
+      {
+        "executionId": "25abfab1-b284-4dca-9b9c-56f143967c5d",
+        "chatSessionId": "sess_63d45d0b-48c1-418a-80a3-f64fb7af7ac0",
+        "timestamp": 1792468057736
+      },
+      {
+        "executionId": "25abfab1-b284-4dca-9b9c-56f143967c5d",
+        "chatSessionId": "sess_63d45d0b-48c1-418a-80a3-f64fb7af7ac0",
+        "timestamp": 1792468199034
+      }
+    ],
+    "4.1 Revisar o código e os assets de exemplo gerados pelo template e remover somente o conteúdo demonstrativo incompatível com a tela E0.": [
+      {
+        "executionId": "25abfab1-b284-4dca-9b9c-56f143967c5d",
+        "chatSessionId": "sess_63d45d0b-48c1-418a-80a3-f64fb7af7ac0",
+        "timestamp": 1792468209299
+      }
+    ],
+    "4.2 Avaliar o teste de exemplo criado pelo template; se estiver incompatível ou não tiver valor para E0, removê-lo.": [
+      {
+        "executionId": "25abfab1-b284-4dca-9b9c-56f143967c5d",
+        "chatSessionId": "sess_63d45d0b-48c1-418a-80a3-f64fb7af7ac0",
+        "timestamp": 1792468213680
+      }
+    ],
+    "4.3 Não substituir o teste removido e não criar novos testes automatizados nesta etapa.": [
+      {
+        "executionId": "25abfab1-b284-4dca-9b9c-56f143967c5d",
+        "chatSessionId": "sess_63d45d0b-48c1-418a-80a3-f64fb7af7ac0",
+        "timestamp": 1792468218286
+      }
+    ],
+    "4.4 Confirmar que não existem assets, módulos ou referências a funcionalidades fora da E0.": [
+      {
+        "executionId": "25abfab1-b284-4dca-9b9c-56f143967c5d",
+        "chatSessionId": "sess_63d45d0b-48c1-418a-80a3-f64fb7af7ac0",
+        "timestamp": 1792468221071
+      }
+    ],
+    "5. Configurar somente as declarações Android aprovadas": [
+      {
+        "executionId": "6d6fd424-32fc-470a-9946-407649770444",
+        "chatSessionId": "sess_222e3976-344b-4dc5-b99e-4115022443cf",
+        "timestamp": 1792468510833
+      },
+      {
+        "executionId": "6d6fd424-32fc-470a-9946-407649770444",
+        "chatSessionId": "sess_222e3976-344b-4dc5-b99e-4115022443cf",
+        "timestamp": 1792472989483
+      }
+    ],
+    "6. Criar a estrutura mínima e o estado da tela E0": [
+      {
+        "executionId": "ac70c08e-322b-4a01-a4fc-7bb67f7f6153",
+        "chatSessionId": "sess_309058d1-9e33-4531-9ff8-e643a340f2ba",
+        "timestamp": 1792501197457
+      },
+      {
+        "executionId": "ac70c08e-322b-4a01-a4fc-7bb67f7f6153",
+        "chatSessionId": "sess_309058d1-9e33-4531-9ff8-e643a340f2ba",
+        "timestamp": 1792503690935
+      }
+    ],
+    "7. Implementar a coordenação serial das permissões": [
+      {
+        "executionId": "b853c0c1-72eb-4347-b41e-cee85b7db34f",
+        "chatSessionId": "sess_7530adab-fc3f-472f-af05-99f5cb0749e2",
+        "timestamp": 1792505741754
+      },
+      {
+        "executionId": "b853c0c1-72eb-4347-b41e-cee85b7db34f",
+        "chatSessionId": "sess_7530adab-fc3f-472f-af05-99f5cb0749e2",
+        "timestamp": 1792505891528
+      }
+    ],
+    "6.1 Manter `lib/main.dart` como ponto de composição e única entrada da aplicação.": [
+      {
+        "executionId": "0c2eb14b-ba79-4427-9f41-522a730d0897",
+        "chatSessionId": "sess_c3ba5b50-2c62-4583-bb5b-9cc009d6b54b",
+        "timestamp": 1792505965591
+      },
+      {
+        "executionId": "0c2eb14b-ba79-4427-9f41-522a730d0897",
+        "chatSessionId": "sess_c3ba5b50-2c62-4583-bb5b-9cc009d6b54b",
+        "timestamp": 1792506050645
+      }
+    ],
+    "6.2 Criar `lib/e0/e0_screen.dart`.": [
+      {
+        "executionId": "348a508c-c06e-47db-b798-863ea276a867",
+        "chatSessionId": "sess_9f510dad-9754-4a21-83e8-34a35d8ade4f",
+        "timestamp": 1792506059688
+      },
+      {
+        "executionId": "348a508c-c06e-47db-b798-863ea276a867",
+        "chatSessionId": "sess_9f510dad-9754-4a21-83e8-34a35d8ade4f",
+        "timestamp": 1792506431250
+      }
+    ],
+    "6.3 Criar `lib/e0/e0_controller.dart` usando `ChangeNotifier`, sem biblioteca externa de estado.": [
+      {
+        "executionId": "e6fcebf9-a310-46eb-973e-39573ef3998f",
+        "chatSessionId": "sess_3cf29163-7bb3-41e6-a3f3-01101d54b1a7",
+        "timestamp": 1792506439651
+      },
+      {
+        "executionId": "e6fcebf9-a310-46eb-973e-39573ef3998f",
+        "chatSessionId": "sess_3cf29163-7bb3-41e6-a3f3-01101d54b1a7",
+        "timestamp": 1792506672819
+      }
+    ],
+    "6.4 Criar `lib/e0/e0_state.dart` com estados de permissão, câmera, localização e HTTPS e somente dados diagnósticos opcionais.": [
+      {
+        "executionId": "87f2ff92-6946-40a7-93c5-2d2f59fd3158",
+        "chatSessionId": "sess_8c8e73bc-607a-47d0-b0dd-c2cae56690eb",
+        "timestamp": 1792506681485
+      }
+    ],
+    "6.5 Criar `lib/e0/camera_diagnostic.dart`.": [
+      {
+        "executionId": "91dc0a8f-26a8-47fa-aadd-6c25fe8c75e6",
+        "chatSessionId": "sess_d6693968-a61d-4f62-bb34-3cf2546cf1af",
+        "timestamp": 1792506692587
+      }
+    ],
+    "6.6 Criar `lib/e0/location_diagnostic.dart`.": [
+      {
+        "executionId": "c9fb72ef-71a1-45a4-ae0d-caba2d0157ca",
+        "chatSessionId": "sess_8fdd7649-fb16-458e-a43f-ee547c2fff53",
+        "timestamp": 1792506703023
+      },
+      {
+        "executionId": "c9fb72ef-71a1-45a4-ae0d-caba2d0157ca",
+        "chatSessionId": "sess_8fdd7649-fb16-458e-a43f-ee547c2fff53",
+        "timestamp": 1792506943330
+      }
+    ],
+    "6.7 Criar `lib/e0/diagnostic_http_client.dart` usando `dart:io` e `dart:async`.": [
+      {
+        "executionId": "fcc7c914-3bf7-473d-9adc-032e8e944ef0",
+        "chatSessionId": "sess_0b273645-533b-4329-97e7-b9e5d705d2ee",
+        "timestamp": 1792506954120
+      },
+      {
+        "executionId": "fcc7c914-3bf7-473d-9adc-032e8e944ef0",
+        "chatSessionId": "sess_0b273645-533b-4329-97e7-b9e5d705d2ee",
+        "timestamp": 1792509475241
+      }
+    ],
+    "6.8 Compor explicitamente esses componentes em `main.dart`, sem framework de injeção, repositórios ou camadas não exigidas.": [
+      {
+        "executionId": "95fc2fa1-501c-4d48-8a96-b8dd0dd80311",
+        "chatSessionId": "sess_b209d979-175b-47f2-b349-8358e8db1ca4",
+        "timestamp": 1792509483154
+      },
+      {
+        "executionId": "95fc2fa1-501c-4d48-8a96-b8dd0dd80311",
+        "chatSessionId": "sess_b209d979-175b-47f2-b349-8358e8db1ca4",
+        "timestamp": 1792509605425
+      }
+    ],
+    "6.9 Confirmar que a árvore não contém módulos de modelo, detector, ocorrência, fila, persistência, envio, autenticação ou configurações.": [
+      {
+        "executionId": "210f2825-d8d6-4adc-95cf-8e561dd8f773",
+        "chatSessionId": "sess_56a22ae4-a5ed-4246-b53b-167c517fa0f9",
+        "timestamp": 1792509614935
+      },
+      {
+        "executionId": "210f2825-d8d6-4adc-95cf-8e561dd8f773",
+        "chatSessionId": "sess_56a22ae4-a5ed-4246-b53b-167c517fa0f9",
+        "timestamp": 1792509687129
+      }
+    ],
+    "7.2 Implementar no `E0Controller` a sequência: câmera pendente, câmera em resolução, câmera resolvida, localização pendente, localização em resolução e permissões resolvidas.": [
+      {
+        "executionId": "1fddabdb-a2b7-4620-8b1a-37b3a97b5369",
+        "chatSessionId": "sess_0c1b1dac-fff4-4ae7-8f59-545e5fb3504d",
+        "timestamp": 1792509879595
+      },
+      {
+        "executionId": "1fddabdb-a2b7-4620-8b1a-37b3a97b5369",
+        "chatSessionId": "sess_0c1b1dac-fff4-4ae7-8f59-545e5fb3504d",
+        "timestamp": 1792510288890
+      }
+    ],
+    "7.1 Fazer a interface aparecer imediatamente com estados iniciais, sem aguardar qualquer permissão.": [
+      {
+        "executionId": "cd4b956f-9e6d-4b11-a083-614a1b26b1b7",
+        "chatSessionId": "sess_374bd53c-2029-4d2a-af8b-dd5070e9ed6d",
+        "timestamp": 1792510298116
+      },
+      {
+        "executionId": "cd4b956f-9e6d-4b11-a083-614a1b26b1b7",
+        "chatSessionId": "sess_374bd53c-2029-4d2a-af8b-dd5070e9ed6d",
+        "timestamp": 1792510393911
+      }
+    ],
+    "7.3 Garantir que somente uma solicitação Android de permissão possa estar ativa por vez.": [
+      {
+        "executionId": "5b53ccde-ef96-42ef-94fc-63ee6970da3d",
+        "chatSessionId": "sess_4409224a-4553-4ec7-aeb3-96b0fcbb6059",
+        "timestamp": 1792510401798
+      },
+      {
+        "executionId": "5b53ccde-ef96-42ef-94fc-63ee6970da3d",
+        "chatSessionId": "sess_4409224a-4553-4ec7-aeb3-96b0fcbb6059",
+        "timestamp": 1792510500846
+      }
+    ],
+    "7.4 Resolver primeiro a câmera e autorizar a solicitação de localização somente depois da concessão ou recusa da câmera.": [
+      {
+        "executionId": "eab32119-39ec-4609-a18f-e20ab54d12ab",
+        "chatSessionId": "sess_4969f143-35c2-4be7-a02a-d3cb4bf435ae",
+        "timestamp": 1792510509825
+      },
+      {
+        "executionId": "eab32119-39ec-4609-a18f-e20ab54d12ab",
+        "chatSessionId": "sess_4969f143-35c2-4be7-a02a-d3cb4bf435ae",
+        "timestamp": 1792512150773
+      }
+    ],
+    "7.5 Garantir que a recusa da câmera não impeça localização ou rede e que a recusa da localização não impeça câmera ou rede.": [
+      {
+        "executionId": "2bc93234-130e-400c-971e-01a0664dbb04",
+        "chatSessionId": "sess_4d116b44-dc6e-4a9e-aef7-405c16eb92cf",
+        "timestamp": 1792512161149
+      },
+      {
+        "executionId": "2bc93234-130e-400c-971e-01a0664dbb04",
+        "chatSessionId": "sess_4d116b44-dc6e-4a9e-aef7-405c16eb92cf",
+        "timestamp": 1792512636205
+      }
+    ],
+    "7.6 Após as decisões de permissão, permitir atualizações independentes dos estados de câmera e localização.": [
+      {
+        "executionId": "cf425515-16b7-49b3-aae5-90be7d6c04d5",
+        "chatSessionId": "sess_165f2101-9516-4d4a-bb1b-08471cfab5f3",
+        "timestamp": 1792512644437
+      },
+      {
+        "executionId": "cf425515-16b7-49b3-aae5-90be7d6c04d5",
+        "chatSessionId": "sess_165f2101-9516-4d4a-bb1b-08471cfab5f3",
+        "timestamp": 1792514089254
+      }
+    ],
+    "7.7 Bloquear toques/retries que tentem abrir uma segunda solicitação enquanto outra estiver ativa.": [
+      {
+        "executionId": "87f28fd5-3c49-4f91-8727-12a20519b729",
+        "chatSessionId": "sess_1e3417cb-431b-4751-9c73-697f1f66fdb2",
+        "timestamp": 1792514097742
+      },
+      {
+        "executionId": "87f28fd5-3c49-4f91-8727-12a20519b729",
+        "chatSessionId": "sess_1e3417cb-431b-4751-9c73-697f1f66fdb2",
+        "timestamp": 1792514251510
+      }
+    ],
+    "8.1 Consultar as câmeras somente quando autorizado pelo `E0Controller`.": [
+      {
+        "executionId": "bddcb0d5-e50f-42f6-ae4e-cf7853f31473",
+        "chatSessionId": "sess_187b9bd6-aed9-4ccf-b0bf-7e53711f83a4",
+        "timestamp": 1792520183221
+      },
+      {
+        "executionId": "bddcb0d5-e50f-42f6-ae4e-cf7853f31473",
+        "chatSessionId": "sess_187b9bd6-aed9-4ccf-b0bf-7e53711f83a4",
+        "timestamp": 1792523542634
+      }
+    ],
+    "8.2 Selecionar a primeira câmera identificada como traseira.": [
+      {
+        "executionId": "1853a5ae-44da-4d4d-b4a3-f8d45593b315",
+        "chatSessionId": "sess_cd663244-46a6-401d-a5bd-3a7491f29a75",
+        "timestamp": 1792530987927
+      },
+      {
+        "executionId": "1853a5ae-44da-4d4d-b4a3-f8d45593b315",
+        "chatSessionId": "sess_cd663244-46a6-401d-a5bd-3a7491f29a75",
+        "timestamp": 1792531100169
+      }
+    ],
+    "8.3 Inicializar `CameraController` com áudio desabilitado e resolução moderada para preview.": [
+      {
+        "executionId": "eb54a33c-6e12-4888-937e-9a172957d698",
+        "chatSessionId": "sess_d37c9dad-cc82-492a-9bff-74329c2f8914",
+        "timestamp": 1792531108977
+      },
+      {
+        "executionId": "eb54a33c-6e12-4888-937e-9a172957d698",
+        "chatSessionId": "sess_d37c9dad-cc82-492a-9bff-74329c2f8914",
+        "timestamp": 1792531209487
+      }
+    ],
+    "8.4 Expor somente o controlador inicializado necessário ao `CameraPreview`; não iniciar stream de imagens.": [
+      {
+        "executionId": "07206e3d-2049-4dc8-933d-5060190d5970",
+        "chatSessionId": "sess_60b8f34e-3601-40d6-a8c6-09ca2a584282",
+        "timestamp": 1792531219771
+      },
+      {
+        "executionId": "07206e3d-2049-4dc8-933d-5060190d5970",
+        "chatSessionId": "sess_60b8f34e-3601-40d6-a8c6-09ca2a584282",
+        "timestamp": 1792531702735
+      }
+    ],
+    "8.5 Solicitar a permissão básica de câmera por meio do fluxo do plugin, sob coordenação do `E0Controller`.": [
+      {
+        "executionId": "b417d839-71bb-4e14-afed-07c44d1bd747",
+        "chatSessionId": "sess_aee0a6b2-be24-4fee-8b3b-74cfc5ab3c32",
+        "timestamp": 1792531711490
+      },
+      {
+        "executionId": "b417d839-71bb-4e14-afed-07c44d1bd747",
+        "chatSessionId": "sess_aee0a6b2-be24-4fee-8b3b-74cfc5ab3c32",
+        "timestamp": 1792532022544
+      }
+    ],
+    "8.6 Classificar permissão negada, negação permanente, ausência de câmera traseira, câmera ocupada e falha de inicialização.": [
+      {
+        "executionId": "7cc909ef-ad34-4d30-8eb2-aee6e4ad5c48",
+        "chatSessionId": "sess_30718642-0286-4106-b7ec-8d213a0c5ffd",
+        "timestamp": 1792532030948
+      },
+      {
+        "executionId": "7cc909ef-ad34-4d30-8eb2-aee6e4ad5c48",
+        "chatSessionId": "sess_30718642-0286-4106-b7ec-8d213a0c5ffd",
+        "timestamp": 1792532286892
+      }
+    ],
+    "8.7 Manter localização e rede funcionais quando a câmera estiver indisponível.": [
+      {
+        "executionId": "6a2e6119-6083-459d-9767-743f675386d0",
+        "chatSessionId": "sess_4e47496d-9d2a-4fb5-8282-b5d427addaf1",
+        "timestamp": 1792532296537
+      }
+    ],
+    "9.2 Verificar se o serviço de localização está habilitado antes de solicitar posição.": [
+      {
+        "executionId": "03909572-a89e-469e-bb48-1d35db03f197",
+        "chatSessionId": "sess_c0430ec5-26bc-4f9d-8c6d-7be9db06352f",
+        "timestamp": 1792542322697
+      }
+    ],
+    "9.1 Iniciar a verificação de localização somente após a resolução da solicitação de câmera.": [
+      {
+        "executionId": "0f1a2fbe-3f2a-47c0-9f76-9d8dcb0d5f8c",
+        "chatSessionId": "sess_0a227bbf-bf9f-4a01-861e-770fee6e2bb3",
+        "timestamp": 1792542329442
+      },
+      {
+        "executionId": "0f1a2fbe-3f2a-47c0-9f76-9d8dcb0d5f8c",
+        "chatSessionId": "sess_0a227bbf-bf9f-4a01-861e-770fee6e2bb3",
+        "timestamp": 1792542459678
+      }
+    ],
+    "9.3 Verificar e solicitar somente permissão de localização em primeiro plano.": [
+      {
+        "executionId": "a262f1f5-3b77-4b07-8adc-4762d833faee",
+        "chatSessionId": "sess_caee7af3-6e82-4c1e-b835-23d0a2f9f435",
+        "timestamp": 1792542469334
+      },
+      {
+        "executionId": "a262f1f5-3b77-4b07-8adc-4762d833faee",
+        "chatSessionId": "sess_caee7af3-6e82-4c1e-b835-23d0a2f9f435",
+        "timestamp": 1792542734556
+      }
+    ],
+    "9.4 Detectar localização aproximada/reduzida e não marcá-la como localização precisa aprovada.": [
+      {
+        "executionId": "b1f5cab0-20d4-4a2a-ab18-13312f733a5b",
+        "chatSessionId": "sess_9d5944ae-c131-4383-899d-4d772d5fe6be",
+        "timestamp": 1792542742910
+      },
+      {
+        "executionId": "b1f5cab0-20d4-4a2a-ab18-13312f733a5b",
+        "chatSessionId": "sess_9d5944ae-c131-4383-899d-4d772d5fe6be",
+        "timestamp": 1792542830828
+      }
+    ],
+    "9.5 Obter uma posição atual e assinar atualizações de alta precisão apenas enquanto a aplicação estiver em primeiro plano.": [
+      {
+        "executionId": "010cbf9a-3142-4e4b-a53b-57879a81083f",
+        "chatSessionId": "sess_bad8ac52-f719-4b51-84a1-d07a227af2e2",
+        "timestamp": 1792542840687
+      },
+      {
+        "executionId": "010cbf9a-3142-4e4b-a53b-57879a81083f",
+        "chatSessionId": "sess_bad8ac52-f719-4b51-84a1-d07a227af2e2",
+        "timestamp": 1792543284060
+      }
+    ],
+    "9.6 Exibir latitude e longitude em graus decimais e precisão reportada em metros.": [
+      {
+        "executionId": "e9b573d1-6a90-45d4-95b2-0fb92e3ba2d3",
+        "chatSessionId": "sess_694fab5e-4d12-423c-9270-163f07fd10fc",
+        "timestamp": 1792543293620
+      },
+      {
+        "executionId": "e9b573d1-6a90-45d4-95b2-0fb92e3ba2d3",
+        "chatSessionId": "sess_694fab5e-4d12-423c-9270-163f07fd10fc",
+        "timestamp": 1792545001991
+      }
+    ],
+    "9.7 Exibir velocidade em metros por segundo somente quando o provedor fornecer valor finito e não negativo.": [
+      {
+        "executionId": "34759d2e-0b00-47e6-9827-27abe00baa5e",
+        "chatSessionId": "sess_98513127-b10e-4bac-b082-332b4838ca27",
+        "timestamp": 1792545010007
+      },
+      {
+        "executionId": "34759d2e-0b00-47e6-9827-27abe00baa5e",
+        "chatSessionId": "sess_98513127-b10e-4bac-b082-332b4838ca27",
+        "timestamp": 1792545078790
+      }
+    ],
+    "9.8 Representar velocidade ausente como “Não fornecida” e demais valores ausentes como “Não disponível”, sem usar zero artificial.": [
+      {
+        "executionId": "12397a7d-fb92-42bc-8781-c49643f99217",
+        "chatSessionId": "sess_523b2c95-74f1-47da-8b13-cdca655d337c",
+        "timestamp": 1792545087613
+      },
+      {
+        "executionId": "12397a7d-fb92-42bc-8781-c49643f99217",
+        "chatSessionId": "sess_523b2c95-74f1-47da-8b13-cdca655d337c",
+        "timestamp": 1792545214230
+      }
+    ],
+    "9.9 Classificar serviço desativado, permissão negada/permanente, precisão reduzida, espera por posição e posição indisponível.": [
+      {
+        "executionId": "5969cbce-5079-41ec-b1ea-53679c43706b",
+        "chatSessionId": "sess_dddf4e6f-6bfb-40a5-a7d1-3230dd8e1675",
+        "timestamp": 1792545221619
+      },
+      {
+        "executionId": "5969cbce-5079-41ec-b1ea-53679c43706b",
+        "chatSessionId": "sess_dddf4e6f-6bfb-40a5-a7d1-3230dd8e1675",
+        "timestamp": 1792545317013
+      }
+    ],
+    "9. Implementar o diagnóstico de localização precisa": [
+      {
+        "executionId": "5969cbce-5079-41ec-b1ea-53679c43706b",
+        "chatSessionId": "sess_dddf4e6f-6bfb-40a5-a7d1-3230dd8e1675",
+        "timestamp": 1792545317116
+      }
+    ],
+    "10. Implementar ciclo de vida e invalidação de operações antigas": [
+      {
+        "executionId": "24429acb-23cd-4e52-bb86-af89d6f742ac",
+        "chatSessionId": "sess_b65cdef7-14e7-4a68-ae31-1410189bee7a",
+        "timestamp": 1792545330919
+      },
+      {
+        "executionId": "24429acb-23cd-4e52-bb86-af89d6f742ac",
+        "chatSessionId": "sess_b65cdef7-14e7-4a68-ae31-1410189bee7a",
+        "timestamp": 1792545583629
+      }
+    ],
+    "10.1 Observar `AppLifecycleState` na tela e delegar transições ao `E0Controller`.": [
+      {
+        "executionId": "f75f830f-cc29-47fa-b1d2-08c7e00bf7b5",
+        "chatSessionId": "sess_11f128a3-e434-4ebe-9e69-604b540d7ab5",
+        "timestamp": 1792545623425
+      },
+      {
+        "executionId": "f75f830f-cc29-47fa-b1d2-08c7e00bf7b5",
+        "chatSessionId": "sess_11f128a3-e434-4ebe-9e69-604b540d7ab5",
+        "timestamp": 1792545693357
+      }
+    ],
+    "10.2 Associar cada ciclo de inicialização a um identificador de geração e ignorar callbacks de gerações antigas.": [
+      {
+        "executionId": "c772fc0e-adfd-4838-b52c-6842d2abaf91",
+        "chatSessionId": "sess_94141834-41bc-4e58-aaf5-6bdadf13cacc",
+        "timestamp": 1792545700781
+      },
+      {
+        "executionId": "c772fc0e-adfd-4838-b52c-6842d2abaf91",
+        "chatSessionId": "sess_94141834-41bc-4e58-aaf5-6bdadf13cacc",
+        "timestamp": 1792545826827
+      }
+    ],
+    "10.3 Manter referência separada à solicitação de permissão em andamento para reconciliá-la após retomada, sem repetir o diálogo.": [
+      {
+        "executionId": "be59e60f-be95-46a5-83bd-5968a75fe2ca",
+        "chatSessionId": "sess_5104f944-4816-4d8d-8fe7-c8e21426df00",
+        "timestamp": 1792545836000
+      },
+      {
+        "executionId": "be59e60f-be95-46a5-83bd-5968a75fe2ca",
+        "chatSessionId": "sess_5104f944-4816-4d8d-8fe7-c8e21426df00",
+        "timestamp": 1792546011113
+      }
+    ],
+    "10.4 Em pausa/inatividade, cancelar a assinatura de localização e descartar o controlador da câmera de forma idempotente.": [
+      {
+        "executionId": "21c2e63b-f5d1-430c-8276-843cfe2bb63d",
+        "chatSessionId": "sess_f03a7841-b9a5-4266-b7e3-6a7c53528841",
+        "timestamp": 1792546019249
+      }
+    ],
+    "10.5 Em retomada, verificar operações e permissões já resolvidas antes de reinicializar recursos.": [
+      {
+        "executionId": "187a2a5e-3e83-4a2e-b57f-608ab04c435d",
+        "chatSessionId": "sess_5d27190e-d30d-4040-a6ad-4d1bbff226e5",
+        "timestamp": 1792547342018
+      },
+      {
+        "executionId": "187a2a5e-3e83-4a2e-b57f-608ab04c435d",
+        "chatSessionId": "sess_5d27190e-d30d-4040-a6ad-4d1bbff226e5",
+        "timestamp": 1792548171740
+      }
+    ],
+    "10.6 Impedir streams de localização duplicados e impedir reutilização de `CameraController` descartado.": [
+      {
+        "executionId": "5310cc5f-061f-434a-881e-bbd75d7a1e1b",
+        "chatSessionId": "sess_5dee1944-2289-4fb3-87c9-3109bb993c7a",
+        "timestamp": 1792548180718
+      },
+      {
+        "executionId": "5310cc5f-061f-434a-881e-bbd75d7a1e1b",
+        "chatSessionId": "sess_5dee1944-2289-4fb3-87c9-3109bb993c7a",
+        "timestamp": 1792548359302
+      }
+    ],
+    "10.7 No descarte definitivo, remover observers e invalidar todos os callbacks pendentes.": [
+      {
+        "executionId": "35634855-c60f-4947-8920-2f12cc10eda3",
+        "chatSessionId": "sess_58fd8d5e-8e0e-44bb-ae91-69d26c36404e",
+        "timestamp": 1792548370193
+      }
+    ],
+    "11. Implementar o diagnóstico HTTPS manual e restrito": [
+      {
+        "executionId": "e83ec350-63e6-458f-90c6-856a53487ac2",
+        "chatSessionId": "sess_5b8f69fa-b165-4558-9c1d-6ee7d92c78ab",
+        "timestamp": 1792548379037
+      },
+      {
+        "executionId": "e83ec350-63e6-458f-90c6-856a53487ac2",
+        "chatSessionId": "sess_5b8f69fa-b165-4558-9c1d-6ee7d92c78ab",
+        "timestamp": 1792548582824
+      }
+    ],
+    "12. Implementar a única tela diagnóstica responsiva e suas mensagens": [
+      {
+        "executionId": "a2cae61f-a926-471c-808a-ac97b57bea43",
+        "chatSessionId": "sess_24b56f13-2c7e-404f-86bf-578bb232713e",
+        "timestamp": 1792548631369
+      },
+      {
+        "executionId": "a2cae61f-a926-471c-808a-ac97b57bea43",
+        "chatSessionId": "sess_24b56f13-2c7e-404f-86bf-578bb232713e",
+        "timestamp": 1792548977591
+      }
+    ],
+    "13. Formatar e analisar estaticamente a implementação E0": [
+      {
+        "executionId": "11340b8c-ca53-42b5-ab74-05ba701d0a39",
+        "chatSessionId": "sess_1afb7806-6d19-4c03-963e-2b300e5c1c06",
+        "timestamp": 1792549200865
+      },
+      {
+        "executionId": "11340b8c-ca53-42b5-ab74-05ba701d0a39",
+        "chatSessionId": "sess_1afb7806-6d19-4c03-963e-2b300e5c1c06",
+        "timestamp": 1792549417563
+      }
+    ],
+    "14. Gerar o build e preparar a validação física": [
+      {
+        "executionId": "d5731cf7-a038-418b-82aa-8afac0d8a30b",
+        "chatSessionId": "sess_3018b360-4a43-4a82-961b-dce7d7872b4c",
+        "timestamp": 1792549475267
+      },
+      {
+        "executionId": "d5731cf7-a038-418b-82aa-8afac0d8a30b",
+        "chatSessionId": "sess_3018b360-4a43-4a82-961b-dce7d7872b4c",
+        "timestamp": 1792549857067
+      },
+      {
+        "executionId": "33c7c049-7fdd-48b9-9b0b-7a37b3ed58ec",
+        "chatSessionId": "sess_3018b360-4a43-4a82-961b-dce7d7872b4c",
+        "timestamp": 1792615729968
+      },
+      {
+        "executionId": "33c7c049-7fdd-48b9-9b0b-7a37b3ed58ec",
+        "chatSessionId": "sess_3018b360-4a43-4a82-961b-dce7d7872b4c",
+        "timestamp": 1792615851949
+      },
+      {
+        "executionId": "03642e80-8f6c-4a0c-a495-a2f9f7dfb1bc",
+        "chatSessionId": "sess_3018b360-4a43-4a82-961b-dce7d7872b4c",
+        "timestamp": 1792615917063
+      },
+      {
+        "executionId": "03642e80-8f6c-4a0c-a495-a2f9f7dfb1bc",
+        "chatSessionId": "sess_3018b360-4a43-4a82-961b-dce7d7872b4c",
+        "timestamp": 1792616340504
+      }
+    ],
+    "15. Validation Gate da E0 no Samsung Galaxy S25+": [
+      {
+        "executionId": "433bf9b7-3d32-42aa-b5f9-b2b4b227c41b",
+        "chatSessionId": "sess_3018b360-4a43-4a82-961b-dce7d7872b4c",
+        "timestamp": 1792616550487
+      },
+      {
+        "executionId": "c93fb4ce-e02f-436c-a079-ba0b294a39bf",
+        "chatSessionId": "sess_3018b360-4a43-4a82-961b-dce7d7872b4c",
+        "timestamp": 1792616659954
+      },
+      {
+        "executionId": "064d3f82-9309-4b79-8fdd-9f6d904116c1",
+        "chatSessionId": "sess_3018b360-4a43-4a82-961b-dce7d7872b4c",
+        "timestamp": 1792616703037
+      },
+      {
+        "executionId": "064d3f82-9309-4b79-8fdd-9f6d904116c1",
+        "chatSessionId": "sess_3018b360-4a43-4a82-961b-dce7d7872b4c",
+        "timestamp": 1792617606065
+      }
+    ]
+  }
+}

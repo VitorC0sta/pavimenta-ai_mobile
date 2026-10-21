@@ -1,0 +1,219 @@
+# Plano de implementação — E0: Smoke test da infraestrutura Android
+
+Esta lista cobre exclusivamente a E0. Todas as tarefas permanecem pendentes até sua execução futura. Não iniciar qualquer funcionalidade posterior nem criar testes automatizados nesta etapa.
+
+## Regras de execução
+
+- Trabalhar diretamente na raiz do repositório mobile atual; não criar subdiretório duplicado.
+- Preservar `.kiro/specs/mvp-app-flutter/requirements.md` e `.kiro/specs/mvp-app-flutter/design.md` como documentos aprovados.
+- Não instalar, atualizar ou reconfigurar globalmente Flutter, Android SDK, Gradle, Java, ADB, drivers USB ou WSL sem autorização explícita.
+- Tratar toolchain ausente, incompatibilidade Windows/WSL/ADB ou dispositivo inacessível como bloqueio ou etapa manual.
+- Adicionar como integrações diretas somente `camera` e `geolocator`, com versões exatas e sem `^`.
+- Não adicionar bibliotecas de estado, HTTP, conectividade ou permissões; usar recursos do Flutter e `dart:io` conforme o design.
+- Não executar comandos em modo watch nem iniciar processos de longa duração.
+- Não criar testes automatizados para E0.
+
+- [x] 1. Verificar o repositório e o ambiente antes de qualquer criação
+  - [x] 1.1 Registrar o estado inicial da raiz e os arquivos existentes, incluindo alterações não commitadas, sem modificar ou remover conteúdo.
+  - [x] 1.2 Procurar marcadores de projeto Flutter existente, incluindo `pubspec.yaml`, `.metadata`, `lib/` e `android/`.
+  - [x] 1.3 Se existir projeto Flutter ou qualquer caminho que seria sobrescrito, interromper a criação e solicitar decisão do usuário; não executar `flutter create` sobre conteúdo conflitante.
+  - [x] 1.4 Executar `flutter --version` e registrar as versões de Flutter e Dart.
+  - [x] 1.5 Executar `flutter doctor -v` e registrar o estado da toolchain Android, sem corrigir ou atualizar componentes automaticamente.
+  - [x] 1.6 Verificar a disponibilidade do Android SDK e dos componentes necessários ao build Android.
+  - [x] 1.7 Verificar a disponibilidade do ADB no mesmo ambiente que executará o Flutter.
+  - [x] 1.8 Confirmar se o Samsung Galaxy S25+ é reconhecido pelo Flutter/ADB desse ambiente.
+  - [x] 1.9 Comparar, quando aplicável, o acesso ao aparelho pelo Windows e pelo WSL; registrar que reconhecimento no ADB do Windows não implica reconhecimento no ADB do WSL.
+  - [x] 1.10 Relatar como bloqueio ou etapa manual qualquer ausência/incompatibilidade; não instalar, atualizar ou reconfigurar Flutter, SDK, Gradle, Java, ADB, drivers ou WSL sem autorização.
+  - **Verificação:** nenhuma criação ocorreu; o estado do repositório, da toolchain e do aparelho está registrado e conflitos estão ausentes ou bloqueados.
+  - **Requisitos:** RF-00.1, RF-00.2, RF-01.2, RF-23.10, RNF-07.1.
+
+- [x] 2. Criar o projeto Flutter Android diretamente na raiz
+  - **Depende de:** tarefa 1 concluída sem conflito ou bloqueio.
+  - [x] 2.1 Executar, a partir da raiz atual, o comando equivalente a `flutter create --platforms=android --project-name pavimenta_ai_mobile --org com.vitor .`.
+  - [x] 2.2 Confirmar que o projeto foi criado na raiz e que nenhum subdiretório `pavimenta_ai_mobile/` duplicado foi criado.
+  - [x] 2.3 Confirmar no `pubspec.yaml` que o nome do projeto é `pavimenta_ai_mobile`.
+  - [x] 2.4 Confirmar na configuração Android gerada que o `applicationId` é exatamente `com.vitor.pavimenta_ai_mobile`.
+  - [x] 2.5 Confirmar que somente a plataforma Android foi gerada e que os arquivos `.kiro` existentes foram preservados.
+  - **Verificação:** identidade e localização correspondem ao design, sem sobrescrita e sem plataformas adicionais.
+  - **Requisitos:** RF-00.1, RF-00.2, RF-01.1, RF-23.10.
+
+- [x] 3. Fixar somente as dependências aprovadas para E0
+  - **Depende de:** tarefas 1 e 2.
+  - [x] 3.1 Consultar a compatibilidade de `camera` e `geolocator` com a versão instalada do Flutter/Dart e com a configuração Android gerada.
+  - [x] 3.2 Escolher e registrar versões exatas e mutuamente compatíveis de `camera` e `geolocator`.
+  - [x] 3.3 Adicionar as duas versões ao `pubspec.yaml` sem `^`, intervalos ou resolução aberta de versão direta.
+  - [x] 3.4 Não adicionar pacote de gerenciamento de estado, HTTP, conectividade, permissões, persistência, armazenamento seguro ou visão computacional.
+  - [x] 3.5 Executar a resolução normal de pacotes somente depois das verificações da toolchain, sem atualização global de Flutter, SDK, Gradle ou Java.
+  - [x] 3.6 Inspecionar `flutter pub deps` e confirmar que as únicas integrações diretas adicionadas para a aplicação são `camera` e `geolocator`.
+  - **Verificação:** versões exatas estão registradas e nenhuma dependência direta fora do escopo foi adicionada.
+  - **Requisitos:** RF-00.1, RF-00.9, RF-00.10, RF-23.10.
+
+- [x] 4. Avaliar e limitar os artefatos do template Flutter
+  - **Depende de:** tarefa 2.
+  - [x] 4.1 Revisar o código e os assets de exemplo gerados pelo template e remover somente o conteúdo demonstrativo incompatível com a tela E0.
+  - [x] 4.2 Avaliar o teste de exemplo criado pelo template; se estiver incompatível ou não tiver valor para E0, removê-lo.
+  - [x] 4.3 Não substituir o teste removido e não criar novos testes automatizados nesta etapa.
+  - [x] 4.4 Confirmar que não existem assets, módulos ou referências a funcionalidades fora da E0.
+  - **Verificação:** o template não mantém exemplo inválido e nenhum teste automatizado novo foi criado.
+  - **Requisitos:** RF-00.1, RF-00.9, RF-00.10, RF-23.10.
+
+- [x] 5. Configurar somente as declarações Android aprovadas
+  - **Depende de:** tarefas 2 e 3.
+  - [ ] 5.1 Declarar `android.permission.CAMERA` no `AndroidManifest.xml`.
+  - [ ] 5.2 Declarar `android.permission.ACCESS_FINE_LOCATION` e `android.permission.ACCESS_COARSE_LOCATION`.
+  - [ ] 5.3 Declarar `android.permission.INTERNET`.
+  - [ ] 5.4 Declarar a câmera como recurso não obrigatório (`required=false`) para permitir falha controlada.
+  - [ ] 5.5 Manter tráfego em texto claro desabilitado e não adicionar exceção ou bypass de validação TLS.
+  - [ ] 5.6 Confirmar a ausência de permissões de microfone, armazenamento, localização em segundo plano, foreground service e wake lock.
+  - [ ] 5.7 Confirmar que `minSdk`, `compileSdk` e `targetSdk` são compatíveis com as versões exatas escolhidas, sem atualizar a toolchain sem autorização.
+  - **Verificação:** o manifesto contém somente permissões e recursos requeridos pela E0.
+  - **Requisitos:** RF-00.2–5, RF-01.2, RF-01.3, RF-03.1–2, RF-06.1–2.
+
+- [x] 6. Criar a estrutura mínima e o estado da tela E0
+  - **Depende de:** tarefas 2 a 5.
+  - [x] 6.1 Manter `lib/main.dart` como ponto de composição e única entrada da aplicação.
+  - [x] 6.2 Criar `lib/e0/e0_screen.dart`.
+  - [x] 6.3 Criar `lib/e0/e0_controller.dart` usando `ChangeNotifier`, sem biblioteca externa de estado.
+  - [x] 6.4 Criar `lib/e0/e0_state.dart` com estados de permissão, câmera, localização e HTTPS e somente dados diagnósticos opcionais.
+  - [x] 6.5 Criar `lib/e0/camera_diagnostic.dart`.
+  - [x] 6.6 Criar `lib/e0/location_diagnostic.dart`.
+  - [x] 6.7 Criar `lib/e0/diagnostic_http_client.dart` usando `dart:io` e `dart:async`.
+  - [x] 6.8 Compor explicitamente esses componentes em `main.dart`, sem framework de injeção, repositórios ou camadas não exigidas.
+  - [x] 6.9 Confirmar que a árvore não contém módulos de modelo, detector, ocorrência, fila, persistência, envio, autenticação ou configurações.
+  - **Verificação:** todos e somente os arquivos mínimos definidos no design estão presentes e conectados.
+  - **Requisitos:** RF-00.1, RF-00.9–10, RF-05.1, RF-23.10, RNF-04.1.
+
+- [x] 7. Implementar a coordenação serial das permissões
+  - **Depende de:** tarefa 6.
+  - [x] 7.1 Fazer a interface aparecer imediatamente com estados iniciais, sem aguardar qualquer permissão.
+  - [x] 7.2 Implementar no `E0Controller` a sequência: câmera pendente, câmera em resolução, câmera resolvida, localização pendente, localização em resolução e permissões resolvidas.
+  - [x] 7.3 Garantir que somente uma solicitação Android de permissão possa estar ativa por vez.
+  - [x] 7.4 Resolver primeiro a câmera e autorizar a solicitação de localização somente depois da concessão ou recusa da câmera.
+  - [x] 7.5 Garantir que a recusa da câmera não impeça localização ou rede e que a recusa da localização não impeça câmera ou rede.
+  - [x] 7.6 Após as decisões de permissão, permitir atualizações independentes dos estados de câmera e localização.
+  - [x] 7.7 Bloquear toques/retries que tentem abrir uma segunda solicitação enquanto outra estiver ativa.
+  - **Verificação:** a ordem é determinística, não há diálogos concorrentes e recusas não bloqueiam diagnósticos independentes.
+  - **Requisitos:** RF-00.3–6, RF-01.3, RF-03.1–2, RF-06.1–2, RNF-04.1.
+
+- [ ] 8. Implementar o preview diagnóstico da câmera traseira
+  - **Depende de:** tarefas 5 a 7.
+  - [x] 8.1 Consultar as câmeras somente quando autorizado pelo `E0Controller`.
+  - [x] 8.2 Selecionar a primeira câmera identificada como traseira.
+  - [x] 8.3 Inicializar `CameraController` com áudio desabilitado e resolução moderada para preview.
+  - [x] 8.4 Expor somente o controlador inicializado necessário ao `CameraPreview`; não iniciar stream de imagens.
+  - [x] 8.5 Solicitar a permissão básica de câmera por meio do fluxo do plugin, sob coordenação do `E0Controller`.
+  - [x] 8.6 Classificar permissão negada, negação permanente, ausência de câmera traseira, câmera ocupada e falha de inicialização.
+  - [x] 8.7 Manter localização e rede funcionais quando a câmera estiver indisponível.
+  - **Verificação:** preview traseiro aparece após autorização e todas as falhas previstas são controladas, sem captura/processamento de frames.
+  - **Requisitos:** RF-00.3–4, RF-01.3, RF-03.1–2, RF-05.1.
+
+- [x] 9. Implementar o diagnóstico de localização precisa
+  - **Depende de:** tarefas 5 a 7.
+  - [x] 9.1 Iniciar a verificação de localização somente após a resolução da solicitação de câmera.
+  - [x] 9.2 Verificar se o serviço de localização está habilitado antes de solicitar posição.
+  - [x] 9.3 Verificar e solicitar somente permissão de localização em primeiro plano.
+  - [x] 9.4 Detectar localização aproximada/reduzida e não marcá-la como localização precisa aprovada.
+  - [x] 9.5 Obter uma posição atual e assinar atualizações de alta precisão apenas enquanto a aplicação estiver em primeiro plano.
+  - [x] 9.6 Exibir latitude e longitude em graus decimais e precisão reportada em metros.
+  - [x] 9.7 Exibir velocidade em metros por segundo somente quando o provedor fornecer valor finito e não negativo.
+  - [x] 9.8 Representar velocidade ausente como “Não fornecida” e demais valores ausentes como “Não disponível”, sem usar zero artificial.
+  - [x] 9.9 Classificar serviço desativado, permissão negada/permanente, precisão reduzida, espera por posição e posição indisponível.
+  - **Verificação:** os valores diagnósticos e as indisponibilidades aparecem sem criar ou associar qualquer ocorrência.
+  - **Requisitos:** RF-00.5–6, RF-01.3, RF-05.1, RF-06.1–2.
+
+- [x] 10. Implementar ciclo de vida e invalidação de operações antigas
+  - **Depende de:** tarefas 7 a 9.
+  - [x] 10.1 Observar `AppLifecycleState` na tela e delegar transições ao `E0Controller`.
+  - [x] 10.2 Associar cada ciclo de inicialização a um identificador de geração e ignorar callbacks de gerações antigas.
+  - [x] 10.3 Manter referência separada à solicitação de permissão em andamento para reconciliá-la após retomada, sem repetir o diálogo.
+  - [ ] 10.4 Em pausa/inatividade, cancelar a assinatura de localização e descartar o controlador da câmera de forma idempotente.
+  - [x] 10.5 Em retomada, verificar operações e permissões já resolvidas antes de reinicializar recursos.
+  - [x] 10.6 Impedir streams de localização duplicados e impedir reutilização de `CameraController` descartado.
+  - [x] 10.7 No descarte definitivo, remover observers e invalidar todos os callbacks pendentes.
+  - **Verificação:** segundo plano/retomada não duplica solicitações ou streams e não publica estados obsoletos.
+  - **Requisitos:** RF-00.2, RF-00.4–6, RF-01.3, RNF-04.1, RNF-07.1.
+
+- [x] 11. Implementar o diagnóstico HTTPS manual e restrito
+  - **Depende de:** tarefas 3 e 6.
+  - [ ] 11.1 Ler a configuração de compilação `E0_DIAGNOSTIC_URL`, usando como padrão apenas a URL fictícia aprovada no design.
+  - [ ] 11.2 Exigir configuração presente, URI válida e absoluta, esquema exatamente HTTPS e host presente.
+  - [ ] 11.3 Rejeitar usuário/senha embutidos e fragmento.
+  - [ ] 11.4 Rejeitar explicitamente o caminho `/api/v1/occurrences` antes de abrir conexão.
+  - [ ] 11.5 Executar somente após ação manual uma única requisição `GET` via `dart:io`, sem corpo, API key, imagem, coordenadas, UUID, identificador ou outros dados de ocorrência.
+  - [ ] 11.6 Manter redirecionamentos desabilitados e validação TLS padrão ativa.
+  - [ ] 11.7 Definir limites numéricos pequenos e finitos de tempo e bytes para conexão, resposta e descarte do corpo, adequados a um diagnóstico que não usa conteúdo.
+  - [ ] 11.8 Nunca armazenar, interpretar, renderizar ou registrar o corpo ou headers da resposta.
+  - [ ] 11.9 Cancelar controladamente resposta excessiva, que ultrapasse o timeout ou que não termine.
+  - [ ] 11.10 Propagar ao `E0State` somente o código HTTP opcional e uma classificação sanitizada.
+  - [ ] 11.11 Classificar sucesso `2xx`, outro código recebido, configuração inválida, timeout, falha TLS e rede/destino indisponível sem semântica de ocorrência.
+  - [ ] 11.12 Impedir polling e retry automático e manter o botão indisponível durante uma requisição ativa.
+  - [ ] 11.13 Encerrar requisição ativa e `HttpClient` em pausa, mudança de ciclo de vida ou descarte e ignorar callbacks antigos.
+  - [ ] 11.14 Não tentar inferir automaticamente se o host é de produção; deixar essa confirmação para o controle humano do gate.
+  - **Verificação:** a requisição manual respeita todas as validações, limites e proibições e somente código/classificação sanitizados chegam à interface.
+  - **Requisitos:** RF-00.7–10, RF-01.3, RF-05.1, RF-23.10, RNF-04.1.
+
+- [x] 12. Implementar a única tela diagnóstica responsiva e suas mensagens
+  - **Depende de:** tarefas 6 a 11.
+  - [ ] 12.1 Exibir o título da E0 e aviso explícito de que nenhum dado de ocorrência é criado ou enviado.
+  - [ ] 12.2 Organizar câmera, localização e rede em três painéis independentes.
+  - [ ] 12.3 Exibir progresso local sem bloquear painéis não relacionados.
+  - [ ] 12.4 Exibir ações coordenadas de nova tentativa para câmera e localização e ação manual para o diagnóstico HTTPS.
+  - [ ] 12.5 Implementar todas as mensagens de indisponibilidade definidas para câmera, GPS/permissão/posição, configuração, TLS e rede/destino.
+  - [ ] 12.6 Usar `SafeArea`, conteúdo rolável, textos com quebra de linha e preview com proporção/altura controladas.
+  - [ ] 12.7 Adaptar uma ou mais colunas conforme largura por recursos nativos do Flutter, sem biblioteca de layout ou estado.
+  - [ ] 12.8 Garantir que botões, rolagem e indicadores permaneçam utilizáveis durante inicializações e requisição HTTPS.
+  - [ ] 12.9 Confirmar que a tela não mostra modelo, inferência, FPS, detecção, confiança, ocorrência, fila, envio ou configuração de credencial.
+  - **Verificação:** a tela única permanece legível, rolável e responsiva nos estados nominais e de erro.
+  - **Requisitos:** RF-00.3–8, RF-00.9–10, RF-05.1, RNF-04.1.
+
+- [x] 13. Formatar e analisar estaticamente a implementação E0
+  - **Depende de:** tarefas 3 a 12.
+  - [ ] 13.1 Executar `dart format` nos arquivos Dart da E0 e confirmar que não restam alterações de formatação.
+  - [ ] 13.2 Executar `flutter analyze` em modo de execução única e corrigir somente problemas pertencentes à E0.
+  - [ ] 13.3 Executar `flutter pub deps` e verificar novamente versões diretas exatas de `camera` e `geolocator` e ausência de dependências diretas não aprovadas.
+  - [ ] 13.4 Inspecionar manifesto, assets e árvore de fontes para confirmar ausência de YOLO, TFLite, detector, inferência, ocorrência, cooldown, fila, credencial, multipart e integração real.
+  - [ ] 13.5 Confirmar que não existem testes automatizados adicionados para E0 e não executar comando em modo watch.
+  - **Verificação:** formatação, análise estática, dependências e inspeção de escopo estão aprovadas.
+  - **Requisitos:** RF-00.1–2, RF-00.9–10, RF-23.10, RNF-04.1.
+
+- [x] 14. Gerar o build e preparar a validação física
+  - **Depende de:** tarefa 13 concluída; toolchain da tarefa 1 disponível.
+  - [ ] 14.1 Obter fora do repositório uma URL HTTPS funcional e confirmar operacionalmente que pertence a ambiente simulado ou exclusivo de teste, não a produção.
+  - [ ] 14.2 Gerar o build Android de debug, em execução única, com `--dart-define=E0_DIAGNOSTIC_URL=...` e sem versionar o valor funcional.
+  - [ ] 14.3 Registrar o resultado do build, versões da toolchain e caminho do artefato, sanitizando a URL de teste.
+  - [ ] 14.4 Preparar a instalação do build no Samsung Galaxy S25+ usando o mesmo ambiente Flutter/ADB validado na tarefa 1.
+  - [ ] 14.5 Se o aparelho não estiver acessível, registrar bloqueio e instrução manual; não alterar Windows, WSL, drivers ou ADB sem autorização.
+  - [ ] 14.6 Preparar checklist de evidências para abertura imediata, ordem das permissões, câmera, localização, rede, indisponibilidades, responsividade e ciclo de vida.
+  - [ ] 14.7 Preparar evidência sanitizada de que a URL foi fornecida fora do repositório, pertence a teste e não contém credencial.
+  - [ ] 14.8 Não considerar câmera, GPS ou rede aprovados com base apenas no build.
+  - **Verificação:** APK de debug e roteiro/evidências estão prontos para validação física, ou o bloqueio manual está claramente registrado.
+  - **Requisitos:** RF-00.2, RF-00.7–8, RF-00.11, RF-23.6–7, RF-23.10–11, RNF-07.1.
+
+- [x] 15. Validation Gate da E0 no Samsung Galaxy S25+
+  - **Depende de:** tarefas 1 a 14 concluídas e aparelho físico disponível.
+  - **Regra obrigatória:** esta tarefa permanece não concluída até a validação física e a aprovação explícita do usuário. O agente não pode aprová-la apenas por build, análise estática, emulador ou inspeção de código.
+  - [ ] 15.1 Confirmar manualmente que o build Android foi concluído.
+  - [ ] 15.2 Instalar o aplicativo no Galaxy S25+ e confirmar `applicationId` `com.vitor.pavimenta_ai_mobile`.
+  - [ ] 15.3 Abrir o aplicativo e confirmar que a tela diagnóstica aparece imediatamente e sem crash.
+  - [ ] 15.4 Confirmar que a permissão de câmera é solicitada primeiro e pode ser concedida.
+  - [ ] 15.5 Confirmar que o preview utiliza a câmera traseira e permanece responsivo.
+  - [ ] 15.6 Confirmar que a localização só é solicitada depois da conclusão, por concessão ou recusa, da solicitação de câmera.
+  - [ ] 15.7 Conceder localização precisa e confirmar que o aplicativo distingue precisão aproximada de precisa.
+  - [ ] 15.8 Confirmar a exibição de latitude e longitude quando houver posição.
+  - [ ] 15.9 Confirmar a exibição da precisão reportada.
+  - [ ] 15.10 Confirmar a exibição da velocidade quando fornecida pelo provedor.
+  - [ ] 15.11 Quando a velocidade não for fornecida, confirmar a representação “Não fornecida”, sem zero artificial.
+  - [ ] 15.12 Executar manualmente o diagnóstico com URL HTTPS confirmada como exclusiva de teste e fornecida por `--dart-define` fora do repositório.
+  - [ ] 15.13 Confirmar que o código HTTP e somente uma classificação sanitizada são apresentados e que nenhum corpo é exibido ou registrado.
+  - [ ] 15.14 Confirmar que redirecionamento, URL inválida e caminho `/api/v1/occurrences` são bloqueados conforme o design.
+  - [ ] 15.15 Confirmar que falha de rede ou destino é tratada com mensagem clara e sem crash.
+  - [ ] 15.16 Negar separadamente câmera e localização e confirmar mensagens claras, ausência de crash e continuidade dos diagnósticos independentes.
+  - [ ] 15.17 Enviar o aplicativo ao segundo plano e retornar; confirmar ausência de stream duplicado, diálogo duplicado e controlador de câmera inválido.
+  - [ ] 15.18 Confirmar rolagem, legibilidade, botões e responsividade básica nos estados nominal e de erro.
+  - [ ] 15.19 Confirmar ausência de YOLO, TFLite, detector real/falso, inferência, FPS, captura/processamento de frames, ocorrência, cooldown, fila, API key, armazenamento seguro, multipart e integração com a API de ocorrências.
+  - [ ] 15.20 Confirmar que nenhuma URL ou credencial de produção está presente e que a evidência da URL de teste foi sanitizada.
+  - [ ] 15.21 Reunir e apresentar evidências de build, instalação, abertura, câmera, permissões sequenciais, GPS, velocidade, HTTPS, indisponibilidades, ciclo de vida e responsividade.
+  - [ ] 15.22 Registrar a decisão explícita do usuário como aprovação ou reprovação do Validation Gate.
+  - [ ] 15.23 Parar obrigatoriamente após apresentar o gate; se reprovado, permitir somente correções da E0 e, se aprovado, não iniciar etapa posterior sem nova solicitação.
+  - **Verificação:** todos os itens aplicáveis foram observados no aparelho físico, as evidências foram apresentadas e existe decisão explícita do usuário.
+  - **Requisitos:** RF-00.1–12, RF-01.1–3, RF-03.1–2, RF-05.1, RF-06.1–2, RF-23.1–11, RNF-04.1 e RNF-07.1, RNF-07.7.
