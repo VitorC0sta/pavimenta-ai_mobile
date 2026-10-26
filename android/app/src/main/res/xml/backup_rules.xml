@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <exclude domain="database" path="e2_occurrence_queue_v1.db" />
+    <exclude domain="database" path="e2_occurrence_queue_v1.db-journal" />
+    <exclude domain="database" path="e2_occurrence_queue_v1.db-wal" />
+    <exclude domain="database" path="e2_occurrence_queue_v1.db-shm" />
+    <exclude domain="file" path="e2_queue_images_v1/" />
+</full-backup-content>

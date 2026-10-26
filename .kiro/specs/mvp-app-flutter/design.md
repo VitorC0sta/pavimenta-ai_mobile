@@ -598,3 +598,1575 @@ A aprovação também exige confirmação humana de que a URL funcional pertence
 O gate será **reprovado** se houver falha de build, instalação ou abertura; solicitações simultâneas ou duplicadas; ausência do preview traseiro após autorização; impossibilidade não explicada de solicitar localização precisa ou apresentar posição disponível; ausência do diagnóstico HTTPS; corpo de resposta exposto; recurso não liberado; crash; interface impraticável; exposição de destino de produção/credencial; ou inclusão de qualquer funcionalidade posterior.
 
 Após a apresentação, o trabalho deverá parar. Somente a aprovação explícita do responsável autoriza iniciar E1; em caso de reprovação, serão permitidas apenas correções pertencentes à E0.
+
+---
+
+# Design adicional — E1: Captura manual e ocorrência em memória
+
+> **Status e transição:** este bloco é posterior e separado do registro histórico da E0 acima. A E0 foi implementada, validada fisicamente no Samsung Galaxy S25+ e aprovada. O comportamento, as responsabilidades e as evidências históricas da E0 permanecem preservados. Este bloco projeta somente a E1; não reinterpreta retroativamente a E0 e não inicia implementação.
+
+## Overview
+
+### E1.1 Visão geral
+
+A E1 introduz uma tela operacional Android para registrar manualmente um buraco observado antes da disponibilidade de detecção automática. O operador vê o preview da câmera traseira, a localização corrente e um banner inequívoco de modo manual; quando câmera, localização, rota e ciclo de vida estão aptos, o botão **“Registrar buraco”** entrega uma ação a uma fonte manual substituível.
+
+Um acionamento permitido produz uma única ocorrência completa em memória com imagem JPEG privada, `detectedAt` fixado no instante do aceite, coordenadas válidas, velocidade opcional em km/h, `confidence = 1.0`, `defectClass = pothole` e UUID v4. Cooldown, preparação de imagem e criação da ocorrência são regras isoladas e testáveis. A E1 não possui persistência, fila, cliente de ocorrências, credencial, envio ou detecção automática.
+
+## E1.2 Relação com a E0 aprovada
+
+A E1 adiciona **Operação** como rota inicial e mantém **Diagnóstico** como rota para a `E0Screen`. Integrações mínimas podem mover arquivos ou extrair comportamento comum estritamente necessário, mas devem preservar no Diagnóstico aprovado: câmera traseira, GPS, ordem e mensagens de permissões, HTTPS diagnóstico, estados de indisponibilidade e ciclo de vida.
+
+O `E0Controller` continua dono do fluxo do Diagnóstico. Seu `DiagnosticHttpClient` continua exclusivo da E0, não é reutilizado, generalizado nem transformado em cliente de ocorrências. A E1 não altera evidências históricas. Qualquer regressão introduzida pela navegação ou por extração de código deve ser corrigida e reverificada no Gate E1.
+
+Operação e Diagnóstico nunca possuirão simultaneamente câmera ou stream de localização. A transição de rota aplicará o protocolo definido em E1.19 e E1.22, inclusive porque um `push` não altera necessariamente o `AppLifecycleState`.
+
+## E1.3 Objetivos e limites
+
+### Objetivos da E1
+
+1. Exibir nova tela operacional com identidade visual aprovada, preview traseiro e estado de GPS.
+2. Tornar inequívoco que a fonte atual é confirmação humana temporária.
+3. Isolar a fonte manual atrás de um contrato substituível e entregar candidatos ao pós-candidato compartilhado.
+4. Criar uma ocorrência completa somente em memória, com horário, localização, velocidade opcional, classe, confirmação manual, UUID e JPEG válidos.
+5. Bloquear concorrência e evitar imagem ou UUID quando o cooldown rejeitar a ação.
+6. Manter imagens somente em diretórios privados, com ownership explícito e limpeza determinística.
+7. Preservar a E0 pela navegação e pela exclusão mútua de recursos.
+8. Manter a tela ligada somente enquanto a Operação estiver efetivamente ativa.
+9. Permitir testes automatizados das regras sem câmera, GPS ou relógio reais.
+10. Encerrar a entrega no Validation Gate E1.
+
+### Limite implementável exclusivo
+
+A E1 contém apenas tela Operação, navegação ao Diagnóstico E0, captura manual, ocorrência em memória, arquivos temporários, permissões operacionais, ciclo de vida, tela ligada e testes correspondentes.
+
+Não pertencem à E1: fila ou banco local; persistência de ocorrência; cliente ou contrato de API; multipart; credencial; armazenamento seguro; backoff; envio; modelo; inferência; processamento contínuo de frames; indicador de FPS; ou qualquer funcionalidade planejada para etapas posteriores. Nenhum componente da E1 deve simular essas capacidades.
+
+## Architecture
+
+### E1.4 Arquitetura
+
+```mermaid
+graph TD
+    CR[Composition Root] --> OS[OperationScreen]
+    CR --> OC[OperationController]
+    CR --> E0[E0Screen + E0Controller preservados]
+    OS -->|ações e observação| OC
+    OC --> MS[ManualCandidateSource]
+    MS -->|produz| CI[CandidateInput]
+    CI -->|retorna ao coordenador| OC
+    OC -->|process candidate| PP[PostCandidateProcessor]
+    CI -. contém .-> IA[Aquisição de imagem associada]
+    PP --> CD[CooldownPolicy]
+    PP -->|invoca após aprovação| IA
+    PP --> IP[ImagePreparer]
+    PP --> OF[InMemoryOccurrenceFactory]
+    OC --> CP[OperationalCameraPort]
+    OC --> LP[OperationalLocationPort]
+    OC --> WL[ScreenAwakePort]
+    OC --> CL[Clock]
+    PP --> DC[DistanceCalculator]
+    PP --> UG[UuidGenerator]
+    IA --> CP
+    CP --> CAM[camera]
+    LP --> GEO[geolocator]
+    IP --> IMG[image + diretório privado]
+```
+
+A divisão é intencionalmente pequena:
+
+- **Apresentação Flutter:** `OperationScreen` renderiza estado e delega ações; não decide cooldown, não prepara imagem, não cria ocorrência e não conhece arquivo, UUID ou payload.
+- **Aplicação:** `OperationController` coordena readiness, single-flight, recursos, lifecycle, navegação e publicação de estado; captura o instante e o snapshot antes de solicitar o candidato, mas não avalia cooldown nem cria ocorrência. `PostCandidateProcessor` recebe qualquer `CandidateInput` normalizado e é a autoridade da sequência compartilhada de validação, cooldown, aquisição de imagem, preparação, UUID, criação e commit.
+- **Domínio Dart puro:** candidato, snapshot, cooldown, cálculo de distância, ocorrência e validações não importam Flutter nem widgets.
+- **Infraestrutura:** câmera, geolocalização, imagem, relógio do sistema, UUID, diretório privado e wake lock implementam portas pequenas e concretamente necessárias.
+- **Diagnóstico:** permanece um fluxo independente, com seu controlador e seu cliente HTTPS próprios.
+
+As dependências são construídas explicitamente no composition root. `ChangeNotifier` e `AnimatedBuilder`/`ListenableBuilder` bastam para a tela. Não serão introduzidos frameworks de DI, gerenciamento de estado ou mocks. Portas existem somente nos limites que precisam ser substituídos em teste, que encapsulam plugin/IO, ou que viabilizam a futura troca da fonte.
+
+## E1.5 Estrutura proposta de diretórios
+
+A estrutura é conceitual e orienta implementação futura; nenhum arquivo é criado por este design.
+
+```text
+lib/
+├── main.dart                         # composition root e rotas
+├── e0/                               # implementação aprovada preservada
+├── operation/
+│   ├── operation_screen.dart
+│   ├── operation_controller.dart
+│   ├── operation_state.dart
+│   └── operation_theme.dart
+├── candidate/
+│   ├── occurrence_candidate_source.dart
+│   └── manual_candidate_source.dart
+├── application/
+│   └── post_candidate_processor.dart
+├── domain/
+│   ├── location_snapshot.dart
+│   ├── cooldown_policy.dart
+│   ├── distance_calculator.dart
+│   └── in_memory_occurrence.dart
+└── infrastructure/
+    ├── operational_camera.dart
+    ├── operational_location.dart
+    ├── image_preparer.dart
+    ├── private_image_store.dart
+    ├── system_clock.dart
+    ├── uuid_v4_generator.dart
+    └── screen_awake.dart
+
+test/
+├── candidate/
+├── application/
+├── domain/
+├── infrastructure/
+└── operation/
+```
+
+Arquivos podem ser agrupados se a implementação mostrar que um arquivo separado não reduz complexidade. Não haverá diretório de fila, banco, rede de ocorrências, configuração segura ou detector.
+
+## Components and Interfaces
+
+### E1.6 Componentes e interfaces conceituais
+
+As assinaturas abaixo são contratos de design em Dart ilustrativo, não código pronto.
+
+```dart
+abstract interface class OperationalCameraPort {
+  Future<void> acquirePreview();
+  Object? get previewHandle; // adaptado para a apresentação no limite Flutter
+  Future<TemporaryCapture> takePicture();
+  Future<void> release();
+}
+
+abstract interface class OperationalLocationPort {
+  LocationSnapshot? get latestValidSnapshot;
+  Future<void> acquireForegroundUpdates();
+  Future<void> release();
+}
+
+abstract interface class Clock {
+  DateTime now();
+}
+
+abstract interface class UuidGenerator {
+  String newV4();
+}
+
+abstract interface class DistanceCalculator {
+  double metersBetween(GeoPoint from, GeoPoint to);
+}
+
+abstract interface class ImagePreparer {
+  Future<OwnedPreparedImage> prepare(TemporaryCapture capture);
+}
+
+abstract interface class ScreenAwakePort {
+  Future<void> setEnabled(bool enabled);
+}
+```
+
+`Object?` no preview indica apenas que o domínio não conhece `CameraController`; a adaptação tipada permanece na camada Flutter/infraestrutura. A implementação deve preferir um tipo de apresentação específico em vez de propagar `dynamic` pelo sistema.
+
+### Responsabilidades
+
+- `OperationController`: estado observável, readiness, single-flight, lifecycle, rota corrente, wake lock, coordenação de câmera/GPS, captura de `attemptedAt` e snapshot síncrono, solicitação à fonte e feedback; não avalia cooldown nem cria ocorrência.
+- `ManualCandidateSource`: produz `CandidateInput` normalizado para a confirmação humana, com aquisição de imagem diferida; não chama câmera ao produzir o candidato, não processa cooldown, não cria UUID nem prepara imagem.
+- `PostCandidateProcessor`: recebe candidato sem conhecer a origem e fixa a sequência compartilhada de validação, cooldown, aquisição de imagem, preparação, UUID, criação e commit.
+- `CooldownPolicy`: decisão pura e referência da última ocorrência criada.
+- `ImagePreparer`/`PrivateImageStore`: orientação, resize, JPEG e ownership.
+- `InMemoryOccurrenceFactory`: valida invariantes e cria o objeto imutável.
+- portas de câmera/GPS: escondem plugins e não contêm regras de ocorrência.
+
+## E1.7 Abstração da fonte e candidato normalizado
+
+```dart
+typedef CandidateImageAcquisition = Future<TemporaryCapture> Function();
+
+final class CandidateSeed {
+  final DateTime observedAt;
+  final LocationSnapshot location;
+  final CandidateImageAcquisition acquireImage;
+}
+
+final class CandidateInput {
+  final DateTime observedAt;
+  final LocationSnapshot location;
+  final String defectClass;
+  final double confidence;
+  final CandidateImageAcquisition acquireImage;
+}
+
+abstract interface class OccurrenceCandidateSource {
+  Future<CandidateInput> requestCandidate(CandidateSeed seed);
+}
+```
+
+`CandidateSeed` transporta para uma fonte os dados já associados a uma observação, sem executar aquisição. `CandidateInput` é a única entrada normalizada do pós-candidato: instante observado/aceito, snapshot imutável de localização, classe, confiança e uma aquisição diferida da imagem exata associada. O callback é um valor opaco para a fonte; somente o `PostCandidateProcessor` tem autoridade para invocá-lo depois da validação e da aprovação do cooldown.
+
+O contrato representa a produção do candidato, não a ocorrência final. A fonte manual é a única implementação E1. Uma fonte YOLO futura poderá produzir o mesmo `CandidateInput` com classe, confiança, instante e uma aquisição que materialize o frame associado, sem mudar cooldown, preparação, fábrica ou `PostCandidateProcessor`; nenhuma fonte YOLO, frame ou inferência pertence à E1.
+
+A abstração não contém API, persistência, widget nem campo de rede `source`. Se algum dia a identificação interna do tipo de fonte for necessária para telemetria ou UI, ela será tratada fora do contrato da ocorrência e fora do `CandidateInput` normativo; a E1 não adiciona esse dado sem necessidade. `CandidateResult` distingue criação, bloqueio por cooldown, pré-condição inválida, cancelamento de lifecycle e falha controlada.
+
+## E1.8 Fonte manual
+
+`ManualCandidateSource` recebe um `CandidateSeed` somente depois de o controlador adquirir single-flight e confirmar readiness. A fonte:
+
+1. preserva `observedAt` — o `attemptedAt` capturado no toque — e o snapshot recebidos;
+2. atribui sem ambiguidade `defectClass = pothole` e `confidence = 1.0` como confirmação humana;
+3. devolve um `CandidateInput` sem chamar câmera, cooldown, preparador, UUID ou fábrica;
+4. encapsula em `acquireImage` a aquisição diferida que chama a captura operacional associada àquele toque;
+5. garante que a primeira invocação do callback pelo `PostCandidateProcessor`, após aprovação do cooldown, inicia `takePicture()` imediatamente;
+6. nunca afirma confiança de modelo ou detecção automática;
+7. não mantém estado persistente.
+
+O single-flight continua sob autoridade do controlador. O banner permanente e o texto auxiliar do botão explicam que tocar equivale a confirmar manualmente um buraco observado.
+
+## E1.9 Pós-candidato compartilhado
+
+O `PostCandidateProcessor` é o único fluxo de aplicação que transforma qualquer candidato normalizado em ocorrência, sem método ou ramo dependente da origem. Sua única interface conceitual é:
+
+```dart
+abstract interface class PostCandidateProcessor {
+  Future<CandidateResult> process(CandidateInput candidate);
+}
+```
+
+Precondições do coordenador: rota Operação corrente, lifecycle `resumed`, single-flight adquirido e candidato produzido a partir do instante/snapshot daquele acionamento. Ao receber o candidato, o processor executa obrigatoriamente:
+
+1. validar os campos do `CandidateInput` e o snapshot, sem adquirir imagem;
+2. avaliar `CooldownPolicy` com `candidate.observedAt` e `candidate.location`;
+3. se bloqueado, retornar feedback de cooldown sem invocar `candidate.acquireImage`, sem gerar UUID e sem criar ocorrência;
+4. se permitido, invocar imediatamente `candidate.acquireImage()` uma única vez, iniciando a captura operacional no caso manual;
+5. preparar e validar o JPEG;
+6. gerar um único UUID v4;
+7. criar a ocorrência com `detectedAt = candidate.observedAt`, localização, classe e confiança do candidato;
+8. somente depois da criação válida, fazer commit do cooldown e devolver sucesso.
+
+Pós-condições: ou existe uma ocorrência completa com ownership da imagem transferido, ou não existe ocorrência/UUID/imagem definitiva e todo temporário criado foi limpo. Falha de captura, compressão, UUID, lifecycle ou validação mantém a referência anterior. O widget, o controlador e a fonte não executam etapas parciais dessa sequência compartilhada.
+
+## Data Models
+
+### E1.10 Modelo da ocorrência em memória
+
+```dart
+final class InMemoryOccurrence {
+  final String idempotencyKey;      // UUID v4
+  final DateTime detectedAt;        // instante aceito, com offset na serialização futura
+  final double latitude;            // [-90, 90]
+  final double longitude;           // [-180, 180]
+  final double? accuracyMeters;     // informativa quando fornecida
+  final double? speedKmh;            // null ou [0, 300]
+  final double confidence;           // exatamente 1.0 na E1
+  final String defectClass;          // exatamente "pothole"
+  final OwnedPreparedImage image;    // JPEG privado <= 2 MiB e <= 1280x720
+}
+```
+
+O objeto é imutável e só pode existir após validação integral. `accuracyMeters` é informativa e não estabelece limiar de aceite; se o provedor não oferecer precisão utilizável para exibição, o snapshot ainda segue as regras normativas de latitude/longitude e permissão precisa, sem inventar limite. A representação de `detectedAt` deve preservar informação de fuso ao produzir ISO 8601, embora não exista payload na E1.
+
+A E1 mantém no máximo a ocorrência corrente necessária para validar/apresentar o resultado e o contador da sessão. Substituir ou limpar a ocorrência libera sua imagem. O contador incrementa somente após criação válida e reinicia com nova execução do aplicativo.
+
+## E1.11 Fluxo manual e ordem normativa
+
+```mermaid
+sequenceDiagram
+    actor U as Operador
+    participant W as OperationScreen
+    participant C as OperationController
+    participant K as Clock
+    participant L as LocationPort
+    participant M as ManualCandidateSource
+    participant PP as PostCandidateProcessor
+    participant P as CooldownPolicy
+    participant A as CandidateImageAcquisition
+    participant Cam as CameraPort
+    participant I as ImagePreparer
+    participant G as UuidGenerator
+    participant F as OccurrenceFactory
+
+    U->>W: toca Registrar buraco
+    W->>C: registerManualPothole()
+    C->>C: adquirir single-flight e validar readiness
+    C->>K: now()
+    K-->>C: attemptedAt
+    C->>L: latestValidSnapshot (síncrono)
+    L-->>C: snapshot
+    C->>M: requestCandidate(CandidateSeed)
+    M-->>C: CandidateInput(pothole, 1.0, attemptedAt, snapshot, acquireImage)
+    C->>PP: process(candidate)
+    PP->>PP: validar candidato e snapshot
+    PP->>P: evaluate(candidate.observedAt, candidate.location)
+    alt bloqueado por tempo E distância
+      P-->>PP: blocked
+      PP-->>C: blocked sem invocar aquisição/UUID
+      C-->>W: feedback explícito; liberar single-flight
+    else permitido
+      P-->>PP: allowed
+      PP->>A: acquireImage() imediatamente
+      A->>Cam: takePicture()
+      Cam-->>A: temporário privado
+      A-->>PP: temporário associado
+      PP->>I: prepare(temporário)
+      I-->>PP: JPEG preparado com ownership
+      PP->>G: newV4()
+      G-->>PP: UUID
+      PP->>F: create(candidate, JPEG, UUID)
+      F-->>PP: ocorrência válida em memória
+      PP->>P: commit(ocorrência criada)
+      PP-->>C: created
+      C-->>W: estado, contador e feedback
+    end
+```
+
+A ordem obrigatória é:
+
+1. o widget delega a ação;
+2. o controlador adquire single-flight e valida câmera, GPS, rota e lifecycle;
+3. o `Clock` captura `attemptedAt` antes de qualquer operação assíncrona;
+4. o controlador lê o snapshot válido mais recente de localização de modo síncrono;
+5. o controlador cria o `CandidateSeed`, solicita à fonte manual e recebe `CandidateInput` com `pothole`, `1.0`, o mesmo instante/snapshot e aquisição de imagem ainda não invocada;
+6. o controlador entrega o candidato ao `PostCandidateProcessor`, que valida candidato e snapshot;
+7. o processor avalia cooldown antes de adquirir imagem e antes do UUID;
+8. se bloqueado, retorna resultado para feedback de **tempo e distância** abaixo dos mínimos; não invoca a aquisição e não há captura, imagem definitiva, UUID ou ocorrência;
+9. se permitido, o processor invoca a aquisição fornecida uma única vez e essa primeira invocação inicia `takePicture()` imediatamente; o mesmo `attemptedAt` permanece como `detectedAt`;
+10. o processor prepara a imagem como JPEG;
+11. o UUID é gerado depois da imagem válida para evitar identificador sem ocorrência; essa ordem jamais altera `detectedAt`;
+12. a fábrica cria a ocorrência completa em memória com os dados normalizados do candidato;
+13. somente então o processor faz commit do cooldown e o controlador incrementa o contador ao receber sucesso.
+
+GPS, compressão e UUID não substituem o horário original. O design associa candidato, ação, imagem e horário pela mesma operação, sem afirmar coincidência de milissegundo com o sensor da câmera.
+
+## E1.12 Horário e `detectedAt`
+
+`SystemClock` encapsula `DateTime.now()` e `FakeClock` escrito à mão controla testes. No início da ação, antes de `await`, o controlador chama `clock.now()` uma vez. Esse valor é `attemptedAt`, atravessa `CandidateSeed` e `CandidateInput` como `observedAt` e, após aprovação do cooldown pelo `PostCandidateProcessor`, torna-se o mesmo `detectedAt`.
+
+A implementação preservará o offset retornado pelo relógio e produzirá ISO 8601 com informação de fuso quando a ocorrência for inspecionada. Captura, leitura posterior do GPS, preparação da imagem e UUID não podem recalcular o campo. Callback assíncrono obsoleto não cria ocorrência com esse horário.
+
+## E1.13 Captura e ownership da imagem
+
+`OperationalCameraPort.takePicture()` encapsula `camera.takePicture()` ou operação equivalente. O arquivo originado pelo plugin e o destino preparado permanecem em área privada do aplicativo, nunca na galeria. `PrivateImageStore`, baseado no diretório temporário privado obtido por `path_provider`, atribui nome opaco e não expõe caminho na interface ou em logs.
+
+Ownership conceitual:
+
+```text
+plugin/captura temporária
+  -> lease da operação em andamento
+  -> JPEG preparado sob lease
+  -> ocorrência em memória (transferência confirmada)
+  -> limpeza ao substituir/descartar/finalizar sessão
+```
+
+Antes da criação da ocorrência, um escopo `try/finally` mantém a lease da operação. Rejeição, erro, cancelamento, callback obsoleto ou falha de validação remove captura e derivados. Após criação, a ocorrência em memória torna-se a única dona do JPEG; o temporário original é removido. Substituição da ocorrência corrente remove a imagem anterior antes ou durante a troca controlada, sem janela órfã. Encerramento de sessão, `dispose` ou descarte explícito remove a imagem.
+
+A limpeza é idempotente. Falha de limpeza gera registro técnico sanitizado com tipo da operação e erro, sem path sensível, bytes, conteúdo, coordenadas ou segredo. Na inicialização, uma varredura restrita ao namespace temporário E1 pode remover arquivos órfãos reconhecíveis deixados por encerramento abrupto; não percorre arquivos alheios.
+
+O contrato de ownership deixa um futuro ponto de transferência atômica: somente após confirmação externa de responsabilidade a ocorrência em memória deixaria de ser dona. A E1 não implementa destino, fila, rollback persistente ou essa transferência.
+
+## E1.14 Preparação JPEG
+
+O `ImagePreparer` executa:
+
+1. ler a captura privada dentro de limite controlado;
+2. decodificar formato suportado;
+3. aplicar correção/bake de orientação quando metadados EXIF indicarem rotação ou espelhamento;
+4. normalizar para dimensões que caibam em `1280x720`, preservando proporção e sem ampliar imagem menor;
+5. codificar **sempre** JPEG com qualidade exatamente `85`;
+6. se o resultado exceder `2 MiB` (`2 * 1024 * 1024` bytes), reduzir monotonicamente apenas largura/altura e recodificar novamente com qualidade `85`;
+7. terminar com sucesso quando tamanho e dimensões cumprirem os limites ou rejeitar explicitamente.
+
+A redução usa fator fixo menor que 1 (por exemplo, 0,85), arredondamento que garante ao menos uma dimensão estritamente menor e cálculo da outra pela proporção original. O laço termina porque cada iteração reduz dimensões inteiras e existe limite inferior de `1x1`; também haverá limite de iterações derivado das dimensões iniciais. Se até o limite inferior o JPEG exceder `2 MiB` ou não puder ser codificado, a ocorrência é rejeitada. Qualidade nunca é reduzida.
+
+```dart
+while (jpegBytes.length > twoMiB && (width > 1 || height > 1)) {
+  final next = dimensionsStrictlySmallerKeepingAspectRatio(width, height);
+  image = resize(image, next);
+  jpegBytes = encodeJpg(image, quality: 85);
+}
+if (jpegBytes.length > twoMiB) rejectAndCleanup();
+```
+
+O pseudocódigo é conceitual. Testes devem verificar orientação, proporção dentro de tolerância de arredondamento, dimensões, tamanho, qualidade solicitada em todas as tentativas, monotonicidade, terminação, rejeição e limpeza.
+
+## E1.15 Localização e velocidade
+
+A Operação reutiliza com segurança regras já comprovadas na E0 ou extrai o mínimo de um adaptador Geolocator comum, sem mudar resultados do Diagnóstico. Cada tela mantém controlador e sessão próprios; não compartilha `StreamSubscription` ativa. A Operação solicita localização precisa em primeiro plano, conserva o snapshot mais recente e o invalida ao perder permissão, serviço, precisão autorizada, foreground ou rota corrente.
+
+Um `LocationSnapshot` é válido quando a permissão precisa está concedida, latitude é finita em `[-90, 90]` e longitude é finita em `[-180, 180]`. A precisão reportada é exibida, mas nenhum limiar ou idade máxima é inventado. O snapshot vigente no instante do toque é copiado de forma imutável; se não houver snapshot válido, o botão está desabilitado e nenhuma ocorrência pode ser criada.
+
+Conversão de velocidade:
+
+```dart
+double? toSpeedKmh(double? metersPerSecond) {
+  if (metersPerSecond == null || !metersPerSecond.isFinite || metersPerSecond < 0) {
+    return null;
+  }
+  final kmh = metersPerSecond * 3.6;
+  return kmh >= 0 && kmh <= 300 ? kmh : null;
+}
+```
+
+Velocidade ausente, negativa, não finita ou convertida acima de 300 km/h vira `null` e é omitida do modelo opcional. Zero é válido. A falta de velocidade não bloqueia a ocorrência.
+
+## E1.16 Cooldown por tempo OU distância
+
+`CooldownPolicy` mantém em memória somente a referência da última ocorrência criada: `detectedAt` e ponto geográfico. Defaults E1: 5 segundos e 15 metros.
+
+```dart
+CooldownDecision evaluate(DateTime attemptedAt, GeoPoint point) {
+  if (lastCreated == null) return allowed;
+  final elapsed = attemptedAt.difference(lastCreated.detectedAt);
+  final distance = distanceCalculator.metersBetween(lastCreated.point, point);
+  return elapsed >= fiveSeconds || distance >= fifteenMeters
+      ? allowed
+      : blocked(elapsed: elapsed, distance: distance);
+}
+```
+
+A primeira candidata elegível é permitida. Depois, permite-se nova ocorrência se `elapsed >= 5 s` **OU** `distance >= 15 m`. Rejeita-se somente quando `elapsed < 5 s` **E** `distance < 15 m`. Valores exatamente no limite permitem. Diferença temporal negativa causada por relógio regressivo é tratada como abaixo do limiar temporal, sem impedir que a distância permita.
+
+A distância usa Haversine em Dart puro: é suficiente para dois pontos geográficos e evita depender do plugin no domínio. `DistanceCalculator` é injetável para testes determinísticos.
+
+Decisão visual: cooldown não desabilita preventivamente o botão. Quando câmera, GPS, rota, lifecycle e single-flight estão aptos, o botão permanece acionável; o toque solicita o candidato e o `PostCandidateProcessor` avalia o cooldown. Se bloqueado, o controlador apresenta o feedback breve “Registro ignorado: tempo e distância ainda abaixo dos mínimos”, podendo incluir valores sanitizados. Assim há feedback explícito sem invocar a aquisição de imagem nem criar arquivo ou UUID. Um indicador visual de cooldown pode complementar, mas não substituir, o feedback. Durante processamento o botão fica desabilitado.
+
+O próprio `PostCandidateProcessor` executa `commit` apenas após ocorrência criada. Falhas e rejeições não avançam a referência.
+
+## E1.17 UUID e identidade
+
+`UuidV4Generator` encapsula `uuid` e produz um UUID versão 4 com fonte aleatória criptograficamente segura oferecida pelo pacote/plataforma. Não se usa contador, timestamp ou RNG previsível. A fábrica valida sintaxe e versão antes de aceitar o identificador.
+
+Um único UUID é criado por ocorrência, depois de JPEG válido e antes da construção final. O valor permanece estável enquanto a ocorrência existir em memória. Falha posterior à geração, mas anterior à criação, descarta o valor e limpa a imagem; retry é nova operação e recebe novo UUID. Não existe reenvio na E1.
+
+## E1.18 Estado da tela
+
+`OperationState` é snapshot imutável com:
+
+- visibilidade e condição de rota corrente;
+- `AppLifecycleState` relevante;
+- status da câmera e handle de preview pronto;
+- status de permissão e mensagem da câmera;
+- status do serviço/permissão/precisão de localização;
+- latitude, longitude, precisão e velocidade apresentáveis;
+- `isBusy` e etapa local do processamento;
+- readiness calculado para o botão;
+- feedback de cooldown ou erro;
+- última ocorrência válida resumida, sem bytes na UI;
+- contador de ocorrências criadas na sessão;
+- estado do wake lock.
+
+`canRegister` é verdadeiro somente quando rota Operação está corrente, app está `resumed`, câmera está pronta, snapshot de localização é válido, não há single-flight e o controlador não está descartado. Cooldown não participa de `canRegister`, pela decisão de feedback da seção E1.16.
+
+Estados de processamento: ocioso, validando, capturando, preparando imagem, criando ocorrência, sucesso, bloqueado por cooldown, cancelado e falha controlada. A UI não armazena `CameraController`, subscription ou arquivo como estado de negócio; handles de preview ficam em limite somente leitura apropriado.
+
+## E1.19 Navegação
+
+O `MaterialApp` terá duas rotas funcionais: Operação como home e Diagnóstico E0. O acesso “Diagnóstico” estará na app bar ou ação claramente rotulada.
+
+Protocolo determinístico ao abrir Diagnóstico:
+
+1. bloquear novas ações e marcar Operação como não corrente;
+2. desabilitar wake lock da Operação;
+3. invalidar geração e callbacks operacionais;
+4. cancelar/ignorar captura em andamento e aguardar sua limpeza;
+5. cancelar stream GPS operacional e liberar câmera;
+6. somente após a liberação, executar `Navigator.push` e criar/adquirir os recursos próprios da E0;
+7. ao `pop`, aguardar o `dispose` completo da E0;
+8. marcar Operação como corrente e, se o app estiver `resumed`, readquirir GPS/câmera e wake lock nessa ordem controlada.
+
+A solução simples escolhida é **suspensão explícita antes do `push` e retomada após o `Future` do `push` concluir**. Não é necessário `RouteObserver` para esse único fluxo controlado; se navegação futura puder cobrir a tela por outros caminhos, `RouteAware` poderá complementar sem substituir a suspensão explícita.
+
+A E0 conserva seu `WidgetsBindingObserver` e lifecycle próprios. O composition root cria uma nova sessão/controlador E0 por entrada ou garante dispose completo da instância de rota; não mantém recursos E0 vivos atrás da Operação.
+
+## E1.20 Coordenação de câmera e GPS
+
+Na entrada da rota Operação em `resumed`, o controlador inicia uma geração:
+
+1. reconcilia limpeza anterior;
+2. adquire câmera operacional e publica preview quando pronto;
+3. adquire localização precisa em primeiro plano;
+4. atualiza readiness conforme resultados independentes;
+5. habilita o wake lock assim que a condição de Operação ativa (visível, `resumed` e rota corrente) for satisfeita, independentemente do readiness de câmera/GPS.
+
+Câmera e GPS são portas distintas e podem apresentar falha independente. A falta de um desabilita registro, mas a tela e o outro indicador continuam responsivos. Operações equivalentes são single-flight; reconstrução de widget não reinicializa plugin. Callbacks carregam geração e são ignorados quando obsoletos.
+
+O adaptador de câmera seleciona a primeira câmera traseira disponível, sem stream de imagens. Preview e `takePicture()` usam o mesmo controlador operacional enquanto válido. Não há captura contínua.
+
+## E1.21 Permissões
+
+A E1 preserva as declarações Android já necessárias para câmera e localização precisa. Não adiciona biblioteca genérica de permissões. A câmera usa o comportamento do plugin e a localização usa Geolocator, com coordenação do controlador para evitar solicitações concorrentes.
+
+Na primeira entrada operacional, câmera é resolvida primeiro e localização depois, reaproveitando a estratégia segura da E0 sem compartilhar sessão. Recusa temporária mostra explicação e mantém registro desabilitado. Recusa permanente orienta abertura manual das configurações Android. Localização aproximada é insuficiente e produz mensagem “Localização precisa necessária”. Serviço desligado ou posição indisponível produz estado controlado.
+
+Retomadas reconciliam uma solicitação pendente antes de abrir outra. Navegar ao Diagnóstico só ocorre após a Operação deixar de ser autoridade de permissões. A E1 não solicita localização em background, armazenamento, galeria, microfone ou internet adicional.
+
+## E1.22 Ciclo de vida e callbacks obsoletos
+
+**Operacional ativa** significa simultaneamente: tela Operação visível, aplicativo em primeiro plano, `AppLifecycleState.resumed` e rota Operação corrente.
+
+O controlador usa geração monotônica. Ao receber `inactive`, `paused`, `hidden`, `detached`, iniciar navegação ou executar `dispose`:
+
+- marca a Operação como inativa e bloqueia registros;
+- incrementa geração antes de aguardar recursos;
+- desabilita wake lock em `try/finally` idempotente;
+- cancela o stream de localização;
+- libera a câmera;
+- se uma captura estiver em andamento, não tenta concluir a ocorrência: o resultado assíncrono é ignorado, toda captura/derivado produzido é limpo e o single-flight é liberado;
+- limpa ocorrência/imagem em memória quando a sessão termina ou a tela é descartada.
+
+Plugins podem não cancelar fisicamente uma operação já entregue ao sistema; por isso cancelamento lógico por geração é obrigatório. Nenhum callback obsoleto pode publicar estado, incrementar contador, fazer commit de cooldown ou transferir ownership à ocorrência.
+
+Em `resumed`, recursos são readquiridos somente se a rota estiver corrente e após limpeza anterior. Não existe botão Iniciar/Parar no modo manual.
+
+## E1.23 Tela ligada
+
+`ScreenAwakePort` encapsula `wakelock_plus`. O controlador calcula `shouldKeepAwake = visible && foreground && resumed && currentRoute` e aplica somente mudanças de valor.
+
+- habilitar ao completar entrada em Operação ativa;
+- desabilitar antes de navegar, e em `inactive`, `paused`, `hidden`, `detached` e `dispose`;
+- repetir enable/disable é idempotente;
+- falha do plugin gera estado técnico controlado sem tornar captura insegura;
+- caminhos de erro usam `finally` para tentar desabilitar;
+- Diagnóstico não herda o wake lock da Operação.
+
+Testes verificam sequência e balanceamento das chamadas. O wake lock mantém apenas a tela; não cria execução em background.
+
+## Error Handling
+
+### E1.24 Tratamento de erros
+
+| Condição | Resposta E1 | Limpeza/estado |
+|---|---|---|
+| câmera sem permissão ou indisponível | mensagem específica; botão desabilitado | GPS e navegação continuam |
+| localização sem precisão, serviço ou snapshot válido | mensagem específica; botão desabilitado | câmera/preview continuam |
+| ação repetida durante single-flight | ignorar além da operação ativa | nenhuma segunda captura |
+| cooldown bloqueado | feedback explícito de tempo e distância abaixo dos mínimos | nenhum arquivo, UUID ou ocorrência |
+| `takePicture` falha | mensagem de captura indisponível | limpar eventual temporário |
+| decode/orientação/JPEG falha | mensagem de preparação | limpar fonte e derivados |
+| JPEG não atinge 2 MiB | rejeitar ocorrência | limpar todos os arquivos |
+| UUID inválido/falha | rejeitar criação | limpar JPEG preparado |
+| dado obrigatório inválido | rejeitar criação | sem commit de cooldown/contador |
+| lifecycle/rota muda durante operação | cancelar logicamente e ignorar callback | limpeza determinística e recursos liberados |
+| limpeza falha | registrar erro sanitizado | não expor path ou conteúdo |
+| wake lock falha | informar erro técnico não bloqueante | manter lifecycle como autoridade |
+| regressão E0 após integração | corrigir dentro da E1 | reverificar no Gate E1 |
+
+Mensagens de UI não exibem stack trace, path privado ou bytes. Logs técnicos não contêm conteúdo da imagem nem coordenadas desnecessárias.
+
+## E1.25 Visual e acessibilidade
+
+A tela usa:
+
+- fundo principal `#111827`;
+- cartões/painéis `#1F2937`;
+- ação e destaque `#F59E0B`, com texto/ícone `#111827`;
+- sucesso `#22C55E` e erro `#EF4444` preferencialmente como ícone, borda ou detalhe acompanhado de texto;
+- texto principal `#F9FAFB` sobre fundos escuros;
+- foreground de fundos verde/vermelho escolhido após verificação de contraste, sem presumir branco.
+
+Conteúdo previsto: app bar com acesso a Diagnóstico; banner permanente **“Modo manual — YOLO ainda não configurado”** ou equivalente inequívoco aprovado; preview traseiro; cartão GPS; precisão e velocidade quando disponíveis; contador da sessão; status de processamento; botão principal **“Registrar buraco”** com texto auxiliar “Confirmação manual”; feedback transitório de cooldown e erros.
+
+A UI usa `SafeArea`, conteúdo rolável, `LayoutBuilder`, quebra de texto, suporte a escala de fonte e orientação, alvos de toque Material e labels semânticos. Nenhum estado depende só de cor. Preview tem proporção preservada e altura limitada. Indicadores atualizam sem bloquear a thread de UI durante captura/preparação. Não há alegação de detecção automática.
+
+## E1.26 Dependências propostas — somente design
+
+Nenhuma dependência é adicionada por este documento. As versões abaixo são pins exatos candidatos para Flutter 3.24.3/Dart 3.5.3; a implementação deverá confirmar resolução e build Android antes de adotá-las.
+
+| Categoria | Dependência exata | Uso E1 | Justificativa |
+|---|---|---|---|
+| existente | Flutter SDK / Dart 3.5.3 | UI, `ChangeNotifier`, async, IO e matemática | Base atual; evita state management, DI e utilitários extras. |
+| existente | `camera: 0.11.0+2` | preview traseiro e `takePicture()` | Pin já resolvido e validado na E0; a E1 adiciona uso operacional sem captura contínua. |
+| existente | `geolocator: 13.0.2` | permissão precisa, snapshot, precisão e velocidade | Pin já resolvido e validado na E0. |
+| nova proposta direta | [`image: 4.2.0`](https://pub.dev/packages/image/versions/4.2.0) | decode, bake de orientação, resize e JPEG 85 | Dart puro e suficiente para a transformação; declara SDK `<4.0.0` compatível com Dart 3.5.3. |
+| nova proposta direta | [`uuid: 4.6.0`](https://pub.dev/packages/uuid/versions/4.6.0) | UUID v4 | Já aparece transitivamente no lock atual e é compatível com Dart 3; deve virar dependência direta se importada. |
+| nova proposta direta | [`wakelock_plus: 1.2.8`](https://pub.dev/packages/wakelock_plus/versions/1.2.8) | manter tela ligada só na Operação ativa | Requer Dart >=3.3 e Flutter >=3.19, compatível com 3.5.3/3.24.3. |
+| nova proposta direta | [`path_provider: 2.1.4`](https://pub.dev/packages/path_provider/versions/2.1.4) | diretório temporário privado do app | Requer Dart ^3.2 e Flutter >=3.16, compatível com o ambiente-alvo. |
+| SDK Dart | `dart:io`, `dart:async`, `dart:math` | arquivos, coordenação e Haversine | Sem pacote adicional. |
+
+`image` é necessário porque o plugin de câmera não garante sozinho bake de EXIF, resize e recodificação controlada. `uuid` explicita uma dependência usada diretamente. `wakelock_plus` encapsula a API de tela ligada sem código nativo próprio. `path_provider` evita paths manuais e seleciona diretório privado.
+
+Não se propõem pacotes de permissões, HTTP, banco, armazenamento seguro, detecção, estado, DI ou mocks. Metadados de compatibilidade foram resumidos das páginas oficiais do pub.dev; conteúdo reescrito para conformidade com restrições de licenciamento.
+
+## Correctness Properties
+
+As propriedades abaixo cobrem apenas lógica executável da E1. Testes de plugin, aparência, build e dispositivo permanecem exemplos, integração ou smoke tests conforme E1.27–E1.29.
+
+### Property 1: Single-flight de registro manual
+
+Para toda sequência de toques concorrentes ou repetidos enquanto uma captura estiver em processamento, no máximo uma operação de captura e no máximo uma ocorrência serão produzidas.
+
+**Validates: Requirements 03.8, 03.10, 09.11**
+
+**Also validates: Requirement RNF-04.3**
+
+### Property 2: Horário original do acionamento
+
+Para todo acionamento manual permitido e quaisquer atrasos assíncronos posteriores, `detectedAt` será exatamente o único instante lido antes das operações assíncronas, e a imagem pertencerá à operação iniciada por esse mesmo acionamento.
+
+**Validates: Requirements 03.5, 03.13, 07.12, 07.13, 08.2, 08.6, 08.7, 08.9**
+
+### Property 3: Validade e completude da ocorrência manual
+
+Para todo candidato manual, uma ocorrência será criada se e somente se imagem, horário, cooldown e localização obrigatórios forem válidos; toda ocorrência criada terá latitude e longitude no domínio, UUID v4, `confidence = 1.0`, `defectClass = pothole` e somente velocidade válida opcional.
+
+**Validates: Requirements 06.2, 06.3, 07.2, 07.3, 07.5, 07.6, 07.7, 07.8, 08.3, 11.1, 11.5**
+
+### Property 4: Conversão e omissão de velocidade
+
+Para toda velocidade do provedor, valores finitos e não negativos cuja conversão `m/s * 3.6` esteja em `[0, 300]` produzirão esse valor em `speedKmh`; qualquer ausência, valor negativo, não finito ou resultado acima de 300 produzirá `null`.
+
+**Validates: Requirements 06.6, 06.7, 06.8**
+
+### Property 5: Decisão OR do cooldown
+
+Para toda referência anterior criada e todo novo par de instante/ponto, o cooldown permitirá a candidata quando o tempo for pelo menos 5 segundos ou a distância for pelo menos 15 metros, e rejeitará somente quando ambos forem inferiores aos respectivos limites; sem referência anterior, permitirá a primeira candidata elegível.
+
+**Validates: Requirements 09.1, 09.2, 09.3, 09.4, 09.5, 09.6, 09.8**
+
+### Property 6: Processor sem efeitos antes do sucesso
+
+Para todo `CandidateInput` bloqueado ou operação que falhe antes da criação válida, o `PostCandidateProcessor` não invocará a aquisição de imagem no bloqueio e não haverá imagem definitiva, UUID, ocorrência, incremento de contador ou alteração da referência da última ocorrência; somente criação válida fará commit.
+
+**Validates: Requirements 03.14, 03.15, 09.7, 09.9, 09.10**
+
+### Property 7: Contrato da imagem JPEG
+
+Para toda captura decodificável aceita, o preparador produzirá JPEG orientado corretamente, com proporção preservada dentro do arredondamento, dimensões máximas `1280x720`, qualidade solicitada exatamente 85 em todas as codificações e tamanho máximo de 2 MiB, ou rejeitará explicitamente.
+
+**Validates: Requirements 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8**
+
+### Property 8: Redução monotônica e terminação
+
+Para toda imagem inicialmente acima de 2 MiB, cada nova tentativa reduzirá estritamente somente as dimensões inteiras, manterá proporção e qualidade 85 e terminará em número finito de passos com imagem válida ou rejeição.
+
+**Validates: Requirements 10.4, 10.5, 10.8**
+
+### Property 9: Ownership e limpeza de temporários
+
+Para todo resultado de captura — sucesso, rejeição, falha, cancelamento, substituição ou fim de sessão — cada arquivo será propriedade de exatamente uma lease/operação ou ocorrência em memória e será removido quando essa responsabilidade terminar, sem gravação na galeria.
+
+**Validates: Requirements 10.11, 10.12, 10.13, 10.14, 11.6, 11.7**
+
+**Also validates: Requirements RNF-06.6, RNF-06.7, RNF-06.8, RNF-06.12**
+
+### Property 10: Callback obsoleto não produz efeito
+
+Para toda operação assíncrona cuja geração deixe de ser corrente por lifecycle, navegação ou dispose, qualquer conclusão posterior não publicará ocorrência, contador, cooldown ou ownership e limpará os temporários produzidos.
+
+**Validates: Requirements 21.2, 21.3, 21.4, 21.5**
+
+**Also validates: Requirement RNF-06.7**
+
+### Property 11: Wake lock acompanha Operação ativa
+
+Para toda sequência de visibilidade, foreground, lifecycle e rota, o wake lock estará habilitado somente quando todas as condições de Operação ativa forem verdadeiras e será desabilitado em qualquer outra combinação.
+
+**Validates: Requirements 21.1, 21.2, 21.7**
+
+### Property 12: Exclusão mútua de recursos entre rotas
+
+Para toda transição Operação–Diagnóstico–Operação, a rota de destino só adquirirá câmera e localização depois de a rota de origem liberar completamente esses recursos.
+
+**Validates: Requirements 00.4, 00.20, 03.11, 21.6**
+
+## Testing Strategy
+
+### E1.27 Estratégia de testes planejados
+
+Todos os testes executam com `flutter test`. Fakes Dart escritos à mão substituem portas; nenhum framework de mocks é necessário. Fixtures de imagem são geradas durante o teste em sandbox temporário privado e removidas no teardown; o design não exige asset novo.
+
+### Testes de domínio e aplicação
+
+- `ManualCandidateSource`: para cada ação aceita, produz um `CandidateInput` com `confidence = 1.0`, `defectClass = pothole`, preserva `attemptedAt`/snapshot e encapsula a aquisição diferida sem invocá-la.
+- `PostCandidateProcessor`: aceita candidatos normalizados sem ramo de origem, valida candidato/snapshot, avalia cooldown antes da aquisição, não invoca aquisição nem UUID quando bloqueado e, quando permitido, executa aquisição -> JPEG -> UUID -> fábrica -> commit nessa ordem.
+- aquisição diferida: a primeira e única invocação pelo processor após aprovação inicia `takePicture()` imediatamente; produzir o candidato manual não chama câmera.
+- single-flight: toques concorrentes/repetidos resultam em no máximo uma captura e uma ocorrência.
+- `Clock`: `detectedAt` é lido uma vez pelo controlador antes do primeiro async, atravessa `CandidateSeed`/`CandidateInput` e permanece igual após atrasos de câmera, GPS já snapshotado, compressão e UUID.
+- UUID/modelo: UUID v4 válido, coordenadas obrigatórias, classe/confiança exatas, campos excluídos ausentes e contador somente no sucesso.
+- localização: lat/lon nos limites são aceitos; não finitos ou fora do domínio são rejeitados.
+- velocidade: valores m/s finitos não negativos convertem por `* 3.6`; 0 e 300 km/h são incluídos; ausência, negativo, não finito e >300 são omitidos.
+- cooldown: primeira permitida; tempo no/above 5 s permite; distância no/above 15 m permite; regra OR; somente ambos abaixo rejeitam; falha não atualiza referência; Clock e distância fakes tornam limites determinísticos.
+
+### Testes de imagem e ownership
+
+- qualidade 85 é passada a toda codificação inicial e repetida;
+- orientação EXIF é baked quando aplicável;
+- proporção é preservada dentro do arredondamento e resultado cabe em 1280x720;
+- arquivo final tem até 2 MiB;
+- tentativas reduzem somente dimensões, de modo estritamente monotônico, sem baixar qualidade;
+- laço termina em sucesso ou rejeição explícita;
+- falha/rejeição/cancelamento remove captura e derivados;
+- ocorrência assume ownership apenas após criação; substituição, descarte e dispose limpam o JPEG;
+- falha de limpeza produz log sanitizado sem path/conteúdo.
+
+### Testes de controlador e widgets
+
+- estados de câmera/GPS/processamento e readiness;
+- banner manual permanente, rótulo “Registrar buraco”, confirmação manual e ausência de alegação automática;
+- botão desabilitado por câmera, GPS, lifecycle ou busy;
+- botão habilitado quando essas precondições passam, mesmo se cooldown puder bloquear;
+- toque bloqueado mostra feedback explícito e não chama câmera/UUID;
+- callback de geração obsoleta não publica ocorrência, contador ou commit;
+- wake lock habilita somente na rota Operação ativa e desabilita em navegação/lifecycle/dispose, inclusive em falha;
+- navegação verifica ordem `suspender Operação -> liberar câmera/GPS -> abrir E0 -> dispor E0 -> retomar Operação`;
+- regressão E0: câmera, GPS, permissões, HTTPS diagnóstico, mensagens e lifecycle continuam acessíveis pela rota Diagnóstico.
+
+Testes unitários cobrem exemplos e erros específicos. Testes gerativos podem percorrer coordenadas, velocidades, tempos, distâncias e dimensões com loops/dados gerados à mão, sem adicionar biblioteca. Integrações de plugin permanecem no roteiro físico do gate.
+
+## E1.28 Roteiro manual no Samsung Galaxy S25+
+
+### Preparação
+
+1. Executar `flutter test` e `flutter analyze` e guardar saídas da E1.
+2. Resolver dependências candidatas e confirmar compatibilidade com Flutter 3.24.3/Dart 3.5.3 antes de qualquer adoção.
+3. Gerar build Android debug e instalar no Galaxy S25+ sem adicionar itens fora da E1.
+4. Limpar permissões/dados quando necessário, sem alterar evidências históricas E0.
+
+### Fluxo nominal
+
+5. Abrir o app e confirmar Operação como tela principal, paleta aprovada e banner manual permanente.
+6. Confirmar preview da câmera traseira, GPS, latitude, longitude, precisão e velocidade quando válida.
+7. Confirmar que o botão explica a confirmação manual e está habilitado somente com câmera, GPS, rota, lifecycle e single-flight aptos.
+8. Tocar “Registrar buraco”; registrar que uma única captura começa imediatamente após o aceite e que a UI permanece responsiva.
+9. Inspecionar a ocorrência em memória: UUID v4, `detectedAt` do toque, coordenadas, `confidence = 1.0`, `defectClass = pothole`, velocidade opcional e JPEG privado.
+10. Confirmar dimensões máximas 1280x720, proporção/orientação, qualidade configurada 85 e arquivo até 2 MiB por evidência técnica sanitizada.
+11. Confirmar incremento do contador da sessão somente após criação válida.
+
+### Bloqueios e ciclo
+
+12. Repetir toques durante processamento e confirmar uma única operação.
+13. Tentar novamente dentro de menos de 5 s e menos de 15 m; confirmar feedback explícito e ausência de nova captura, UUID ou ocorrência.
+14. Aguardar pelo menos 5 s sem atingir 15 m e confirmar permissão por tempo.
+15. Em cenário seguro, atingir pelo menos 15 m antes de 5 s ou simular somente em teste automatizado; confirmar regra OR sem condução insegura.
+16. Revogar/recusar câmera e confirmar mensagem e botão desabilitado.
+17. Revogar localização precisa, conceder apenas aproximada e desligar serviço; confirmar mensagens e botão desabilitado em cada caso.
+18. Enviar app a `inactive/paused`, retornar e confirmar bloqueio fora de `resumed`, limpeza de captura interrompida, ausência de callback obsoleto e recuperação controlada.
+19. Confirmar que a tela fica ligada somente enquanto Operação está visível, `resumed` e corrente; navegar ou pausar deve liberar.
+
+### Navegação e preservação E0
+
+20. Abrir Diagnóstico e confirmar que Operação libera câmera/GPS antes da aquisição E0.
+21. Reexecutar roteiro regressivo essencial E0: preview, GPS, permissões, HTTPS diagnóstico, indisponibilidades e lifecycle.
+22. Voltar e confirmar dispose completo da E0 antes de a Operação readquirir câmera/GPS.
+23. Alternar repetidamente as rotas e confirmar ausência de duas câmeras, streams duplicados, diálogos duplicados ou crash.
+24. Aumentar escala de fonte e alternar orientação; confirmar rolagem, labels, alvos de toque, contraste e ausência de informação somente por cor.
+
+### Limpeza e escopo
+
+25. Criar, substituir e descartar ocorrência em memória; confirmar remoção dos arquivos temporários privados.
+26. Interromper captura/preparação e confirmar que não sobra arquivo órfão reconhecível.
+27. Inspecionar dependências, diretórios, UI e tráfego para confirmar ausência dos itens adiados.
+28. Reunir evidências E1 sem modificar o pacote histórico E0.
+
+## E1.29 Validation Gate E1
+
+A E1 é aprovável somente com:
+
+- `flutter test` e `flutter analyze` aprovados;
+- build debug, instalação e abertura no Samsung Galaxy S25+;
+- preview traseiro, banner manual, botão e indicadores corretos;
+- bloqueios por câmera, GPS, lifecycle e concorrência;
+- captura única, `detectedAt` original, localização, velocidade opcional, UUID, classe e confirmação manual;
+- cooldown de 5 s OU 15 m e rejeição somente com ambos abaixo, com feedback e sem captura/UUID;
+- JPEG com orientação, proporção, máximo 1280x720, qualidade 85 e até 2 MiB ou rejeição controlada;
+- ocorrência completa somente em memória, contador correto e limpeza de temporários;
+- wake lock restrito à Operação ativa;
+- navegação com exclusão mútua de recursos e regressão E0 verificada;
+- responsividade, acessibilidade e identidade visual no dispositivo;
+- inspeção demonstrando ausência de fila, banco, API de ocorrências, multipart, credencial, armazenamento seguro, backoff, envio, modelo, inferência e FPS;
+- roteiro preenchido e evidências E1 associadas;
+- aprovação explícita do responsável.
+
+O trabalho para ao apresentar o Gate E1. Se reprovado, somente correções pertencentes à E1 podem ser executadas. Etapa posterior não pode começar sem aprovação explícita. As evidências históricas E0 permanecem intactas; a verificação regressiva E0 do Gate E1 gera evidência nova da integração, não reescreve o passado.
+
+## E1.30 Rastreabilidade da E1
+
+| Requisito aprovado | Decisão de design E1 | Evidência planejada |
+|---|---|---|
+| RF-00 | E1.2 e E1.19 preservam Diagnóstico, responsabilidades, cliente HTTPS separado e evidências | regressão E0 e ordem de recursos no Gate E1 |
+| RF-01 | Android e Galaxy S25+ permanecem plataforma/dispositivo-alvo | build, instalação e roteiro físico |
+| RF-03 | E1.1, E1.8, E1.11, E1.18 e E1.19 definem preview, banner, botão, captura, bloqueios e Diagnóstico | widgets, single-flight e fluxo manual |
+| RF-05 | E1.18 e E1.25 definem indicadores, GPS, processamento e contador | testes de widget e capturas de tela |
+| RF-06 | E1.15 define snapshot válido, coordenadas, precisão e velocidade opcional | testes de limites/conversão e roteiro GPS |
+| RF-07 | E1.7–E1.11 definem `CandidateSeed`/`CandidateInput`, fonte manual substituível, processor genérico, classe, confirmação e ocorrência | testes da fonte, processor e fábrica e inspeção do modelo |
+| RF-08 | E1.12 e E1.17 fixam horário antes de async e UUID único | FakeClock, delays e validação UUID v4 |
+| RF-09 | E1.16 define primeira ocorrência, OR, defaults, feedback e commit no sucesso | testes de limites de tempo/distância |
+| RF-10 | E1.13–E1.14 definem captura associada, JPEG 85, resize, 2 MiB e limpeza | fixtures geradas e inspeção técnica |
+| RF-11 | E1.10 e E1.13 limitam ocorrência/arquivo à memória e sessão | teste de ownership e ausência de persistência |
+| RF-20 | E1.20–E1.21 coordenam permissões e indisponibilidades | testes de estado e cenários no Galaxy |
+| RF-21 | E1.19, E1.22 e E1.23 definem rota corrente, lifecycle, single-flight e tela ligada | fakes de lifecycle/wake lock e roteiro |
+| RF-23 | E1.3 e E1.29 fecham escopo e interrupção no Gate E1 | inspeção de escopo e aprovação explícita |
+| RNF-01 | E1.4–E1.9 separam widgets, controlador, domínio, portas, fonte substituível e `PostCandidateProcessor.process(CandidateInput)` | análise de imports e testes por porta |
+| RNF-03 | E1.27 prevê `flutter test` com fakes para regras críticas | saída completa dos testes |
+| RNF-04 | E1.18, E1.20 e E1.25 preservam preview/UI responsivos e evitam acúmulo | testes de estado e observação física |
+| RNF-06 | E1.13–E1.14 definem armazenamento privado, ownership e limpeza | testes de filesystem temporário |
+| RNF-07 | E1.28–E1.29 definem roteiro e gate no Galaxy S25+ | pacote de evidências E1 |
+| RNF-08 | E1.25 fixa paleta, banner, semântica e contraste | testes de widget e inspeção visual |
+
+RF-02 e RF-04 não geram componente E1: servem somente para confirmar que modelo, carregamento, inferência, frames e FPS permanecem ausentes.
+
+## E1.31 Adiamentos para E2–E5
+
+Este design não especifica solução implementável para etapas posteriores. Permanecem apenas as fronteiras normativas já aprovadas:
+
+- responsabilidade da imagem pertence à ocorrência em memória durante a E1; uma transferência futura só poderá ocorrer após confirmação atômica do novo responsável;
+- `OccurrenceCandidateSource` produz `CandidateInput` e `PostCandidateProcessor.process(candidate)` é o ponto genérico compartilhado; a E1 possui somente fonte manual, e a identidade do tipo de fonte não integra ocorrência nem contrato normalizado;
+- uma fonte futura poderá fornecer classe, confiança, instante, localização e materialização da imagem associada sem mudar cooldown, preparação, UUID ou fábrica, mas nenhuma fonte automática é implementada na E1;
+- ocorrência, cooldown, imagem e UUID não dependem de rede, armazenamento ou origem automática;
+- nenhuma escolha de banco, cliente de rede, credencial, protocolo de retry, modelo ou runtime é feita neste bloco;
+- iniciar qualquer etapa posterior depende da aprovação explícita do Gate E1.
+
+Assim, a E1 termina com ocorrência válida em memória e imagem temporária privada sob ownership explícito. Não há código pendente ou simulado de etapas posteriores dentro do escopo E1.
+
+---
+
+# Design adicional — E2: Fila local persistente
+
+> **Status e reconciliação normativa:** a E1 foi implementada, validada no Samsung Galaxy S25+ e aprovada explicitamente pelo usuário, conforme a evidência consolidada `evidence/task-34.6-validation-gate.md`. O texto anterior que apresenta a E1 como projeto futuro permanece como registro do momento em que aquele design foi aprovado, não como descrição do estado atual. Da mesma forma, a nomenclatura histórica da seção 20 do design E0 foi superada pela sequência normativa vigente em `requirements.md`: E1 corresponde à captura manual e ocorrência em memória; E2 corresponde à fila local persistente. Esta seção E2 e os requisitos aprovados são as referências vigentes para a próxima etapa. Nenhuma implementação E2 é iniciada por este documento.
+
+## E2.1 Visão geral
+
+A E2 preserva integralmente os fluxos aprovados de Diagnóstico E0 e Operação E1 e acrescenta um único limite funcional: toda ocorrência manual válida passa a ser persistida localmente, com seu JPEG associado, antes de ser considerada aceita pela aplicação. A fila deve sobreviver ao fechamento, force-stop e reabertura do aplicativo, reconstruir os mesmos dados da ocorrência e apresentar na tela Operação a quantidade de pendências.
+
+A E2 continua sem integração real com a API. Não há `BASE_URL`, API key, armazenamento seguro de credencial, multipart, tentativa de envio, classificação HTTP, retry, backoff, worker em segundo plano, YOLO, TFLite ou inferência. A palavra “fila” nesta etapa significa armazenamento durável de ocorrências pendentes; não significa fila de rede em execução.
+
+O ponto de aceite muda de forma controlada em relação à E1: a ocorrência continua sendo criada completa em memória pelo pós-candidato compartilhado, mas o resultado de sucesso só é publicado depois que metadados e imagem tiverem sido confirmados pelo armazenamento persistente. Se a persistência falhar, não há aceite, incremento do contador da sessão nem avanço da referência de cooldown.
+
+## E2.2 Escopo positivo
+
+A E2 implementará somente:
+
+1. banco local privado para registros completos de ocorrências pendentes;
+2. diretório privado durável para os JPEGs associados, distinto do namespace temporário E1;
+3. operação transacional recuperável para promover imagem, inserir metadados e transferir ownership;
+4. recuperação da fila e reconciliação de arquivos após reabertura ou interrupção;
+5. reconstrução determinística dos dados necessários a um envio futuro, sem realizar o envio;
+6. contagem observável de pendências na tela Operação;
+7. remoção interna consistente de registro e imagem, sem criar tela de histórico ou gestão manual de fila;
+8. restauração da última referência de cooldown a partir da ordem de aceite persistida;
+9. estados controlados de inicialização, disponibilidade, degradação e falha da fila;
+10. testes automatizados e roteiro físico próprios da E2;
+11. Validation Gate E2 no Samsung Galaxy S25+.
+
+## E2.3 Escopo negativo
+
+Permanecem expressamente fora da E2:
+
+- tela de configurações, `BASE_URL`, API key, armazenamento seguro e validações de configuração;
+- cliente HTTP de ocorrências, endpoint, headers, multipart ou qualquer tráfego de ocorrência;
+- envio automático ou manual, conectividade para envio, classificação de respostas e exclusão motivada por resposta HTTP;
+- tentativas, contador de tentativas, `nextAttemptAt`, backoff, pausa por autenticação, retomada de envio ou worker Android;
+- execução em segundo plano, foreground service, WorkManager ou nova permissão Android;
+- lista, mapa, histórico, detalhe, revisão ou exclusão manual de ocorrências pelo operador;
+- alteração dos campos do contrato futuro, incluindo adição de `source`, `highway` ou `km`;
+- detector, modelo, TFLite, YOLO, inferência, stream de frames ou FPS;
+- criptografia de banco inventada, sincronização em nuvem, exportação, galeria ou armazenamento compartilhado;
+- migração destrutiva ou importação de arquivos temporários E1 como se fossem ocorrências persistidas.
+
+O `DiagnosticHttpClient` da E0 continua sendo o único cliente HTTP existente e permanece isolado do domínio de ocorrência. A permissão `INTERNET` já existente serve ao Diagnóstico E0 e não autoriza nem evidencia integração de ocorrências na E2.
+
+## E2.4 Decisões técnicas
+
+### Persistência escolhida
+
+A E2 usará **SQLite por meio de `sqflite`**, em vez de Hive. A escolha decorre dos requisitos de unicidade da `idempotencyKey`, transações para metadados, versão explícita de esquema, consultas determinísticas de contagem/ordem e testes de integridade. O banco armazenará somente metadados; bytes JPEG permanecerão como arquivos privados.
+
+`sqflite` e o pacote Dart `crypto` serão dependências diretas com versões exatas compatíveis com Flutter 3.24.3/Dart 3.5.3, confirmadas antes da implementação. `crypto` será usado somente para SHA-256 por streaming; não introduz criptografia de banco nem segredo. Testes de integração do repositório usarão um backend SQLite temporário compatível com a API escolhida, também com versão de desenvolvimento exata. A seleção dos números exatos das versões é uma verificação de compatibilidade da implementação, não uma decisão funcional pendente.
+
+### Local dos dados
+
+- o banco terá nome estável próprio da E2, `e2_occurrence_queue_v1.db`, no diretório privado de bancos gerenciado por `sqflite`;
+- JPEGs persistidos ficarão em um namespace durável privado, `e2_queue_images_v1`, sob diretório de suporte da aplicação obtido por `path_provider`;
+- capturas e derivados ainda não aceitos continuarão no namespace temporário E1;
+- caminhos absolutos não serão persistidos; o banco guardará somente nome/identificador relativo validado pelo armazenamento E2;
+- arquivos não serão gravados na galeria nem em armazenamento compartilhado;
+- nenhum novo acesso de armazenamento será solicitado ao Android.
+
+O diretório temporário não pode ser o proprietário final da fila, pois o sistema operacional pode removê-lo. O diretório durável e o temporário devem estar sob controle privado da aplicação, mas possuem ciclos de vida distintos.
+
+### Exclusão de backup e transferência Android
+
+O `AndroidManifest.xml` atual não declara `android:fullBackupContent`, `android:dataExtractionRules` nem outra política de backup. O sandbox, isoladamente, não impede Android Auto Backup ou transferência entre dispositivos. A implementação E2 deverá acrescentar regras explícitas e versionadas, sem nova permissão:
+
+- `android:fullBackupContent` apontará para regras legadas com exclusões no domínio `database` para `e2_occurrence_queue_v1.db` e seus sidecars reconhecidos (`-journal`, `-wal` e `-shm`), e no domínio `file` para `e2_queue_images_v1/`;
+- `android:dataExtractionRules` apontará para regras Android 12+ com as mesmas exclusões de domínio/path tanto em `cloud-backup` quanto em `device-transfer`;
+- os paths das regras serão confrontados com os paths relativos efetivamente produzidos por `sqflite` e `path_provider`; divergência impedirá o gate;
+- banco e imagens serão excluídos em conjunto, evitando restauração parcial que associe linhas sem JPEG ou JPEGs sem linhas.
+
+A escolha é proporcional ao MVP: exclui somente os artefatos sensíveis e inseparáveis da fila E2, em vez de desabilitar indiscriminadamente todo backup do aplicativo. E0/E1 permanecem sem alteração de comportamento. Backup, restauração ou sincronização da fila não se tornam funcionalidades da E2.
+
+## E2.5 Arquitetura
+
+```mermaid
+graph TD
+    UI[OperationScreen preservada] --> OC[OperationController ampliado]
+    OC --> MS[ManualCandidateSource preservada]
+    MS --> PP[PostCandidateProcessor compartilhado]
+    PP --> CD[CooldownPolicy]
+    PP --> IP[ImagePreparer E1]
+    PP --> OF[OccurrenceFactory E1]
+    PP --> AC[OccurrenceAcceptancePort]
+    AC --> QS[PersistentOccurrenceQueue]
+    QS --> MC[Coordenador serial interno]
+    MC --> DB[(SQLite privado)]
+    MC --> DI[DurableImageStore]
+    DI --> FS[(Diretório privado E2)]
+    QS --> QO[QueueObserver]
+    QO --> OC
+    BOOT[Bootstrap E2] --> QS
+    BOOT --> CD
+    E0[E0Screen + E0Controller preservados] -. isolado .-> UI
+```
+
+As fronteiras permanecem:
+
+- **Apresentação:** mostra quantidade e saúde da fila; não conhece SQLite, path, transação ou formato de registro.
+- **Aplicação:** coordena o processamento do candidato e considera sucesso somente após `OccurrenceAcceptancePort` confirmar persistência.
+- **Domínio:** preserva candidato, ocorrência, validações, cooldown e cálculo de distância sem imports de banco ou widgets.
+- **Infraestrutura:** implementa SQLite, promoção de arquivo, recuperação, observação da contagem e uma única região crítica assíncrona para mutações da fila.
+- **Diagnóstico:** permanece independente, com recursos e HTTP próprios.
+
+Não será criado um “serviço de envio vazio”. A fila expõe operações de persistir, listar/reconstruir, contar, remover e observar mudanças; nenhum consumidor de rede existe na E2.
+
+## E2.6 Componentes e contratos
+
+| Componente/contrato | Responsabilidade E2 | Proibições |
+|---|---|---|
+| `OccurrenceAcceptancePort` | Receber uma ocorrência completa em memória e concluir somente após a fila assumir responsabilidade pelos dados e pelo JPEG. | Não montar payload, não enviar e não decidir resposta HTTP. |
+| `PersistentOccurrenceQueue` | Inicializar esquema, persistir, reconstruir, contar, remover e reconciliar registros/imagens. | Não importar Flutter UI, câmera, GPS ou fonte de candidato. |
+| Coordenador serial interno da fila | Serializar bootstrap, recuperação, persistência e remoção na mesma região crítica assíncrona durante toda mutação de SQLite e filesystem. | Não criar isolate, worker, fila de envio, paralelismo interno nem API pública adicional. |
+| `QueueRecordMapper` | Converter ocorrência validada para registro canônico e reconstruir uma projeção persistida sem perda. | Não recalcular horário, velocidade, classe, confiança, UUID ou digest. |
+| `DurableImageStore` | Promover uma lease preparada para arquivo E2 durável, calcular e validar SHA-256 por streaming, publicar sem substituir arquivo existente, restaurar/excluir marcadores e limpar órfãos reconhecíveis. | Não percorrer diretórios externos, galeria ou arquivos não reconhecidos. |
+| `QueueObserver` | Publicar snapshot imutável com disponibilidade, estado de recuperação e quantidade de pendências após mudanças confirmadas. | Não publicar registros completos, paths, coordenadas ou bytes. |
+| `QueueBootstrap` | Abrir banco, aplicar criação/migração permitida, reconciliar filesystem, validar registros e restaurar contagem/referência de cooldown antes de habilitar registros. | Não apagar banco em caso de versão/erro e não bloquear o acesso ao Diagnóstico. |
+| `OperationController` ampliado | Incorporar readiness da fila, encaminhar sucesso persistido, manter contador de sessão e observar pendências. | Não executar SQL, mover arquivo ou reter ownership do JPEG persistido. |
+| `PostCandidateProcessor` compartilhado | Preservar a ordem E1 e inserir o aceite persistente entre criação completa em memória e commit de cooldown. | Não conter ramo por origem, banco concreto, UI ou rede. |
+
+### Contratos comportamentais
+
+**Persistir ocorrência** recebe exatamente uma ocorrência completa com lease ativa. Retorna um resultado tipado: `persistida`, `já persistida e equivalente`, `conflito de identidade`, `armazenamento indisponível`, `dados inválidos`, `falha de imagem` ou `falha transacional`. Os dois primeiros resultados confirmam que os dados já estão duráveis, mas somente `persistida` representa novo aceite da execução e pode incrementar o contador da sessão. `Já persistida e equivalente` não altera linha, JPEG, contagem persistente ou contador da sessão; a referência de cooldown permanece ou é reconciliada com a pendência existente.
+
+Equivalência exige igualdade de todos os campos canônicos da ocorrência e dos metadados da imagem, incluindo `imageByteLength`, dimensões, qualidade, MIME e `imageSha256`. Igualdade apenas de `idempotencyKey`, nome ou tamanho não prova equivalência. Qualquer divergência produz `conflito de identidade` e preserva integralmente a primeira pendência.
+
+**Reconstruir pendências** retorna registros em ordem crescente de aceite local. Cada registro contém metadados canônicos e uma referência privada validada ao JPEG. Reconstrução não abre nem envia o arquivo.
+
+**Contar pendências** considera somente linhas confirmadas do conjunto principal. Registros cuja integridade não possa ser confirmada permanecem preservados, tornam a fila degradada e são incluídos na contagem total com indicação sanitizada de atenção; não são apagados silenciosamente.
+
+**Remover ocorrência** é um contrato interno por `idempotencyKey`, exigido para consistência da fila e testes. A composição de produção E2 não possui chamador que remova uma pendência: sem envio e sem descarte explícito do operador, RF-12.11/RNF-06.10 exigem retenção. O contrato é exercitado na suíte E2 e somente poderá receber um chamador funcional em etapa futura após design que forneça motivo autorizado de sucesso ou descarte. A E2 não expõe ação de remoção ao operador.
+
+## E2.7 Modelo persistido e esquema v1
+
+O banco terá versão inicial `1` e uma tabela principal de pendências. Nomes concretos podem seguir convenção Dart/SQLite, mas os campos semânticos abaixo são obrigatórios:
+
+| Campo | Tipo lógico | Regras |
+|---|---|---|
+| `queueSequence` | inteiro monotônico local | chave de ordenação de aceite atribuída pelo SQLite; não integra contrato HTTP. |
+| `idempotencyKey` | texto | UUID v4, `UNIQUE` e não nulo. |
+| `detectedAtIso8601` | texto | representação canônica persistida uma vez, com `Z` ou offset; nunca recalculada na leitura. |
+| `latitude` | real | finita em `[-90, 90]`. |
+| `longitude` | real | finita em `[-180, 180]`. |
+| `accuracyMeters` | real anulável | valor informativo preservado quando disponível e válido. |
+| `speedKmh` | real anulável | nulo ou finito em `[0, 300]`. |
+| `confidence` | real | exatamente `1.0` para ocorrências manuais E2. |
+| `defectClass` | texto | exatamente `pothole`. |
+| `imageRelativeName` | texto | nome opaco validado, único, sem separador de diretório. |
+| `imageMimeType` | texto | exatamente `image/jpeg`. |
+| `imageByteLength` | inteiro | entre 1 e `2 MiB`. |
+| `imageSha256` | texto | digest SHA-256 interno, 64 caracteres hexadecimais minúsculos, calculado por streaming sobre os bytes exatos do JPEG durável. |
+| `imageWidth` | inteiro | entre 1 e 1280. |
+| `imageHeight` | inteiro | entre 1 e 720. |
+| `imageQuality` | inteiro | exatamente 85. |
+
+`source`, `highway`, `km`, URL, API key, estado HTTP, contador de tentativas e agendamento de retry não existirão no esquema v1. Também não será armazenado path absoluto. `imageSha256` é metadado interno de integridade da fila e não acrescenta campo ao contrato futuro, ao multipart ou à interface.
+
+A fila possui apenas a condição funcional **pendente** nesta etapa. Marcadores transitórios de arquivo (`.staging` e `.deleting`) pertencem ao protocolo interno de recuperação e não representam status de envio.
+
+## E2.8 Invariantes
+
+1. Cada linha confirmada possui exatamente uma `idempotencyKey` UUID v4, referencia um único JPEG durável reconhecível e registra o SHA-256 dos bytes desse JPEG.
+2. Cada JPEG canônico E2 referencia no máximo uma linha confirmada; publicação, restauração e remoção jamais substituem um arquivo de destino já existente.
+3. Uma ocorrência só é publicada como aceita depois do commit do registro e da confirmação do arquivo durável.
+4. Uma falha antes do aceite deixa contador da sessão, cooldown e contagem de pendências inalterados.
+5. `detectedAtIso8601`, coordenadas, velocidade opcional, confiança, classe, UUID e digest lidos são iguais aos valores persistidos; nenhum valor é obtido novamente de relógio, GPS, fábrica ou imagem diferente.
+6. A mesma `idempotencyKey` nunca cria duas pendências.
+7. Repetir uma persistência equivalente produz no máximo a confirmação da pendência existente, sem novo incremento de sessão; repetir a chave com qualquer metadado ou SHA-256 divergente retorna conflito e preserva linha e JPEG originais.
+8. O contador persistente é derivado da fila, não de incremento otimista da UI.
+9. O contador da sessão incrementa uma vez somente para um novo aceite da execução corrente; recuperação e confirmação idempotente de registros existentes não incrementam esse contador.
+10. Somente a fila possui o JPEG depois do aceite. O controlador guarda apenas resumo sem lease/path.
+11. Fechar tela, navegar ao Diagnóstico ou pausar o app não remove ocorrências persistidas.
+12. Remoção confirmada termina sem linha e sem JPEG canônico; interrupções intermediárias são reconciliáveis.
+13. Bootstrap, recuperação, persistência e remoção são mutuamente exclusivos na instância da fila; nenhum reconciliador observa ou remove staging de uma mutação em andamento.
+14. Recuperação e limpeza são idempotentes: executá-las repetidamente produz o mesmo conjunto confirmado.
+15. Nenhuma operação E2 realiza chamada de rede.
+
+## E2.9 Protocolo de persistência e transferência de ownership
+
+SQLite e filesystem não oferecem uma transação única entre si. A E2 usará um protocolo recuperável restrito ao namespace E2. Bootstrap, recuperação, persistência e remoção entram pelo mesmo coordenador serial interno; enquanto uma mutação estiver na região crítica, nenhuma outra mutação ou varredura de órfãos será iniciada.
+
+Para persistir:
+
+1. entrar na região crítica e confirmar que bootstrap/recuperação terminaram;
+2. validar novamente ocorrência, metadados JPEG e lease ativa;
+3. consultar a `idempotencyKey` antes de criar ou publicar qualquer arquivo E2;
+4. se a chave já existir, calcular por streaming o SHA-256 do JPEG preparado e do JPEG canônico existente, exigir que o canônico corresponda ao digest da linha e comparar todos os campos canônicos, metadados e digest; retornar `já persistida e equivalente` somente se as três visões coincidirem, ou `conflito de identidade`/fila degradada sem tocar na linha nem no JPEG canônico;
+5. se a chave não existir, criar com exclusividade um `.staging` de nome opaco e único por operação no diretório E2, sem reutilizar ou truncar arquivo preexistente;
+6. copiar o JPEG preparado, executar flush, calcular por streaming o SHA-256 dos bytes efetivamente gravados e validar tamanho, dimensões, MIME e qualidade;
+7. abrir uma transação SQLite e reconsultar a `idempotencyKey`; se a chave tiver surgido, encerrar sem publicação canônica, remover somente o staging desta operação e resolver equivalência ou conflito como no preflight;
+8. ainda sob coordenação e transação, escolher um nome canônico opaco, confirmar que o destino não existe e publicar o staging por rename no mesmo diretório; a abstração recusará destino existente e jamais invocará rename com semântica de substituição;
+9. inserir a linha com `idempotencyKey`, referência relativa, metadados e `imageSha256`, e confirmar a transação;
+10. declarar a fila como proprietária lógica do JPEG e retirar idempotentemente a lease temporária E1;
+11. publicar snapshot e nova contagem;
+12. somente para resultado `persistida`, permitir commit do cooldown, incremento da sessão e feedback de novo salvamento. Para `já persistida e equivalente`, reconciliar a referência sem novo incremento.
+
+A consulta antecipada evita alterar o arquivo de uma chave existente; a reconsulta transacional e a constraint `UNIQUE` são defesas finais. A serialização é local à única instância/processo Android da fila E2 e elimina a corrida entre teste de existência e rename sem introduzir isolate, lock de arquivo ou serviço. Se uma futura etapa adotar múltiplos processos, a estratégia deverá ser redesenhada naquela etapa, não antecipada aqui.
+
+Se insert ou commit falhar depois da publicação canônica, a transação é revertida e somente o arquivo criado pela operação corrente é removido; se essa compensação falhar, o arquivo permanece como órfão reconhecível para a próxima recuperação. Um destino canônico inesperadamente existente nunca é sobrescrito nem removido pelo caminho de persistência: a fila falha de forma controlada e exige reconciliação sob o mesmo coordenador. A lease E1 continua sob responsabilidade do fluxo até o resultado e é limpa pelo caminho de falha. Se a transação for confirmada e a remoção do temporário falhar, a fila continua proprietária do canônico; o duplicado temporário é registrado de forma sanitizada e removido pela varredura restrita E1.
+
+Não haverá cópia “best effort” seguida de sucesso otimista. O resultado de aceite exige linha confirmada, JPEG canônico e SHA-256 correspondente. A consistência declarada cobre fechamento, force-stop e interrupção do processo entre etapas recuperáveis. Perda abrupta de energia ou falha física do armazenamento permanece sujeita às garantias do filesystem/SQLite do aparelho e não recebe garantia adicional por plugin nativo, journal próprio ou replicação fora do escopo do MVP.
+
+### Ponto de não retorno e lifecycle
+
+Antes da promoção persistente, invalidação de geração cancela o fluxo conforme E1 e limpa temporários. Depois que a operação de commit durável entra na sua seção final, ela deve concluir em sucesso ou rollback mesmo se a rota/lifecycle mudar. Se o commit for confirmado durante a saída da tela, os dados permanecem na fila conforme RF-21.5; nenhuma UI obsoleta é publicada. Cooldown e total da sessão são conciliados internamente e o snapshot visível é atualizado na próxima ativação. Esse comportamento amplia a E1 apenas no ponto necessário para preservar uma ocorrência já aceita; callbacks anteriores ao aceite continuam sem efeitos.
+
+## E2.10 Protocolo de remoção consistente
+
+Embora não exista botão de exclusão E2, o repositório implementará remoção segura. A operação usa o mesmo coordenador serial do bootstrap, recuperação e persistência:
+
+1. entrar na região crítica, localizar novamente a linha e validar a referência ao JPEG canônico;
+2. escolher um marcador `.deleting` reconhecível que codifique de forma opaca e reversível o nome canônico e inclua token único da operação, e confirmar que esse destino não existe;
+3. renomear o JPEG canônico para esse marcador `.deleting` sem substituir arquivo existente;
+4. em transação SQLite, revalidar que a linha ainda referencia o mesmo nome e SHA-256 e remover a linha correspondente;
+5. após commit, apagar o marcador `.deleting` criado por essa operação;
+6. publicar a contagem confirmada.
+
+Na recuperação, também sob o coordenador exclusivo:
+
+- marcador `.deleting` com linha ainda existente é restaurado ao nome canônico somente se o destino estiver livre; colisão preserva ambos os artefatos reconhecidos e degrada a fila, sem substituição;
+- marcador `.deleting` sem linha é excluído;
+- linha sem JPEG canônico nem marcador é preservada e sinalizada como violação de integridade, nunca descartada silenciosamente.
+
+Assim, uma interrupção não converte uma pendência íntegra em remoção parcial invisível, e persistência/recuperação não podem observar ou apagar o marcador de uma remoção ainda em andamento.
+
+## E2.11 Inicialização, recuperação e reabertura
+
+```mermaid
+sequenceDiagram
+    participant App as Bootstrap
+    participant Q as PersistentOccurrenceQueue
+    participant DB as SQLite
+    participant FS as DurableImageStore
+    participant C as CooldownPolicy
+    participant UI as OperationController
+
+    App->>Q: initialize()
+    Q->>DB: abrir/criar esquema v1
+    Q->>FS: reconciliar staging/deleting/órfãos
+    Q->>DB: ler linhas confirmadas em queueSequence
+    Q->>FS: validar referências canônicas
+    Q-->>App: QueueSnapshot(saúde, pendências, última aceita)
+    App->>C: restaurar última referência
+    App->>UI: publicar readiness e contagem
+```
+
+A inicialização ocorre antes de habilitar “Registrar buraco”, mas uma falha de fila não impede o aplicativo de abrir nem o acesso ao Diagnóstico. Enquanto a fila inicializa, a Operação mostra “Preparando fila local” e mantém registro desabilitado. Em sucesso, a quantidade recuperada aparece. Em falha, mostra “Fila local indisponível; registros desabilitados” e permite nova tentativa controlada sem reinicializar câmera/GPS.
+
+A recuperação inteira mantém a região crítica desde antes de abrir/revalidar os recursos até publicar o snapshot:
+
+1. abrir o banco sem fallback destrutivo;
+2. criar esquema v1 somente se ainda não existir;
+3. recusar versão futura/desconhecida sem apagar dados;
+4. ler as linhas necessárias para interpretar marcadores;
+5. reconciliar `.deleting` segundo a existência da linha, sempre sem substituir destino;
+6. remover `.staging` não confirmado, pois nenhuma persistência pode estar em andamento sob a mesma coordenação;
+7. remover JPEG canônico reconhecido sem linha somente depois da leitura confirmada do banco;
+8. validar nome, tamanho e SHA-256 de cada referência de linha por streaming, sem carregar todas as imagens em memória; mismatch preserva linha e arquivo, marca a fila degradada e bloqueia alegação de reconstrução íntegra;
+9. produzir snapshot de saúde e contagem;
+10. restaurar no cooldown a ocorrência de maior `queueSequence`;
+11. liberar a região crítica e habilitar novos aceites somente se o repositório estiver operacional.
+
+Chamadas concorrentes de inicialização/retry compartilham ou aguardam a mesma execução; não abrem bancos nem reconciliadores paralelos. O repositório não é fechado enquanto houver mutação adquirida. Leituras públicas aguardam inicialização e recebem snapshots confirmados, nunca estado intermediário de filesystem/SQLite.
+
+Arquivos temporários E1 não são importados: a E1 não possuía compromisso persistente. Apenas órfãos reconhecíveis do namespace temporário continuam sujeitos à limpeza E1 já aprovada e ao ownership de suas leases; a recuperação E2 não percorre nem remove arquivos E1.
+
+### Aceite local e interpretação de RNF-05.3
+
+Na E2 existem somente **aceite local** e confirmação de durabilidade local. O aceite local ocorre no commit SQLite que referencia o JPEG canônico já publicado e validado. Não existe confirmação remota, tentativa de envio ou resposta HTTP nesta etapa.
+
+A expressão “antes da confirmação” de RNF-05.3 é interpretada no ciclo completo E2–E4 como confirmação futura do resultado de envio. Em E2, a consequência aplicável é: se o processo cair depois do commit local e antes de a aplicação publicar o callback de sucesso, a reabertura recupera a linha e o mesmo `idempotencyKey`; se cair antes do commit local, a ocorrência não foi aceita e a recuperação remove apenas staging/canônico órfão reconhecível. Em E4, ainda sujeita a design próprio, a pendência aceita deverá permanecer até sucesso remoto ou descarte explícito. A E2 não cria ack, status, tentativa ou campo HTTP para antecipar essa fase.
+
+### Justificativa da restauração do cooldown
+
+Restaurar a referência pela maior `queueSequence` é uma inferência conservadora dos requisitos RF-09 preservados em E2: a regra usa a “ocorrência anterior” e não limita essa referência à sessão, enquanto RF-21.5 exige preservar ocorrências aceitas. A restauração evita que force-stop/reabertura contorne o cooldown e não cria tabela, preferência ou estado persistido adicional; reutiliza `detectedAt` e localização da última pendência aceita. O contador da sessão continua reiniciando, pois possui requisito explícito distinto.
+
+Essa decisão vale somente enquanto E2 mantém todas as ocorrências aceitas como pendentes. Quando E4 puder remover a última pendência por confirmação remota ou descarte, o design E4 deverá decidir como preservar ou encerrar a referência sem reservar campos agora. Se o relógio civil regredir, a avaliação permanece conservadora e a alternativa por distância continua aplicável; nenhuma garantia nova de relógio monotônico entre processos é alegada.
+
+## E2.12 Fluxo nominal de uma captura
+
+```mermaid
+sequenceDiagram
+    actor U as Operador
+    participant OC as OperationController
+    participant PP as PostCandidateProcessor
+    participant F as OccurrenceFactory
+    participant A as OccurrenceAcceptancePort
+    participant Q as PersistentOccurrenceQueue
+    participant CD as CooldownPolicy
+
+    U->>OC: Registrar buraco
+    OC->>PP: process(CandidateInput)
+    PP->>PP: validar, cooldown, capturar e preparar JPEG
+    PP->>F: criar ocorrência completa em memória
+    F-->>PP: ocorrência + lease temporária
+    PP->>A: aceitar(ocorrência)
+    A->>Q: persistir metadados + JPEG
+    Q-->>A: persistida e pendingCount
+    A-->>PP: aceite confirmado
+    PP->>CD: commit da ocorrência
+    PP-->>OC: sucesso persistido + resumo
+    OC->>OC: incrementar sessão e publicar pendências
+```
+
+Bloqueio por cooldown continua antes da captura. UUID continua depois do JPEG válido. A E2 acrescenta persistência depois da ocorrência completa em memória e antes do commit final. A ordem de câmera, GPS, horário, imagem, classe e confiança não muda.
+
+## E2.13 Reconstrução exata
+
+O mapper persistirá a representação canônica já validada, não valores recomputados. Na leitura:
+
+- `idempotencyKey` é validada como UUID v4, mas não regenerada;
+- `detectedAtIso8601` é preservado textualmente e também pode ser parseado para validação;
+- `confidence` e `defectClass` são conferidos contra o contrato manual;
+- velocidade nula permanece ausente e velocidade zero permanece zero;
+- referência do JPEG resolve somente dentro do namespace E2 após validação contra traversal e symlink;
+- `imageSha256` é validado como hexadecimal minúsculo de 256 bits e comparado ao SHA-256 recalculado por streaming sobre o JPEG na recuperação e antes de declarar uma reconstrução íntegra;
+- tamanho, dimensões, MIME e qualidade persistidos são confrontados com o arquivo; digest, bytes e imagem não são carregados integralmente em memória;
+- ordem da fila deriva de `queueSequence`, não do relógio, que pode regredir.
+
+Uma futura camada de integração poderá receber essa projeção, mas nenhum serializer multipart é criado na E2.
+
+## E2.14 Estado e interface da Operação
+
+`OperationState` será ampliado somente com:
+
+- estado da fila: inicializando, pronta, degradada ou indisponível;
+- quantidade persistida de pendências;
+- indicação de operação de persistência durante o processamento;
+- mensagem sanitizada de recuperação ou falha.
+
+`canRegister` passa a exigir fila pronta além das condições E1. O indicador deve mostrar “Pendências: N” e manter significado por texto, não somente cor. Estado degradado usa mensagem de atenção sem revelar registro, UUID, path, coordenadas ou conteúdo. Não haverá lista de pendências, detalhe nem ação manual de exclusão.
+
+O feedback de sucesso muda de “Buraco registrado em memória” para texto inequívoco como “Buraco salvo na fila local”. Banner manual, preview, GPS, contador da sessão, cooldown, tema, permissões, ações de configurações Android e navegação ao Diagnóstico permanecem como aprovados.
+
+A persistência não reinicializa câmera/GPS e não bloqueia a thread de UI. Copy, hashing e validação de arquivo usam APIs assíncronas e streaming em blocos, sem `readAsBytesSync`, decodificação simultânea da fila inteira ou acúmulo de operações. O JPEG já está limitado a `2 MiB`, e o coordenador executa uma mutação por vez. Durante uma operação single-flight, o botão permanece desabilitado como na E1. O contador de pendências é atualizado somente a partir de snapshot confirmado do repositório.
+
+## E2.15 Tratamento de erros e recuperação
+
+| Condição | Resposta E2 | Integridade/limpeza |
+|---|---|---|
+| banco inicializando | indicador local e registro desabilitado | câmera, GPS e Diagnóstico continuam disponíveis |
+| banco indisponível, bloqueado ou incompatível | falha controlada e retry da fila | nenhum reset/apagamento automático |
+| disco sem espaço ou escrita/flush falha | ocorrência rejeitada | remover staging/derivados e manter contadores/cooldown |
+| JPEG temporário inválido/inativo | ocorrência rejeitada | não criar linha; limpar artefatos sob ownership do fluxo |
+| rename/publicação sem substituição falha | ocorrência rejeitada | remover somente staging desta operação; preservar qualquer destino existente e degradar/reconciliar |
+| transação falha | ocorrência rejeitada | rollback SQLite e remoção somente do canônico criado pela operação; registrar órfão se compensação falhar |
+| chave já existe com campos e SHA-256 equivalentes | confirmação idempotente sem novo aceite da sessão | retirar temporário novo e não alterar linha, JPEG ou pendências |
+| chave já existe com campo, metadado ou SHA-256 divergente | erro de integridade | preservar linha e JPEG originais; limpar somente artefatos da nova tentativa |
+| digest persistido diverge do JPEG | fila degradada | preservar linha e arquivo para diagnóstico; bloquear reconstrução íntegra e novo aceite até recuperação controlada |
+| linha referencia JPEG ausente | fila degradada | preservar linha, bloquear alegação de reconstrução íntegra e registrar evento sanitizado |
+| JPEG reconhecido sem linha | órfão | remover somente em recuperação exclusiva, nunca durante outra mutação |
+| operação concorrente de fila | aguardar o coordenador serial | não observar nem limpar estado intermediário |
+| remoção interrompida | recuperar pelo marcador `.deleting` | restaurar ou concluir conforme existência da linha |
+| limpeza falha | manter estado consistente possível e registrar tipo de erro | nunca logar path, bytes ou conteúdo |
+| lifecycle muda antes do commit | cancelar e limpar | nenhum aceite |
+| lifecycle muda durante commit final | concluir ou fazer rollback | se confirmado, preservar na fila sem publicar callback obsoleto |
+
+Erros da fila não são convertidos em envio e não acionam conectividade. Não haverá retry automático agressivo; inicialização pode ser repetida por ação controlada ou nova abertura.
+
+## E2.16 Segurança, privacidade e observabilidade
+
+### Segurança e privacidade
+
+- banco e imagens permanecem em sandbox privado Android e são excluídos conjuntamente de cloud backup e transferência de dispositivo pelas duas gerações de regras Android;
+- nenhum segredo é introduzido ou persistido;
+- nenhum path absoluto ou conteúdo JPEG chega à UI, banco ou logs; o banco contém apenas referência relativa e digest interno;
+- nomes de arquivo são opacos e não contêm coordenadas, data legível ou classe;
+- resolução de referência rejeita separadores, `..`, symlink e escape do namespace;
+- SQL usa parâmetros e esquema fixo, sem concatenação de entrada;
+- varreduras não seguem links, não percorrem subdiretórios arbitrários e só tocam nomes reconhecíveis no namespace E2; limpeza E1 permanece no mecanismo E1;
+- uma imagem persistida existe somente para uma pendência ou para um marcador transitório recuperável;
+- SHA-256 serve apenas para integridade/equivalência local, não para autenticação, deduplicação entre ocorrências ou identificação externa;
+- não se declara criptografia em repouso além das garantias do sandbox, pois esse requisito não foi aprovado.
+
+### Observabilidade sanitizada
+
+Eventos técnicos podem registrar somente código de evento, estágio, contagens agregadas e tipo do erro, por exemplo:
+
+- `E2_QUEUE_INIT_OK pending_count=N`;
+- `E2_QUEUE_INIT_FAILED error=<tipo>`;
+- `E2_QUEUE_PERSIST_FAILED stage=<estágio> error=<tipo>`;
+- `E2_QUEUE_RECOVERY_DONE orphan_count=N degraded_count=N`;
+- `E2_QUEUE_REMOVE_FAILED stage=<estágio> error=<tipo>`.
+
+São proibidos: API key, URL real, UUID completo, path, nome real de arquivo, coordenadas, horário da ocorrência, `imageSha256` completo ou parcial, stack trace na UI, bytes, conteúdo ou representação codificada da imagem. O digest não pode ser usado como identificador em logs, mensagens, telemetria ou interface. Logs não constituem mecanismo de auditoria da ocorrência.
+
+## E2.17 Compatibilidade Android e dependências
+
+A E2 mantém Android como única plataforma e o `applicationId` aprovado. Não altera permissões do manifesto. Acrescenta apenas os atributos de política de backup no elemento `<application>` e os XMLs de exclusão correspondentes. Não requer internet adicional, armazenamento externo, câmera adicional, localização em background, foreground service, wake lock adicional ou configuração de cleartext.
+
+Dependências diretas previstas:
+
+- manter os seis pins E1 aprovados (`camera`, `geolocator`, `image`, `uuid`, `wakelock_plus`, `path_provider`);
+- adicionar somente `sqflite` e `crypto` como dependências diretas com pins exatos compatíveis; `crypto` calcula SHA-256 por streaming sem reter o JPEG inteiro em memória;
+- adicionar, se necessário para SQLite real em testes host, somente o adaptador de desenvolvimento compatível e com pin exato;
+- usar `glados` como biblioteca de property-based testing, com pin de desenvolvimento exato compatível, sem criar gerador PBT próprio;
+- não adicionar Hive, ORM, gerador de código, biblioteca de rede, secure storage, worker, estado, DI ou mocks.
+
+A implementação deverá confirmar resolução com a toolchain aprovada, build Android e funcionamento no Galaxy S25+, sem atualizar globalmente Flutter, Android SDK, Gradle, Java ou ADB sem autorização. O aviso NDK histórico deve ser reavaliado somente se bloquear a nova dependência; não será alterado preventivamente.
+
+## E2.18 Estratégia de migração e composição
+
+A passagem E1 → E2 será incremental:
+
+1. preservar integralmente `lib/e0/` e seu composition/lifecycle;
+2. preservar fonte manual, validações, câmera/GPS, preparador JPEG, UUID, cooldown e fábrica E1;
+3. evoluir a lease preparada com a capacidade mínima necessária à leitura por streaming e promoção durável, sem expor `File` a widgets ou domínio;
+4. introduzir `OccurrenceAcceptancePort` no pós-candidato;
+5. compor a implementação persistente E2 nesse porto e manter bootstrap, recuperação, persistência e remoção sob um coordenador serial interno;
+6. acrescentar SHA-256 ao esquema/mapper e às decisões de equivalência, sem expor o digest;
+7. mover o ownership final do JPEG do controlador para a fila;
+8. substituir no controlador a ocorrência com lease por um resumo sem recurso descartável;
+9. inserir o aceite persistente antes do commit de cooldown e do resultado de sucesso;
+10. inicializar a fila e restaurar contagem/cooldown antes de habilitar captura;
+11. adicionar regras Android legadas e Android 12+ que excluam conjuntamente banco, sidecars e diretório de imagens E2 de backup e transferência;
+12. manter a navegação Operação–Diagnóstico e exclusão mútua de câmera/GPS inalteradas.
+
+Não existe migração de dados de E1: a E1, por definição aprovada, não possuía fila. Atualizar o APK sem limpar dados deve criar o banco v1 e o namespace E2, sem interpretar temporários E1 como pendências. Evidências históricas E0/E1 não são alteradas.
+
+Migrações futuras de esquema deverão ser incrementais e testadas, mas nenhum campo de E3–E5 será reservado agora. Banco com versão superior à suportada produz falha controlada, nunca `drop` automático.
+
+## E2.19 Correctness Properties
+
+As propriedades E1 continuam aplicáveis às etapas anteriores ao aceite. As propriedades abaixo cobrem apenas a extensão persistente E2.
+
+### Property 13: Aceite somente após persistência íntegra
+
+Para toda ocorrência completa cuja `idempotencyKey` ainda não exista, um novo aceite será publicado se e somente se a operação produzir uma linha confirmada equivalente e um JPEG canônico cujo SHA-256 corresponda ao digest persistido; em qualquer falha anterior, cooldown, contador da sessão e pendências permanecerão inalterados.
+
+**Validates: Requirements RF-12.1, RF-12.2, RF-12.7, RF-12.10, RF-12.11, RNF-05.1, RNF-05.2**
+
+### Property 14: Round-trip da fila
+
+Para toda ocorrência válida persistida, fechar e reabrir o repositório e reconstruir a pendência produzirá os mesmos valores canônicos de UUID, `detectedAt`, localização, precisão opcional, velocidade opcional, confiança, classe, metadados e referência ao JPEG cujo SHA-256 corresponda ao valor persistido.
+
+**Validates: Requirements RF-08.4, RF-12.2, RF-12.3, RF-12.4, RNF-03.5, RNF-05.3**
+
+### Property 15: Unicidade idempotente
+
+Para toda `idempotencyKey` e qualquer sequência serializada ou concorrente de solicitações, persistências com campos e SHA-256 equivalentes produzirão no máximo uma linha, um JPEG canônico e um incremento de novo aceite; qualquer solicitação conflitante ou destino preexistente preservará sem substituição os bytes e metadados da primeira pendência.
+
+**Validates: Requirements RF-08.3, RF-08.4, RF-12.4, RNF-05.3**
+
+### Property 16: Contagem derivada da fila
+
+Para todo estado íntegro da fila, a quantidade publicada será igual ao número de linhas confirmadas; um novo aceite aumenta esse total em um e uma remoção confirmada reduz esse total em um, sem alteração por falha ou recuperação repetida.
+
+**Validates: Requirements RF-05.5, RF-12.5, RF-12.9, RNF-05.4**
+
+### Property 17: Ownership exclusivo após aceite
+
+Para toda ocorrência aceita, a fila será a única proprietária lógica do JPEG canônico e a lease temporária anterior estará retirada ou marcada para limpeza restrita; para toda ocorrência rejeitada, nenhum JPEG E2 permanecerá referenciado.
+
+**Validates: Requirements RF-11.8, RF-12.2, RF-12.10, RF-12.11, RNF-06.3, RNF-06.9, RNF-06.10**
+
+### Property 18: Remoção consistente
+
+Para toda pendência removida, após a operação ou qualquer recuperação subsequente não existirá linha confirmada nem JPEG canônico associado; se a remoção for interrompida antes do commit, a recuperação restaurará a pendência íntegra.
+
+**Validates: Requirements RF-12.9, RNF-05.4, RNF-06.2, RNF-06.10**
+
+### Property 19: Recuperação idempotente
+
+Para todo conjunto alcançável de linhas, arquivos canônicos e marcadores reconhecíveis produzido por interrupção em qualquer etapa de persistência ou remoção, executar recuperação uma ou mais vezes sob o mesmo coordenador produzirá o mesmo conjunto confirmado, sem apagar artefato de operação em andamento, sem apagar linhas corrompidas silenciosamente e sem tocar arquivos externos ao namespace.
+
+**Validates: Requirements RF-12.3, RF-12.8, RNF-05.3, RNF-06.3, RNF-06.11**
+
+### Property 20: Restauração da referência de cooldown
+
+Para toda fila não vazia recuperada, a referência de cooldown restaurada será a ocorrência de maior `queueSequence`; para fila vazia, nenhuma referência será restaurada.
+
+**Validates: Requirements RF-09.1, RF-09.2, RF-09.3, RF-09.4, RF-12.3**
+
+## E2.20 Estratégia de testes automatizados
+
+Todos os testes serão executáveis com `flutter test`, sem modo watch. Fakes Dart simples permanecem preferidos nas portas; o repositório SQLite terá também testes com banco temporário real e filesystem em sandbox. As propriedades 13–20 usarão `glados`, no mínimo 100 casos por propriedade e um único teste por propriedade, identificado por comentário no formato `Feature: mvp-app-flutter, Property N: <texto da propriedade>`.
+
+### Domínio e aplicação
+
+- regressão integral das propriedades e testes E1;
+- ordem `fábrica -> persistência -> cooldown -> sucesso`;
+- ausência de commit, contador e feedback de sucesso quando persistência falha;
+- sucesso publicado e contador da sessão incrementado uma vez somente para persistência nova;
+- confirmação equivalente sem segunda linha, segunda imagem ou incremento da sessão;
+- conflito para mesma chave com campo, metadado ou SHA-256 divergente;
+- lifecycle antes e durante o ponto de commit;
+- restauração da referência de cooldown pela ordem de aceite;
+- controlador guarda somente resumo e não descarta imagem persistida ao navegar, pausar ou finalizar.
+
+### Repositório e mapper
+
+- criação de esquema v1 e reabertura;
+- constraints de UUID, domínios numéricos, classe, confiança, JPEG, dimensões, qualidade, SHA-256 e unicidade;
+- round-trip de todos os campos, incluindo `null` versus zero para velocidade e digest do JPEG;
+- equivalência somente com todos os campos e digest iguais, inclusive imagens diferentes de mesmo tamanho;
+- preservação textual de `detectedAtIso8601` com `Z` e offsets válidos;
+- ordenação por `queueSequence` mesmo com relógio regressivo;
+- contagem após persistir, reabrir e remover;
+- banco com versão futura, linha inválida e imagem ausente sem reset destrutivo.
+
+### Filesystem, falhas e recuperação
+
+Falhas serão injetadas em cada fronteira: preflight, criação exclusiva de staging, copy, flush, cálculo/validação do digest, rechecagem transacional, verificação de destino, rename sem substituição, insert, commit, retirada da lease, rename de remoção e delete. Para cada ponto, os testes verificam rollback ou estado recuperável, ausência de contador otimista, preservação de arquivo preexistente e logs sanitizados.
+
+Serão gerados estados de crash com `.staging`, `.deleting`, JPEG órfão, linha íntegra, linha sem imagem, digest divergente, destino canônico preexistente e arquivos não reconhecidos. Recuperação deve ser idempotente e nunca tocar arquivo externo, subdiretório ou symlink. Um executor/fake controlado disparará bootstrap/retry, persistências e remoções concorrentes para provar ordem serial observável e que a recuperação não remove staging em andamento. Exemplos específicos cobrirão corrupção e falhas de IO; propriedades 13–20 seguirão a configuração de PBT acima.
+
+### Widget e composição
+
+- indicador “Pendências: N” em inicialização, zero, múltiplas pendências, degradada e indisponível;
+- botão bloqueado enquanto fila não está pronta e habilitado sem reinicializar câmera/GPS quando a fila se recupera;
+- feedback de sucesso persistido e falha sanitizada;
+- contador da sessão separado do contador persistente;
+- reentrada do Diagnóstico sem mudança da fila;
+- ausência de lista, exclusão manual, configuração, envio ou indicação automática;
+- regressão dos fluxos físicos corrigidos no Gate E1 para negação/retry independente de câmera e GPS.
+
+### Inspeção negativa automatizada
+
+A suíte/inspeção confirmará ausência de cliente de ocorrência, endpoint, multipart, API key, secure storage, retry, backoff, worker, YOLO, TFLite e dependências correspondentes. O cliente HTTPS E0 permanece permitido apenas em `lib/e0/`.
+
+### Política Android de backup
+
+Testes estáticos validarão que o manifesto mesclado referencia as regras legada e Android 12+, que ambas excluem o nome real do banco, sidecars e diretório real de JPEGs, e que `cloud-backup` e `device-transfer` possuem exclusões simétricas. Um teste de integração confrontará os paths relativos efetivos de `sqflite`/`path_provider` com os declarados nos XMLs. Quando a toolchain/dispositivo permitir um ciclo controlado de backup/transferência, o gate registrará que nenhum artefato E2 foi restaurado; indisponibilidade dessa automação será registrada e não será substituída por alegação sem evidência.
+
+## E2.21 Roteiro físico no Samsung Galaxy S25+
+
+### Preparação
+
+1. Preservar o pacote de evidências E0/E1 e instalar o APK E2 como atualização quando possível, sem limpar dados antes do cenário de migração.
+2. Executar e registrar `flutter analyze`, `flutter test` e build debug.
+3. Registrar versão da toolchain, dependências diretas, hash do APK e identidade Android.
+4. Confirmar que nenhuma URL/API key de ocorrências foi fornecida.
+
+### Fluxo nominal e recuperação
+
+5. Abrir a atualização e confirmar criação/inicialização da fila sem regressão de preview, GPS, banner e permissões E1.
+6. Confirmar indicador inicial de zero pendências em instalação sem fila E2.
+7. Registrar uma ocorrência válida e confirmar feedback de salvamento local, contador da sessão `+1` e pendências `+1`.
+8. Registrar ocorrências adicionais respeitando cooldown e confirmar contagem acumulada.
+9. Enviar o aplicativo ao segundo plano e retornar; confirmar que pendências permanecem e câmera/GPS/lifecycle se recuperam conforme E1.
+10. Fechar/force-stop e reabrir; confirmar a mesma contagem recuperada antes de novo registro.
+11. Confirmar que o contador da sessão reinicia na nova execução sem zerar pendências.
+12. Com teste instrumentado e evidência sanitizada, confirmar que os registros recuperados preservam UUID, horário, coordenadas, velocidade opcional, classe, confiança, digest e associação ao JPEG, sem imprimir esses valores, path, digest ou imagem.
+13. Confirmar que JPEGs persistidos permanecem em armazenamento privado, não aparecem na galeria e cumprem o contrato E1.
+
+### Falhas e regressões
+
+14. Inspecionar o manifesto mesclado e os XMLs de backup para confirmar exclusão simétrica do banco, sidecars e diretório E2 em backup legado, cloud backup e transferência; executar ciclo controlado de backup/transferência somente se suportado pela toolchain e registrar eventual indisponibilidade.
+15. Simular armazenamento indisponível de forma controlada somente se houver mecanismo de teste seguro; confirmar registro desabilitado ou falha sem aceite, sem alterar cooldown/contagens. Se não houver cenário físico seguro, usar evidência automatizada e marcar o físico como não executado.
+16. Navegar ao Diagnóstico e voltar; confirmar que a contagem não muda e a exclusão mútua de câmera/GPS permanece.
+17. Reexecutar regressão essencial E0: preview, GPS, permissões, HTTPS diagnóstico, mensagens e lifecycle.
+18. Reexecutar regressão E1: modo manual, retry independente de câmera/GPS, cooldown, captura única, lifecycle, wake lock, JPEG e contador.
+19. Inspecionar tráfego e interface para confirmar ausência de envio ou tentativa de rede de ocorrência.
+20. Inspecionar dependências, manifesto e artefato para confirmar ausência de E3–E5.
+21. Reunir evidências, classificar itens como aprovado/reprovado/não executado e parar no Gate E2.
+
+Remoção interna, crash em cada subetapa e corrupção são comprovados por testes automatizados; não será criada UI de debug nem manipulado o sandbox do aparelho de forma insegura apenas para demonstrá-los fisicamente.
+
+## E2.22 Critérios técnicos de aceite
+
+A E2 estará pronta para o gate quando:
+
+- toda ocorrência manual válida for persistida antes do sucesso visível;
+- metadados e JPEG sobreviverem à reabertura e forem reconstruíveis sem perda, com SHA-256 correspondente;
+- `idempotencyKey` e `detectedAt` permanecerem inalterados;
+- persistências equivalentes não duplicarem aceite e conflitos jamais substituírem o JPEG original;
+- contagem persistente refletir a fila e contador da sessão mantiver semântica própria;
+- falhas não produzirem linha, arquivo canônico, cooldown ou contador parcial;
+- ownership passar formalmente à fila e temporários forem limpos;
+- bootstrap, persistência, remoção e recuperação forem serializados, consistentes e idempotentes;
+- fila indisponível não causar crash nem impedir o Diagnóstico;
+- nenhum arquivo E2 aparecer na galeria ou fora do sandbox;
+- banco, sidecars e JPEGs E2 estiverem explicitamente excluídos de backup e transferência Android pelas regras aplicáveis;
+- Operação E1 e Diagnóstico E0 permanecerem sem regressão;
+- análise, testes e build estiverem aprovados;
+- roteiro físico aplicável estiver preenchido no Galaxy S25+;
+- inspeção negativa confirmar ausência de funcionalidades E3–E5.
+
+## E2.23 Validation Gate E2
+
+A E2 será **aprovável** somente com:
+
+1. `flutter analyze` sem issues;
+2. `flutter test` completo aprovado, incluindo propriedades 13–20 com `glados`, falhas injetadas, concorrência serializada, SQLite real temporário e regressões E0/E1;
+3. build Android debug aprovado, hash registrado e instalação no Samsung Galaxy S25+;
+4. ocorrência manual salva localmente antes do feedback de sucesso;
+5. pendências recuperadas após fechamento/force-stop e reabertura;
+6. contador persistente correto e contador da sessão reiniciado sem perda da fila;
+7. reconstrução comprovada de metadados, SHA-256 e imagem associados;
+8. preflight/rechecagem de idempotência, publicação sem substituição, ownership, limpeza, rollback, remoção e recuperação comprovados por testes e evidência aplicável;
+9. manifesto mesclado e regras Android comprovando exclusão conjunta dos artefatos E2 de backup e transferência;
+10. regressão física E0/E1 essencial aprovada;
+11. ausência comprovada de rede de ocorrência e de qualquer item E3–E5;
+12. evidências sanitizadas e decisão explícita do usuário.
+
+A apresentação do gate interrompe obrigatoriamente o trabalho. Reprovação permite somente correções E2. Aprovação não inicia E3 automaticamente; exige solicitação posterior e novo ciclo de design/planejamento correspondente. Evidências históricas E0/E1 permanecem imutáveis.
+
+## E2.24 Rastreabilidade
+
+| Requisito | Cobertura no design E2 | Evidência planejada |
+|---|---|---|
+| RF-00, RF-01 | preservação do Diagnóstico, Android e falhas controladas | regressão E0, build e dispositivo |
+| RF-03 | captura manual/readiness preservados e fila adicionada como precondição de aceite | testes de controlador/widget e roteiro E1 regressivo |
+| RF-05.4–5 | contadores da sessão e de pendências separados | testes de estado, reabertura e observação física |
+| RF-06–RF-10 | dados, horário, UUID, cooldown e JPEG preservados antes da fila, com SHA-256 interno apenas para integridade E2 | regressão das propriedades E1, round-trip, digest divergente e logs sem digest |
+| RF-11.1, RF-11.8 | ocorrência completa em memória e transferência formal de responsabilidade | testes da ordem e de ownership |
+| RF-12.1–11 | persistência integral, imagem, recuperação, reconstrução, indicador, falha e remoção | SQLite/filesystem, preflight, publicação sem substituição, crash injection e roteiro de reabertura |
+| RF-20, RF-21 | permissões, lifecycle e recursos E1 preservados | regressão automatizada/física |
+| RF-23.1–10, RF-23.19–20 | sequência, escopo E2 e parada no gate | inspeção negativa e decisão explícita |
+| RNF-01 | widgets isolados e repositório/armazenamento atrás de portas | testes arquiteturais e imports |
+| RNF-03.5, RNF-03.10 | persistência testável com fakes e banco temporário | suíte automatizada |
+| RNF-04.2–3, RNF-04.6 | UI responsiva durante IO e single-flight | widgets e observação no Galaxy |
+| RNF-05.1–5 | aceite local anterior a envio, RNF-05.3 distinguido de confirmação remota, retenção, recuperação, serialização, contagem e ausência de endpoint | propriedades 13–19, crashes antes/depois do commit e inspeção negativa |
+| RNF-06.2–3, RNF-06.9–12 | imagem associada, ownership da fila, remoção, sandbox e exclusão de backup/transferência | testes de filesystem, regras Android e inspeção privada |
+| RNF-07.3, RNF-07.10 | roteiro E2 e regressão do Diagnóstico | pacote do Gate E2 |
+| RNF-08 | identidade visual e clareza manual preservadas | widget tests e inspeção física |
+
+RF-13 a RF-19 e RF-22 não geram componentes E2. RF-02 e RF-04 também permanecem sem implementação. Esses requisitos apenas delimitam etapas posteriores e não justificam scaffolding antecipado.
+
+## E2.25 Decisões encerradas e adiamentos
+
+Decisões encerradas neste design:
+
+- SQLite/`sqflite` para metadados;
+- JPEG como arquivo privado durável fora do diretório temporário;
+- protocolo recuperável entre filesystem e SQLite sob uma única coordenação serial;
+- SHA-256 interno por streaming como prova de identidade dos bytes e parte da equivalência idempotente;
+- preflight, rechecagem transacional, staging exclusivo e publicação canônica sem substituição;
+- `idempotencyKey` única e persistência idempotente equivalente sem novo incremento da sessão;
+- fila como proprietária após commit;
+- contador derivado do repositório;
+- restauração do cooldown pela ordem local de aceite, justificada pela ocorrência anterior não limitada à sessão;
+- exclusão seletiva e conjunta do banco/sidecars/JPEGs de backup e transferência Android;
+- ausência de UI de lista/remoção e ausência total de rede de ocorrência.
+
+Não há decisão essencial pendente que exija resposta do usuário para fechar o design E2. Permanecem deliberadamente adiados: números exatos dos pins de `sqflite`, `crypto`, `glados` e eventual adaptador SQLite de teste após verificação de compatibilidade; qualquer configuração/credencial; cliente e política de envio; semântica de confirmação remota e remoção por resposta HTTP; backoff/worker; fluxo visual de pausa; e integração YOLO/TFLite. Esses itens pertencem à implementação técnica E2 ou às etapas posteriores indicadas e não devem gerar scaffolding antecipado.
+
+Esta seção conclui exclusivamente a fase de design da E2. `requirements.md`, `tasks.md`, código, dependências e evidências não são alterados por esta fase.
+
+
+---
+
+# Design adicional — E3: Configuração local e credencial protegida
+
+> **Status e transição:** a E2 foi encerrada no Gate E2 com aprovação explícita. Este bloco projeta exclusivamente a E3. Ele preserva a fila, a captura manual, o Diagnóstico e as evidências E0–E2; não inicia a implementação nem introduz transporte de ocorrências.
+
+## E3.1 Objetivo, escopo e fronteiras
+
+A E3 disponibiliza uma tela de Configurações para o operador salvar o destino futuro (`BASE_URL`), parâmetros operacionais atuais (cooldown e distância mínima), parâmetros reservados a E5 (confiança e FPS) e a API key do dispositivo. A chave é tratada como segredo: é colada manualmente, validada, gravada apenas pelo adaptador seguro Android e nunca volta a preencher a interface.
+
+A etapa **não** cria cliente HTTP de ocorrências, endpoint, header `Authorization`, multipart, envio, remoção remota, retry/backoff, worker, URL real, API key de exemplo funcional, YOLO, TFLite ou inferência. E1/E2 continuam operacionais mesmo sem URL ou chave; a fila não é alterada pela configuração.
+
+## E3.2 Decisões arquiteturais
+
+| Decisão | Definição E3 | Motivo |
+|---|---|---|
+| Dados não secretos | Um `OperationalConfigurationStore` persiste, sob uma única chave/versionamento local, `baseUrl`, cooldown, distância, confiança e FPS. Defaults são aplicados ao carregar campo ausente ou armazenamento vazio. | Permite evolução sem misturar preferências com a fila SQLite E2 nem criar migração no banco de ocorrências. |
+| Segredo | Um `DeviceCredentialStore` separado é o único dono da API key completa; a UI depende apenas de `hasCredential`, `saveCredential` e `removeCredential`. A capacidade de leitura fica restrita a uma porta de consumo futuro E4, não exposta a widgets/estado. | Impede que controller, estado renderizado, logs ou reabertura republiquem a chave. |
+| Dependências | `shared_preferences` (configuração não secreta) e `flutter_secure_storage` (credencial Android) serão adicionadas somente com versões exatas verificadas na tarefa E3. | Mantém os pins reproduzíveis e evita assumir compatibilidade de plugin/SDK. |
+| Salvamento | Valores não secretos e credencial são ações explicitamente separadas na UI. Salvar configurações é atômico no único valor versionado; trocar/remover chave é uma operação segura própria. | Não há transação confiável entre preferences e keystore; separar ações evita atualização cruzada parcialmente silenciosa. |
+| Aplicação em runtime | A política de cooldown recebe atualização de regra sem apagar o último aceite restaurado pela fila E2. Distância também passa a valer na próxima avaliação; confiança/FPS apenas persistem para E5. | Evita liberar uma duplicata ao salvar configurações durante uma janela de cooldown. |
+| Navegação | Abertura de Configurações desativa os recursos de Operação com o mesmo protocolo de rota já usado para Diagnóstico; o retorno reconcilia câmera, GPS, wake lock, fila e estado de permissão. | Evita duas telas disputarem recursos e preserva RF-21. |
+
+## E3.3 Modelo, defaults e validação
+
+`OperationalConfiguration` é um value object imutável com:
+
+- `Uri? baseUrl`;
+- `Duration cooldown` — default de 5 segundos;
+- `double minimumDistanceMeters` — default de 15 metros;
+- `double confidenceThreshold` — default de 0,5;
+- `double maximumInferenceFps` — default de 5;
+- uma versão de armazenamento interna, sem segredo.
+
+`SettingsDraft` conserva somente textos de edição e erros por campo. Antes de qualquer escrita, o validador converte todos os campos em valores tipados; campos vazios, `NaN`, infinito, não numéricos ou fora do domínio bloqueiam o salvamento e apresentam erro no próprio campo. Cooldown, distância e FPS são estritamente positivos; confiança aceita os limites inclusivos `0` e `1`. Cooldown é configurado em segundos e distância em metros; FPS e confiança aceitam decimal com ponto, preservando um formato único e previsível na UI.
+
+A URL é opcional, mas quando fornecida é aparada, parseada e normalizada sem barra final. Ela deve conter host e não pode conter credenciais de usuário, query, fragmento ou o caminho `/api/v1/occurrences` (nem qualquer path diferente de vazio ou `/`). Em qualquer variante, `https` é aceito. Em debug, e somente em debug, `http://localhost:3000` é a única exceção HTTP; host alternativo, porta diferente, IP e qualquer outro HTTP são rejeitados. A UI nunca acrescenta o sufixo de ocorrências nesta etapa.
+
+A chave é opcional para a operação E1/E2. Quando informada para salvar ou substituir, deve ter `prefixo.segredo`: um prefixo não vazio, um único separador de ponto no limite mínimo aceito e uma parcela de segredo não vazia. A validação não registra nem devolve o valor. Campo vazio significa “manter o estado atual”; remoção é uma ação explícita, confirmada por diálogo, e não é inferida de um campo vazio.
+
+## E3.4 Portas, adaptadores e segurança
+
+A camada de domínio contém validadores e modelos sem Flutter. A aplicação define:
+
+```text
+OperationalConfigurationRepository
+  load() -> OperationalConfiguration
+  save(OperationalConfiguration) -> void
+
+DeviceCredentialStatusPort
+  hasCredential() -> bool
+  saveCredential(SecretInput) -> void
+  removeCredential() -> void
+
+OperationalConfigurationSource
+  current() -> OperationalConfiguration
+  watch() -> Stream<OperationalConfiguration>
+```
+
+O adaptador de preferences serializa somente a configuração não secreta em uma chave E3 versionada. Dados ausentes/corrompidos não travam Operação: produzem defaults seguros, erro técnico sanitizado e possibilidade de salvar novamente. O adaptador seguro usa a implementação Android do pacote escolhido, com alias/nome de armazenamento fixado e documentado somente de forma não secreta. Exceções de keystore/storage são convertidas em falhas controladas e acionáveis, nunca em valores impressos.
+
+A API key completa existe apenas durante a submissão da ação de chave e dentro do adaptador seguro. O `TextEditingController` da chave é limpo após sucesso, descarte ou saída; `OperationState`, `SettingsState`, semântica, erros e logs guardam apenas `configured/notConfigured`. Troca exige nova chave completa. Se o valor estiver perdido, a UI orienta a rotação na Administração Next.js e não tenta buscá-lo.
+
+A dependência segura será abstraída por fakes em testes. Nenhum teste de widget ou log pode recuperar/afirmar o texto completo da chave; testes verificam presença, escrita/remoção chamada e ausência de repopulação.
+
+## E3.5 Segurança Android e variantes
+
+O manifesto principal/release continua com `usesCleartextTraffic="false"`. A variante debug recebe somente uma `network-security-config` própria com `base-config` de cleartext bloqueado e uma regra de domínio específica para `localhost`; não haverá abertura global de HTTP, IP, porta alternativa ou alteração no manifesto principal. Testes de artefato/manifesto devem confirmar que a exceção pertence somente ao debug.
+
+Antes da implementação, a tarefa de compatibilidade confirma o mecanismo Android do plugin escolhido e os arquivos de backup/data extraction. A configuração não secreta pode ser preservada segundo a política Android; o arquivo/preference que suporta a credencial segura deve ser excluído de backup e transferência quando necessário pela implementação efetiva, sem enfraquecer as exclusões E2 já aprovadas. A chave nunca é colocada em `.env`, assets, documentação, código, logs ou evidência.
+
+## E3.6 Tela, estados e fluxo
+
+A tela de Configurações contém seções “Operação”, “Destino futuro” e “Credencial do dispositivo”:
+
+1. **Operação:** campos para cooldown, distância, confiança futura e FPS futuro; exibe unidades e defaults aplicados.
+2. **Destino futuro:** campo opcional de `BASE_URL`, com exemplo exclusivamente fictício HTTPS e aviso de que o sufixo `/api/v1/occurrences` não deve ser incluído.
+3. **Credencial:** status “Chave configurada”/“Chave não configurada”, campo vazio de senha para colar uma nova chave, ação de salvar/substituir e ação de remover com confirmação. Quando não houver chave, apresenta orientação de rotação na Administração Next.js em caso de perda.
+4. **Permissões:** apresenta os estados de câmera/localização e uma ação de abrir os detalhes do app Android quando a negação for permanente; essa ação reutiliza a abstração já disponível, não altera o Diagnóstico e não cria solicitações concorrentes.
+
+O controller carrega os stores antes de habilitar salvar. Falha de configuração ou segredo deixa a tela em estado controlado e retentável, sem desligar a fila ou a captura. Ao salvar valores não secretos com sucesso, publica a nova configuração para a Operação. Ao salvar/remover credencial, atualiza somente o status sanitizado. Ausência de URL/chave aparece no resumo de Operação como “Configuração para envio pendente”; ela não desabilita “Registrar buraco”, não altera pendências e não chama rede.
+
+Ao abrir Configurações, `OperationController` suspende recursos; Configurações não inicializa câmera, GPS ou wake lock. Ao retornar, Operação recebe a configuração corrente, atualiza `CooldownPolicy` preservando o último aceite E2 e então reconcilia ciclo de vida/permissões. A rota Diagnóstico mantém seu protocolo próprio e não depende dos stores E3.
+
+## E3.7 Testes e inspeção negativa
+
+Testes de domínio cobrem defaults, toda fronteira numérica, URI, normalização, credencial válida/inválida e ausência de configuração. Testes de repositório cobrem round-trip não secreto, versão/corrupção, falha sanitizada e fakes de secure storage. Testes de controller/widget cobrem carregamento, erros por campo, status de chave sem preenchimento, troca, confirmação de remoção, orientação de rotação, navegação e falta de configuração sem bloqueio E1/E2.
+
+Testes de integração/controle cobrem atualização de cooldown e distância sem perder a referência recuperada após E2. Testes de Android inspecionam os manifests mesclados debug/release e as regras de backup para garantir HTTPS em release, HTTP exclusivamente localhost/debug e exclusões de credencial sem regressão dos artefatos E2. A inspeção negativa exige zero cliente de ocorrência, `POST`, multipart, header de autenticação, worker, backoff, YOLO/TFLite/modelo/inferência; a dependência de secure storage é a única exceção E3 permitida.
+
+## E3.8 Roteiro físico e Validation Gate E3
+
+No Galaxy S25+, o gate deve instalar o APK E3 como atualização preservadora e verificar: tela de Configurações acessível; defaults em instalação sem valores; validação visível de URL/números/chave; salvar e reabrir valores; chave indicada apenas como configurada e nunca preenchida; substituição e remoção confirmada; reinicialização/force-stop preservando configuração e fila; ausência de URL/chave sem bloqueio da captura/fila; aplicação observável de cooldown/distância; tratamento de permissão permanentemente negada; e regressão Operação → Diagnóstico → Operação.
+
+A validação registra APK, hash, versão, estado das permissões e resultados sanitizados. Nenhuma URL de produção, API key, imagem, UUID, coordenada, caminho ou conteúdo de armazenamento seguro entra na evidência. O Gate E3 só pode ser aprovado após análise, testes, build, inspeções de segurança/manifesto, roteiro físico aplicável e aprovação explícita do usuário. Reprovação permite somente correções E3; aprovação encerra E3 e não inicia E4 automaticamente.
+
+## E3.9 Rastreabilidade
+
+| Requisito | Cobertura E3 |
+|---|---|
+| RF-13.1–8, 13–26 | URL validada por variante, provisão manual, status sanitizado, secure storage, troca/remoção e orientação de rotação. |
+| RF-19.1–18 | Tela, defaults, validação, parâmetros atuais/futuros, credencial e funcionamento E1/E2 sem configuração. |
+| RF-20.8 e RF-21 | Reabertura/orientação de permissões e liberação/reconciliação de recursos por rota. |
+| RF-23.1–10, 19–20 | Sequência após E2, escopo fechado, evidências e parada no Gate E3. |
+| RNF-01.7–13 e RNF-03.6,10 | Regras fora de widgets, portas/fakes e testes automatizados. |
+| RNF-02.1–14 | Segredo fora de texto simples/UI/logs, variantes HTTP restritas e política Android. |
+| RNF-04.2,6 e RNF-07.4,10 | UI responsiva, roteiro no S25+ e regressão do Diagnóstico. |
+
+As decisões de contrato HTTP, `Authorization: ApiKey`, multipart, resposta, remoção remota, retry/backoff e worker pertencem exclusivamente à E4. Confiança e FPS persistem nesta etapa apenas como configuração futura; nenhum modelo ou pipeline de inferência é introduzido até E5.

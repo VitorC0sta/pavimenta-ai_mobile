@@ -36,8 +36,15 @@ class E0Controller extends ChangeNotifier {
   _CameraResolution? _pendingCameraResolution;
   final Set<CameraController> _retiredCameraControllers =
       Set<CameraController>.identity();
+  final Completer<void> _disposalCompletion = Completer<void>();
+  Future<void>? _disposalOperation;
+  bool _changeNotifierDisposed = false;
 
   E0State get state => _state;
+
+  /// Completes only after every E0 asynchronous operation and resource has
+  /// settled, allowing the owning route to hand hardware back safely.
+  Future<void> get disposalComplete => _disposalCompletion.future;
 
   bool get canRetryCameraDiagnostic =>
       !_isDisposed &&
@@ -1054,10 +1061,21 @@ class E0Controller extends ChangeNotifier {
     }
   }
 
-  @override
-  void dispose() {
-    if (_isDisposed) {
-      return;
+  /// Begins idempotent E0 shutdown and returns its observable completion.
+  ///
+  /// Resource cancellation starts synchronously. Completion additionally
+  /// waits for callbacks already handed to plugins, which must retire any
+  /// controller they created after this generation was invalidated.
+  Future<void> shutdown() {
+    final operation = _startShutdown();
+    dispose();
+    return operation;
+  }
+
+  Future<void> _startShutdown() {
+    final activeDisposal = _disposalOperation;
+    if (activeDisposal != null) {
+      return activeDisposal;
     }
 
     _isDisposed = true;
@@ -1067,10 +1085,48 @@ class E0Controller extends ChangeNotifier {
 
     final cameraController = _activeCameraController;
     _state = _state.copyWith(cameraController: null);
-    unawaited(locationDiagnostic.dispose());
-    unawaited(diagnosticHttpClient.dispose());
-    unawaited(_retireCameraController(cameraController));
+    final pendingOperations = <Future<void>>[
+      if (_foregroundEntryOperation case final operation?) operation,
+      if (_cameraPermissionOperation case final operation?) operation,
+      if (_cameraPreviewOperation case final operation?) operation,
+      if (_locationPermissionOperation case final operation?) operation,
+      if (_locationResumeOperation case final operation?) operation,
+      if (_httpsDiagnosticOperation case final operation?) operation,
+    ];
+    final cleanupOperations = <Future<void>>[
+      _resourceRelease,
+      locationDiagnostic.dispose(),
+      diagnosticHttpClient.dispose(),
+      _retireCameraController(cameraController),
+    ];
 
+    late final Future<void> operation;
+    operation = () async {
+      await Future.wait(cleanupOperations.map(_ignoreCleanupFailure));
+      await Future.wait(pendingOperations.map(_ignoreCleanupFailure));
+      // Pending callbacks can reach their own stale-result cleanup only after
+      // the first cancellation pass, so reconcile each idempotent owner once.
+      await Future.wait<void>([
+        _ignoreCleanupFailure(locationDiagnostic.dispose()),
+        _ignoreCleanupFailure(diagnosticHttpClient.dispose()),
+      ]);
+    }()
+        .whenComplete(() {
+      if (!_disposalCompletion.isCompleted) {
+        _disposalCompletion.complete();
+      }
+    });
+    _disposalOperation = operation;
+    return operation;
+  }
+
+  @override
+  void dispose() {
+    unawaited(_startShutdown());
+    if (_changeNotifierDisposed) {
+      return;
+    }
+    _changeNotifierDisposed = true;
     super.dispose();
   }
 }

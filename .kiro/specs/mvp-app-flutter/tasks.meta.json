@@ -891,6 +891,1912 @@
         "chatSessionId": "sess_3018b360-4a43-4a82-961b-dce7d7872b4c",
         "timestamp": 1792617606065
       }
+    ],
+    "16. Verificar o baseline aprovado da E0 e os limites da E1": [
+      {
+        "executionId": "75e823a4-5a95-498a-bd17-19ddf2513c5c",
+        "chatSessionId": "sess_4b20eba8-2df4-4476-9b6c-e6074cf4ed57",
+        "timestamp": 1792626295184
+      }
+    ],
+    "17. Fixar somente as dependências aprovadas da E1": [
+      {
+        "executionId": "2f185f98-e325-4e95-83c2-99e70c58a15c",
+        "chatSessionId": "sess_22bb4c22-7e95-47f4-9922-e8a9a4b821da",
+        "timestamp": 1792626552306
+      },
+      {
+        "executionId": "2f185f98-e325-4e95-83c2-99e70c58a15c",
+        "chatSessionId": "sess_22bb4c22-7e95-47f4-9922-e8a9a4b821da",
+        "timestamp": 1792626805593
+      }
+    ],
+    "18. Criar a estrutura arquitetural e os contratos da E1": [
+      {
+        "executionId": "6d17ab6a-fd2a-4a35-9e85-8e69a90b9dcc",
+        "chatSessionId": "sess_0a9fa5d4-52b8-4eb8-93cd-7abb2d444817",
+        "timestamp": 1792626877038
+      },
+      {
+        "executionId": "6d17ab6a-fd2a-4a35-9e85-8e69a90b9dcc",
+        "chatSessionId": "sess_0a9fa5d4-52b8-4eb8-93cd-7abb2d444817",
+        "timestamp": 1792627158178
+      }
+    ],
+    "19. Implementar ocorrência em memória, horário, UUID, localização e velocidade": [
+      {
+        "executionId": "03bbd7aa-c19c-423f-89a1-0bba5acfccc0",
+        "chatSessionId": "sess_b8ea14ec-5556-4f2f-b441-4ef67c1d5f62",
+        "timestamp": 1792627240542
+      },
+      {
+        "executionId": "03bbd7aa-c19c-423f-89a1-0bba5acfccc0",
+        "chatSessionId": "sess_b8ea14ec-5556-4f2f-b441-4ef67c1d5f62",
+        "timestamp": 1792627438733
+      }
+    ],
+    "20. Implementar cooldown por tempo OU distância": [
+      {
+        "executionId": "a1eb5b9f-747a-46e2-a9b1-fc86e4f7ede0",
+        "chatSessionId": "sess_8e2256f9-8634-443e-bb8b-90f7adb3ad6e",
+        "timestamp": 1792627874929
+      },
+      {
+        "executionId": "a1eb5b9f-747a-46e2-a9b1-fc86e4f7ede0",
+        "chatSessionId": "sess_8e2256f9-8634-443e-bb8b-90f7adb3ad6e",
+        "timestamp": 1792628368002
+      }
+    ],
+    "21. Implementar imagem privada, ownership, JPEG e limpeza": [
+      {
+        "executionId": "a98560d7-a156-4eb9-99ca-7f2d18f0d7c0",
+        "chatSessionId": "sess_fedbba2a-34c2-4a79-96b6-c708c2909bb0",
+        "timestamp": 1792628513967
+      },
+      {
+        "executionId": "a98560d7-a156-4eb9-99ca-7f2d18f0d7c0",
+        "chatSessionId": "sess_fedbba2a-34c2-4a79-96b6-c708c2909bb0",
+        "timestamp": 1792628904893
+      }
+    ],
+    "22. Implementar a fonte manual substituível": [
+      {
+        "executionId": "62f47953-b511-42d1-b606-308cc273ac54",
+        "chatSessionId": "sess_fed34f65-0227-4cbc-9012-33258f6c7454",
+        "timestamp": 1792632019902
+      },
+      {
+        "executionId": "62f47953-b511-42d1-b606-308cc273ac54",
+        "chatSessionId": "sess_fed34f65-0227-4cbc-9012-33258f6c7454",
+        "timestamp": 1792632197700
+      }
+    ],
+    "23. Implementar o pós-candidato genérico": [
+      {
+        "executionId": "df024889-c1a3-4b92-9863-47e2c93fa182",
+        "chatSessionId": "sess_cb81f0a9-12a4-40d3-a126-daf8a8055709",
+        "timestamp": 1792632215754
+      },
+      {
+        "executionId": "df024889-c1a3-4b92-9863-47e2c93fa182",
+        "chatSessionId": "sess_cb81f0a9-12a4-40d3-a126-daf8a8055709",
+        "timestamp": 1792632452609
+      }
+    ],
+    "24. Adaptar câmera e GPS operacionais preservando a E0": [
+      {
+        "executionId": "b9062706-7784-4f74-8077-3fb5916b702c",
+        "chatSessionId": "sess_77a25de3-4a3a-42f6-bf97-649f312ee295",
+        "timestamp": 1792632491120
+      }
+    ],
+    "25. Implementar estado, controlador e single-flight da Operação": [
+      {
+        "executionId": "bef0b1f3-74b1-4a8a-b719-d6470f5fd393",
+        "chatSessionId": "sess_313b5458-8882-440b-839f-b9d4d3cf5cfc",
+        "timestamp": 1792633606545
+      },
+      {
+        "executionId": "bef0b1f3-74b1-4a8a-b719-d6470f5fd393",
+        "chatSessionId": "sess_313b5458-8882-440b-839f-b9d4d3cf5cfc",
+        "timestamp": 1792634596196
+      }
+    ],
+    "26. Implementar a tela Operação, tema e feedbacks": [
+      {
+        "executionId": "0deae0d7-febd-4d67-b725-f76d044cae1b",
+        "chatSessionId": "sess_c5c10cc4-d782-4e92-bcc6-cb4961c8aab8",
+        "timestamp": 1792634612745
+      },
+      {
+        "executionId": "0deae0d7-febd-4d67-b725-f76d044cae1b",
+        "chatSessionId": "sess_c5c10cc4-d782-4e92-bcc6-cb4961c8aab8",
+        "timestamp": 1792635488469
+      }
+    ],
+    "27. Implementar lifecycle operacional e tela ligada": [
+      {
+        "executionId": "970e7533-5978-4a98-a3a5-9f4d0adf6f85",
+        "chatSessionId": "sess_def30e35-0c32-413a-987a-467864f79748",
+        "timestamp": 1792635595205
+      },
+      {
+        "executionId": "970e7533-5978-4a98-a3a5-9f4d0adf6f85",
+        "chatSessionId": "sess_def30e35-0c32-413a-987a-467864f79748",
+        "timestamp": 1792636601115
+      }
+    ],
+    "28. Integrar navegação Operação–Diagnóstico com exclusão mútua": [
+      {
+        "executionId": "9b5e1001-ecf2-433b-bf7a-45064a708343",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792636649832
+      }
+    ],
+    "28.1 Tornar Operação a rota inicial e oferecer ação claramente rotulada para abrir o Diagnóstico E0 preservado.": [
+      {
+        "executionId": "3bd619e0-3ce9-4515-b412-caa51c8144cc",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792636716275
+      },
+      {
+        "executionId": "b5a80c5d-a948-4174-8d77-686df492437f",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792637725834
+      },
+      {
+        "executionId": "b5a80c5d-a948-4174-8d77-686df492437f",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792637740998
+      },
+      {
+        "executionId": "00f2c95d-59c7-44d5-8866-c9d08b9861db",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792638343901
+      }
+    ],
+    "28.2 Antes do `push`, suspender Operação, bloquear ações, desabilitar wake lock, invalidar callbacks, limpar processamento e liberar completamente câmera/GPS.": [
+      {
+        "executionId": "3bd619e0-3ce9-4515-b412-caa51c8144cc",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792636716380
+      },
+      {
+        "executionId": "b5a80c5d-a948-4174-8d77-686df492437f",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792637725938
+      },
+      {
+        "executionId": "b5a80c5d-a948-4174-8d77-686df492437f",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792637743378
+      },
+      {
+        "executionId": "00f2c95d-59c7-44d5-8866-c9d08b9861db",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792641563044
+      }
+    ],
+    "28.3 Após o `pop`, aguardar o `dispose` completo da sessão E0 antes de marcar Operação corrente e readquirir recursos em `resumed`.": [
+      {
+        "executionId": "3bd619e0-3ce9-4515-b412-caa51c8144cc",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792636716451
+      },
+      {
+        "executionId": "b5a80c5d-a948-4174-8d77-686df492437f",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792637726024
+      },
+      {
+        "executionId": "b5a80c5d-a948-4174-8d77-686df492437f",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792637746237
+      },
+      {
+        "executionId": "00f2c95d-59c7-44d5-8866-c9d08b9861db",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792643703566
+      }
+    ],
+    "28.4 Escrever testes de navegação e ordem de recursos para Operação → Diagnóstico → Operação, repetição de rotas, exclusão mútua de câmera/GPS e ausência de diálogo/stream duplicado.": [
+      {
+        "executionId": "3bd619e0-3ce9-4515-b412-caa51c8144cc",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792636716516
+      },
+      {
+        "executionId": "b5a80c5d-a948-4174-8d77-686df492437f",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792637726124
+      },
+      {
+        "executionId": "b5a80c5d-a948-4174-8d77-686df492437f",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792637748505
+      },
+      {
+        "executionId": "48d6e766-ffea-4eea-9f56-bb2ba6121612",
+        "chatSessionId": "sess_6ab6ab2d-3f93-46f8-9db9-58a53d45831e",
+        "timestamp": 1792676577765
+      },
+      {
+        "executionId": "48d6e766-ffea-4eea-9f56-bb2ba6121612",
+        "chatSessionId": "sess_6ab6ab2d-3f93-46f8-9db9-58a53d45831e",
+        "timestamp": 1792676829769
+      }
+    ],
+    "28.5 Escrever testes regressivos do acesso E0 para preview, GPS, permissões, HTTPS diagnóstico, mensagens e lifecycle, mantendo intactas as evidências históricas.": [
+      {
+        "executionId": "3bd619e0-3ce9-4515-b412-caa51c8144cc",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792636716575
+      },
+      {
+        "executionId": "b5a80c5d-a948-4174-8d77-686df492437f",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792637726223
+      },
+      {
+        "executionId": "b5a80c5d-a948-4174-8d77-686df492437f",
+        "chatSessionId": "sess_ac92a56a-4aac-4905-bba0-4005726d83ce",
+        "timestamp": 1792637751001
+      }
+    ],
+    "29. Formatar somente a implementação E1": [
+      {
+        "executionId": "20b7e32e-931a-429d-bd82-527f067d4239",
+        "chatSessionId": "sess_9a6f9248-de61-4cd6-8bb4-c9431d4396ab",
+        "timestamp": 1792637098461
+      },
+      {
+        "executionId": "20b7e32e-931a-429d-bd82-527f067d4239",
+        "chatSessionId": "sess_9a6f9248-de61-4cd6-8bb4-c9431d4396ab",
+        "timestamp": 1792637173162
+      }
+    ],
+    "30. Executar análise estática consolidada": [
+      {
+        "executionId": "b2b34647-97d4-4128-82bc-450c2ad15e56",
+        "chatSessionId": "sess_e04c0fa9-5821-49b6-8142-ba1579847320",
+        "timestamp": 1792637316051
+      },
+      {
+        "executionId": "b2b34647-97d4-4128-82bc-450c2ad15e56",
+        "chatSessionId": "sess_e04c0fa9-5821-49b6-8142-ba1579847320",
+        "timestamp": 1792637397270
+      }
+    ],
+    "31. Executar a suíte automatizada consolidada": [
+      {
+        "executionId": "6763aa8b-ef9a-4777-9e40-5c7e19645def",
+        "chatSessionId": "sess_63208265-47b4-44cc-a22b-d1ea1ea24327",
+        "timestamp": 1792637439699
+      }
+    ],
+    "32. Gerar o build Android debug da E1": [
+      {
+        "executionId": "0ca22113-da14-4003-8658-4f70ee53f47d",
+        "chatSessionId": "sess_c65507de-e117-43a8-97fc-441b98a19e7e",
+        "timestamp": 1792637669175
+      }
+    ],
+    "33. Preparar a validação física E1 no Samsung Galaxy S25+": [
+      {
+        "executionId": "9d064d43-5bef-4be8-b5e1-7db3acf6c8dd",
+        "chatSessionId": "sess_49e3c11d-94a2-436b-858b-f7dd3da8198b",
+        "timestamp": 1792675844135
+      },
+      {
+        "executionId": "5b3bc697-ffb6-4f42-9c0a-0539c35b7569",
+        "chatSessionId": "sess_5e0db272-6490-43c7-ac84-c884b34e8fc9",
+        "timestamp": 1792675977458
+      }
+    ],
+    "33.1 Instalar o APK no Galaxy S25+ pelo ambiente Flutter/ADB aprovado; se o aparelho estiver ausente, registrar instrução manual sem alterar toolchain ou aprovar fisicamente.": [
+      {
+        "executionId": "70123acc-7b2f-42b6-9c22-c306eca18996",
+        "chatSessionId": "sess_64952c94-40fe-4f0c-95cc-9dcbfbcdfe89",
+        "timestamp": 1792675992287
+      },
+      {
+        "executionId": "70123acc-7b2f-42b6-9c22-c306eca18996",
+        "chatSessionId": "sess_64952c94-40fe-4f0c-95cc-9dcbfbcdfe89",
+        "timestamp": 1792676080243
+      }
+    ],
+    "33.2 Preparar roteiro e evidências para abertura, preview, banner, botão/readiness, captura única, GPS, velocidade, `detectedAt`, UUID, classe, confiança e contador.": [
+      {
+        "executionId": "9daf3f74-d81b-46d9-81c3-ae6c6d7bd4ff",
+        "chatSessionId": "sess_d873447a-a338-460e-98f3-6efd0755cc70",
+        "timestamp": 1792676088079
+      },
+      {
+        "executionId": "9daf3f74-d81b-46d9-81c3-ae6c6d7bd4ff",
+        "chatSessionId": "sess_d873447a-a338-460e-98f3-6efd0755cc70",
+        "timestamp": 1792676198998
+      }
+    ],
+    "33.3 Preparar cenários para permissões, blockers, concorrência, cooldown por tempo/distância/OR, JPEG 85, orientação, proporção, `1280x720`, 2 MiB, rejeição e limpeza temporária.": [
+      {
+        "executionId": "cf4c7757-03e6-4edc-8bcc-8ea3557651ae",
+        "chatSessionId": "sess_4f35aebc-0106-4533-86ea-9d71081263d0",
+        "timestamp": 1792676210317
+      },
+      {
+        "executionId": "cf4c7757-03e6-4edc-8bcc-8ea3557651ae",
+        "chatSessionId": "sess_4f35aebc-0106-4533-86ea-9d71081263d0",
+        "timestamp": 1792676434752
+      }
+    ],
+    "33.4 Preparar cenários para lifecycle, wake lock, responsividade, acessibilidade, navegação, exclusão mútua de recursos e regressão do Diagnóstico E0.": [
+      {
+        "executionId": "b710a7b7-f411-4c8a-bc02-6d1dff42afb7",
+        "chatSessionId": "sess_f05373b3-4cd0-4cd2-aebd-80e6c6294513",
+        "timestamp": 1792676443637
+      },
+      {
+        "executionId": "2ffca9da-0ce5-4591-b1a4-25472f4c8762",
+        "chatSessionId": "sess_54394243-1ee1-4211-b8d0-1c0c4f53b9e7",
+        "timestamp": 1792680160857
+      },
+      {
+        "executionId": "2ffca9da-0ce5-4591-b1a4-25472f4c8762",
+        "chatSessionId": "sess_54394243-1ee1-4211-b8d0-1c0c4f53b9e7",
+        "timestamp": 1792680422517
+      }
+    ],
+    "29.1 Executar `dart format` somente nos arquivos Dart criados ou modificados pela E1.": [
+      {
+        "executionId": "b8b4545f-1984-4623-977d-62638aec670c",
+        "chatSessionId": "sess_f3f1578c-4a17-4ce1-b2d2-b1d40089a0a5",
+        "timestamp": 1792676839308
+      },
+      {
+        "executionId": "b8b4545f-1984-4623-977d-62638aec670c",
+        "chatSessionId": "sess_f3f1578c-4a17-4ce1-b2d2-b1d40089a0a5",
+        "timestamp": 1792677034182
+      }
+    ],
+    "29.2 Verificar que uma nova checagem de formatação não produz alterações pendentes e que arquivos/evidências históricas fora do escopo permanecem intactos.": [
+      {
+        "executionId": "9eb3dd73-13bf-408e-97f2-32f4b316da54",
+        "chatSessionId": "sess_85aa025c-ef9c-4a67-bf1e-e3503e1c91ae",
+        "timestamp": 1792677043920
+      },
+      {
+        "executionId": "9eb3dd73-13bf-408e-97f2-32f4b316da54",
+        "chatSessionId": "sess_85aa025c-ef9c-4a67-bf1e-e3503e1c91ae",
+        "timestamp": 1792677133459
+      }
+    ],
+    "30.1 Executar `flutter analyze` uma vez em modo não interativo e registrar a saída completa.": [
+      {
+        "executionId": "ec18ed96-d5bc-41f1-8e7d-55f0a7bbd976",
+        "chatSessionId": "sess_bec904b1-5bf3-44dc-9c1e-65f8c6781631",
+        "timestamp": 1792677142183
+      },
+      {
+        "executionId": "ec18ed96-d5bc-41f1-8e7d-55f0a7bbd976",
+        "chatSessionId": "sess_bec904b1-5bf3-44dc-9c1e-65f8c6781631",
+        "timestamp": 1792677259905
+      }
+    ],
+    "30.2 Corrigir somente problemas da E1 ou regressões introduzidas pela integração e repetir até obter zero issues.": [
+      {
+        "executionId": "874fe136-82fb-41d0-b8f6-e9ac720518fa",
+        "chatSessionId": "sess_894b5546-13a5-473c-b55e-93c0c5ed1c00",
+        "timestamp": 1792677273333
+      },
+      {
+        "executionId": "874fe136-82fb-41d0-b8f6-e9ac720518fa",
+        "chatSessionId": "sess_894b5546-13a5-473c-b55e-93c0c5ed1c00",
+        "timestamp": 1792677912028
+      }
+    ],
+    "31.1 Executar `flutter test` completo uma vez e registrar a saída consolidada, sem modo watch.": [
+      {
+        "executionId": "6b4a37b8-cdac-415a-acc2-7025fa9223a8",
+        "chatSessionId": "sess_fadfa695-0084-4407-8e17-f17b4517c6bb",
+        "timestamp": 1792677922633
+      }
+    ],
+    "31.2 Corrigir somente falhas pertencentes à E1 ou regressões introduzidas pela integração e repetir a suíte quando necessário.": [
+      {
+        "executionId": "58efa9a6-820c-4543-810f-081687ec393b",
+        "chatSessionId": "sess_a5f0aa46-d344-4d83-9365-9dd71be3d10f",
+        "timestamp": 1792677938821
+      },
+      {
+        "executionId": "58efa9a6-820c-4543-810f-081687ec393b",
+        "chatSessionId": "sess_a5f0aa46-d344-4d83-9365-9dd71be3d10f",
+        "timestamp": 1792677991921
+      }
+    ],
+    "31.3 Confirmar que todos os testes planejados e criados nas tarefas 19–28 estão presentes, executados e aprovados.": [
+      {
+        "executionId": "01336101-0c95-47fc-a3d6-c301fed317ff",
+        "chatSessionId": "sess_d133a13a-b888-4854-8e91-8a745760531a",
+        "timestamp": 1792678003405
+      },
+      {
+        "executionId": "01336101-0c95-47fc-a3d6-c301fed317ff",
+        "chatSessionId": "sess_d133a13a-b888-4854-8e91-8a745760531a",
+        "timestamp": 1792678312709
+      }
+    ],
+    "32.1 Gerar build Android debug em execução única, sem URL de produção, API key ou configuração de integração de ocorrências.": [
+      {
+        "executionId": "f3621cba-8973-4067-bdc9-1c84797d91b3",
+        "chatSessionId": "sess_2fb2d2dc-efe7-45c1-be4f-628587753dda",
+        "timestamp": 1792678695238
+      },
+      {
+        "executionId": "f3621cba-8973-4067-bdc9-1c84797d91b3",
+        "chatSessionId": "sess_2fb2d2dc-efe7-45c1-be4f-628587753dda",
+        "timestamp": 1792678799421
+      }
+    ],
+    "32.2 Registrar versões da toolchain, resultado do build, caminho do artefato e hash criptográfico do APK.": [
+      {
+        "executionId": "7ed7a0e4-4e61-4eb0-90b9-6c9ae065becb",
+        "chatSessionId": "sess_29b16165-992d-431b-83a8-5034884713b6",
+        "timestamp": 1792678819599
+      },
+      {
+        "executionId": "7ed7a0e4-4e61-4eb0-90b9-6c9ae065becb",
+        "chatSessionId": "sess_29b16165-992d-431b-83a8-5034884713b6",
+        "timestamp": 1792678989905
+      }
+    ],
+    "32.3 Inspecionar o artefato e as dependências quanto ao escopo exclusivo E1 e à preservação da identidade Android aprovada.": [
+      {
+        "executionId": "80ca815f-f10b-4677-b75b-f003368d80e2",
+        "chatSessionId": "sess_8062c61a-f3aa-40e4-b28f-f7e5b5e73d55",
+        "timestamp": 1792679000032
+      },
+      {
+        "executionId": "80ca815f-f10b-4677-b75b-f003368d80e2",
+        "chatSessionId": "sess_8062c61a-f3aa-40e4-b28f-f7e5b5e73d55",
+        "timestamp": 1792679388589
+      }
+    ],
+    "32.4 Confirmar por inspeção negativa a ausência de fila, banco, cliente de ocorrências, multipart, credencial, envio, modelo, inferência e FPS.": [
+      {
+        "executionId": "92f611aa-7bbb-4e7e-beeb-8aed8d09df02",
+        "chatSessionId": "sess_507d3e40-8236-4d5d-a460-2ac1fa69e523",
+        "timestamp": 1792679398601
+      },
+      {
+        "executionId": "92f611aa-7bbb-4e7e-beeb-8aed8d09df02",
+        "chatSessionId": "sess_507d3e40-8236-4d5d-a460-2ac1fa69e523",
+        "timestamp": 1792679626124
+      }
+    ],
+    "33.5 Preparar inspeção negativa de E2–E5 e modelo de evidências sanitizadas, sem executar aprovação nem alterar evidências históricas E0.": [
+      {
+        "executionId": "a47746b4-0a54-4cb4-9c9f-3063d0fd2c31",
+        "chatSessionId": "sess_7e297239-a1ce-47cf-a57f-7d147e06dce9",
+        "timestamp": 1792680436289
+      }
+    ],
+    "34.1 Confirmar e apresentar resultados aprovados de `flutter analyze`, `flutter test`, build debug, hash, instalação, identidade e abertura no Galaxy S25+.": [
+      {
+        "executionId": "193b73d1-b2c1-46d8-bddb-2d21811dc259",
+        "chatSessionId": "sess_1e77a021-13d2-44c4-ab49-9fdfbe853de0",
+        "timestamp": 1792680642214
+      },
+      {
+        "executionId": "193b73d1-b2c1-46d8-bddb-2d21811dc259",
+        "chatSessionId": "sess_1e77a021-13d2-44c4-ab49-9fdfbe853de0",
+        "timestamp": 1792681000833
+      }
+    ],
+    "34.2 Observar fisicamente preview, banner manual, botão e blockers, captura única, GPS/velocidade, horário/UUID, classe/confiança, contador e responsividade.": [
+      {
+        "executionId": "3ab30649-291d-46b1-a41b-1d66cab77261",
+        "chatSessionId": "sess_cb3a9adb-be32-4f88-b0ce-52696e0befc0",
+        "timestamp": 1792681017393
+      }
+    ],
+    "34.3 Observar cooldown de 5 segundos OU 15 metros, rejeição somente com ambos abaixo, feedback explícito e ausência de captura/UUID no bloqueio.": [
+      {
+        "executionId": "de007347-2148-47b4-84d7-94311c8202f5",
+        "chatSessionId": "sess_6480f199-5df4-4543-b19e-e873dc5e584b",
+        "timestamp": 1792682083944
+      },
+      {
+        "executionId": "de007347-2148-47b4-84d7-94311c8202f5",
+        "chatSessionId": "sess_6480f199-5df4-4543-b19e-e873dc5e584b",
+        "timestamp": 1792683993421
+      }
+    ],
+    "34.4 Verificar JPEG privado, orientação, proporção, `1280x720`, qualidade 85, até 2 MiB, rejeição controlada, ownership e limpeza temporária.": [
+      {
+        "executionId": "389dca2d-4046-4c51-aa8a-6d392dd1f376",
+        "chatSessionId": "sess_17c4531a-f01a-43c8-9f58-4fb404855f45",
+        "timestamp": 1792684014583
+      },
+      {
+        "executionId": "389dca2d-4046-4c51-aa8a-6d392dd1f376",
+        "chatSessionId": "sess_17c4531a-f01a-43c8-9f58-4fb404855f45",
+        "timestamp": 1792684688238
+      }
+    ],
+    "34.5 Verificar lifecycle, wake lock, navegação, exclusão mútua câmera/GPS, regressão E0 e ausência de fila, banco, API, credencial, envio, YOLO, TFLite, inferência ou FPS.": [
+      {
+        "executionId": "06dab04b-37d1-46e2-9510-6b802117b998",
+        "chatSessionId": "sess_af04f7e6-524d-481d-9de3-5e53c53987d5",
+        "timestamp": 1792684704449
+      }
+    ],
+    "34.6 Apresentar todas as evidências e registrar aprovação ou reprovação explícita; parar no gate, limitar eventual correção à E1 e não iniciar E2.": [
+      {
+        "executionId": "3f9999cd-8e0d-42a9-a0e6-157ce3b04ae6",
+        "chatSessionId": "sess_9cfa1600-d884-4f3e-af06-27338de3614e",
+        "timestamp": 1792684730001
+      },
+      {
+        "executionId": "3f9999cd-8e0d-42a9-a0e6-157ce3b04ae6",
+        "chatSessionId": "sess_9cfa1600-d884-4f3e-af06-27338de3614e",
+        "timestamp": 1792685396357
+      },
+      {
+        "executionId": "a14779b9-8373-4e7c-90e6-a01317292d7f",
+        "chatSessionId": "sess_9cfa1600-d884-4f3e-af06-27338de3614e",
+        "timestamp": 1792688525279
+      },
+      {
+        "executionId": "eae2e60e-d0dd-41cb-abda-4a575659c4ab",
+        "chatSessionId": "sess_9cfa1600-d884-4f3e-af06-27338de3614e",
+        "timestamp": 1792690054970
+      },
+      {
+        "executionId": "a0b2da08-9c71-4e57-9584-7819980b800a",
+        "chatSessionId": "sess_9cfa1600-d884-4f3e-af06-27338de3614e",
+        "timestamp": 1792692656476
+      },
+      {
+        "executionId": "4194a8b9-6a63-4534-8ce6-1805faa79c5f",
+        "chatSessionId": "sess_9cfa1600-d884-4f3e-af06-27338de3614e",
+        "timestamp": 1792693590513
+      },
+      {
+        "executionId": "4194a8b9-6a63-4534-8ce6-1805faa79c5f",
+        "chatSessionId": "sess_9cfa1600-d884-4f3e-af06-27338de3614e",
+        "timestamp": 1792695616910
+      }
+    ],
+    "34. Validation Gate E1 no Samsung Galaxy S25+": [
+      {
+        "executionId": "3f9999cd-8e0d-42a9-a0e6-157ce3b04ae6",
+        "chatSessionId": "sess_9cfa1600-d884-4f3e-af06-27338de3614e",
+        "timestamp": 1792685396493
+      }
+    ],
+    "35.1 Registrar `git status`, árvore relevante, dependências diretas, versões da toolchain, manifesto, regras Android existentes e resultados reproduzíveis de `flutter analyze` e `flutter test`, sem modificar nem descartar alterações preexistentes.": [
+      {
+        "executionId": "f5b89657-6664-45dc-9ed7-33cccd826860",
+        "chatSessionId": "sess_d2b86273-4492-4376-a5da-f4b3c171341c",
+        "timestamp": 1792698577893
+      }
+    ],
+    "35.2 Confirmar o acesso ao Diagnóstico E0, o fluxo Operação E1, a aprovação do Gate E1 e a integridade das evidências históricas antes de qualquer alteração E2.": [
+      {
+        "executionId": "235a3b98-01e4-4aee-8c0b-8a990d4a3454",
+        "chatSessionId": "sess_39d5a095-ff14-4e12-ba83-e1130f149656",
+        "timestamp": 1792698594011
+      },
+      {
+        "executionId": "235a3b98-01e4-4aee-8c0b-8a990d4a3454",
+        "chatSessionId": "sess_39d5a095-ff14-4e12-ba83-e1130f149656",
+        "timestamp": 1792701701622
+      }
+    ],
+    "35.3 Mapear os pontos concretos de integração do `PostCandidateProcessor`, `OperationController`, `OperationState`, ownership/lease de imagem, cooldown e composition root, sem alterar comportamento ainda.": [
+      {
+        "executionId": "e5a0063b-5e36-4c5b-9b0c-cf907bfe499c",
+        "chatSessionId": "sess_05f22844-cd56-47ab-9531-1d0667291483",
+        "timestamp": 1792701718624
+      },
+      {
+        "executionId": "e5a0063b-5e36-4c5b-9b0c-cf907bfe499c",
+        "chatSessionId": "sess_05f22844-cd56-47ab-9531-1d0667291483",
+        "timestamp": 1792702054616
+      }
+    ],
+    "35.4 Executar inspeção negativa inicial e registrar a ausência de fila E2 preexistente e de funcionalidades E3–E5, distinguindo o `DiagnosticHttpClient` E0 permitido de qualquer cliente de ocorrências proibido.": [
+      {
+        "executionId": "17c4bc0a-19b9-45d2-85ec-b60443f482de",
+        "chatSessionId": "sess_8b4d22b3-d498-4682-ab03-8b6bf5a9d18f",
+        "timestamp": 1792702069033
+      }
+    ],
+    "36.1 Preservar os seis pins diretos aprovados da E1 e verificar a compatibilidade de versões candidatas exatas de `sqflite`, `crypto` e `glados` com Flutter 3.24.3, Dart 3.5.3, Android e as dependências já resolvidas.": [
+      {
+        "executionId": "3f70d751-7219-4789-ae22-e7a8ae85e7e8",
+        "chatSessionId": "sess_986d5ef3-311f-452c-a639-10f3e2f11905",
+        "timestamp": 1792702949323
+      },
+      {
+        "executionId": "3f70d751-7219-4789-ae22-e7a8ae85e7e8",
+        "chatSessionId": "sess_986d5ef3-311f-452c-a639-10f3e2f11905",
+        "timestamp": 1792703656424
+      }
+    ],
+    "36.2 Verificar se testes SQLite reais no host exigem adaptador compatível; adicionar um único adaptador de desenvolvimento com pin exato somente se a suíte não puder usar adequadamente a API escolhida sem ele.": [
+      {
+        "executionId": "d10a8d6f-0281-4d94-b2d8-27b3de671ab1",
+        "chatSessionId": "sess_adbe7286-885e-46f1-8513-91724dac9be6",
+        "timestamp": 1792703665995
+      }
+    ],
+    "36.3 Registrar a justificativa e fixar no `pubspec.yaml`, sem `^` ou intervalos, as versões exatas confirmadas de `sqflite`, `crypto`, `glados` e do eventual adaptador de teste; atualizar o lockfile pela resolução normal.": [
+      {
+        "executionId": "c60c935d-971d-4139-8470-2abecb4fc976",
+        "chatSessionId": "sess_806ac0d2-bfa5-481c-bff4-af451d7dd4bf",
+        "timestamp": 1792703675634
+      },
+      {
+        "executionId": "c60c935d-971d-4139-8470-2abecb4fc976",
+        "chatSessionId": "sess_806ac0d2-bfa5-481c-bff4-af451d7dd4bf",
+        "timestamp": 1792714167513
+      }
+    ],
+    "36.4 Executar resolução e inspeção de dependências, rejeitando incompatibilidades sem atualizar globalmente a toolchain e sem adicionar Hive, ORM, gerador de código, rede, secure storage, worker, estado, DI, mocks ou visão computacional.": [
+      {
+        "executionId": "9ef5e280-f178-440f-98df-821c64609cae",
+        "chatSessionId": "sess_b2da54de-f287-4c7f-a174-947718d40427",
+        "timestamp": 1792714184355
+      }
+    ],
+    "36.5 Escrever verificação automatizada ou inspeção reproduzível que confirme os pins diretos e a ausência de dependências E3–E5.": [
+      {
+        "executionId": "98406731-1a40-41af-8af6-eed215d420f0",
+        "chatSessionId": "sess_b3a26e32-e9e5-479d-b29e-abd88cad4b8d",
+        "timestamp": 1792714198316
+      },
+      {
+        "executionId": "98406731-1a40-41af-8af6-eed215d420f0",
+        "chatSessionId": "sess_b3a26e32-e9e5-479d-b29e-abd88cad4b8d",
+        "timestamp": 1792714324048
+      }
+    ],
+    "36. Confirmar e fixar somente as dependências compatíveis da E2": [
+      {
+        "executionId": "98406731-1a40-41af-8af6-eed215d420f0",
+        "chatSessionId": "sess_b3a26e32-e9e5-479d-b29e-abd88cad4b8d",
+        "timestamp": 1792714324138
+      }
+    ],
+    "37. Definir portas, resultados e modelos persistentes da E2": [
+      {
+        "executionId": "6274b05f-8946-4970-93c5-33da924ed396",
+        "chatSessionId": "sess_696dfd67-f05c-4506-b973-807b252cf9a8",
+        "timestamp": 1792714339218
+      },
+      {
+        "executionId": "6274b05f-8946-4970-93c5-33da924ed396",
+        "chatSessionId": "sess_696dfd67-f05c-4506-b973-807b252cf9a8",
+        "timestamp": 1792714653856
+      }
+    ],
+    "37.1 Criar `OccurrenceAcceptancePort` e resultados tipados para nova persistência, equivalência existente, conflito de identidade, armazenamento indisponível, dados inválidos, falha de imagem e falha transacional.": [
+      {
+        "executionId": "cd2c9f49-a172-46b6-8150-4d1d31be379d",
+        "chatSessionId": "sess_e00d3e5d-4c71-44c7-b2ee-951514a52b4a",
+        "timestamp": 1792714662370
+      },
+      {
+        "executionId": "cd2c9f49-a172-46b6-8150-4d1d31be379d",
+        "chatSessionId": "sess_e00d3e5d-4c71-44c7-b2ee-951514a52b4a",
+        "timestamp": 1792715168391
+      }
+    ],
+    "37.2 Definir contratos de `PersistentOccurrenceQueue`, `DurableImageStore`, observação de snapshot, bootstrap, listagem/reconstrução, contagem e remoção interna, sem API de envio ou ação de remoção na UI.": [
+      {
+        "executionId": "aa1c3059-0aae-429a-8bc3-0a2b0b332aeb",
+        "chatSessionId": "sess_bc1ca6fa-cdc4-4f5d-9514-3d2754f447c6",
+        "timestamp": 1792715178547
+      }
+    ],
+    "37.3 Criar projeções imutáveis de registro, imagem persistida, saúde da fila e pendência reconstruída, preservando `null` versus zero e sem propagar paths absolutos ou bytes à apresentação.": [
+      {
+        "executionId": "348dab71-f8e2-4c58-b566-a838e2305a10",
+        "chatSessionId": "sess_6cff8ecd-fb67-401c-85ed-d80aeabc0c2a",
+        "timestamp": 1792715407938
+      },
+      {
+        "executionId": "348dab71-f8e2-4c58-b566-a838e2305a10",
+        "chatSessionId": "sess_6cff8ecd-fb67-401c-85ed-d80aeabc0c2a",
+        "timestamp": 1792715548160
+      }
+    ],
+    "37.4 Evoluir a lease E1 apenas com operações mínimas para leitura em streaming, promoção e retirada idempotente de ownership, preservando limpeza E1 em falha.": [
+      {
+        "executionId": "ada6e00d-0c76-4658-835f-e5f952dd1a19",
+        "chatSessionId": "sess_e63ae17b-d4ab-4722-8d10-cf961ad32082",
+        "timestamp": 1792715638308
+      }
+    ],
+    "37.5 Escrever testes de contrato para transições de ownership, resultados tipados, snapshots imutáveis e ausência de imports Flutter/SQLite nos modelos e portas de domínio/aplicação.": [
+      {
+        "executionId": "bc9347f4-2492-4c13-8c93-8d2bc766a4a2",
+        "chatSessionId": "sess_e2697fd6-9696-439f-8341-56c1aab6376a",
+        "timestamp": 1792715652223
+      },
+      {
+        "executionId": "bc9347f4-2492-4c13-8c93-8d2bc766a4a2",
+        "chatSessionId": "sess_e2697fd6-9696-439f-8341-56c1aab6376a",
+        "timestamp": 1792715858219
+      }
+    ],
+    "38. Implementar o schema SQLite v1 e o mapper canônico": [
+      {
+        "executionId": "22e1523a-446f-4ca9-a674-df0021064e92",
+        "chatSessionId": "sess_7687065d-d222-4cd9-8478-63bf4fa2c34b",
+        "timestamp": 1792715868966
+      },
+      {
+        "executionId": "22e1523a-446f-4ca9-a674-df0021064e92",
+        "chatSessionId": "sess_7687065d-d222-4cd9-8478-63bf4fa2c34b",
+        "timestamp": 1792716227711
+      }
+    ],
+    "38.1 Criar o banco privado `e2_occurrence_queue_v1.db`, versão 1, e a tabela de pendências com `queueSequence` monotônico, `idempotencyKey` UUID v4 única e todos os campos canônicos definidos em E2.7.": [
+      {
+        "executionId": "9d4e5927-220c-4a41-b81a-dfa227d33807",
+        "chatSessionId": "sess_3aa784e7-a651-4b28-a87a-1773582fab35",
+        "timestamp": 1792716238333
+      },
+      {
+        "executionId": "9d4e5927-220c-4a41-b81a-dfa227d33807",
+        "chatSessionId": "sess_3aa784e7-a651-4b28-a87a-1773582fab35",
+        "timestamp": 1792716345576
+      }
+    ],
+    "38.2 Incluir `imageRelativeName`, MIME `image/jpeg`, tamanho entre 1 e 2 MiB, `imageSha256` hexadecimal minúsculo de 64 caracteres, dimensões máximas `1280x720` e qualidade exatamente 85, com constraints defensivas aplicáveis.": [
+      {
+        "executionId": "3fa2bfaa-5dcc-4ae5-b9ac-85d187c3a7dc",
+        "chatSessionId": "sess_d9f7b2af-b794-49c7-875d-f3c4ee5e3c98",
+        "timestamp": 1792716356594
+      },
+      {
+        "executionId": "3fa2bfaa-5dcc-4ae5-b9ac-85d187c3a7dc",
+        "chatSessionId": "sess_d9f7b2af-b794-49c7-875d-f3c4ee5e3c98",
+        "timestamp": 1792716466119
+      }
+    ],
+    "38.3 Omitir do schema `source`, `highway`, `km`, URL, API key, status HTTP, tentativas, `nextAttemptAt`, backoff, pausa e qualquer campo reservado a etapas posteriores.": [
+      {
+        "executionId": "8bcdf065-a595-4802-ba20-b69a1feea82e",
+        "chatSessionId": "sess_5dfafceb-fffd-4b5e-a63e-4cb6624eb627",
+        "timestamp": 1792716485870
+      },
+      {
+        "executionId": "8bcdf065-a595-4802-ba20-b69a1feea82e",
+        "chatSessionId": "sess_5dfafceb-fffd-4b5e-a63e-4cb6624eb627",
+        "timestamp": 1792716554640
+      }
+    ],
+    "38.4 Implementar `QueueRecordMapper` para persistir e reconstruir os valores canônicos sem recalcular UUID, horário, coordenadas, precisão, velocidade, confiança, classe, digest ou metadados da imagem.": [
+      {
+        "executionId": "7a320b0d-aaa7-4fe7-8a98-a0c6552d0900",
+        "chatSessionId": "sess_229ef5d2-65b1-4361-bb41-0740f59be211",
+        "timestamp": 1792716580711
+      }
+    ],
+    "38.5 Escrever testes com SQLite temporário real para criação/reabertura do schema, constraints, unicidade, offsets ISO 8601, `null` versus zero, ordem por `queueSequence`, versão futura sem reset e round-trip de todos os campos.": [
+      {
+        "executionId": "5acf7ddf-bc68-4fd3-ac3f-60808768224c",
+        "chatSessionId": "sess_92608f05-e0e3-4bd1-a43d-0a7a64e0bc98",
+        "timestamp": 1792716591651
+      },
+      {
+        "executionId": "5acf7ddf-bc68-4fd3-ac3f-60808768224c",
+        "chatSessionId": "sess_92608f05-e0e3-4bd1-a43d-0a7a64e0bc98",
+        "timestamp": 1792716693241
+      }
+    ],
+    "39. Implementar o armazenamento durável privado e a integridade SHA-256": [
+      {
+        "executionId": "f9bdf3be-50bc-4dc8-954f-c769d0952160",
+        "chatSessionId": "sess_2465ac72-c120-48d5-9797-81c18537eaab",
+        "timestamp": 1792716710914
+      },
+      {
+        "executionId": "f9bdf3be-50bc-4dc8-954f-c769d0952160",
+        "chatSessionId": "sess_2465ac72-c120-48d5-9797-81c18537eaab",
+        "timestamp": 1792716929252
+      }
+    ],
+    "39.2 Implementar criação exclusiva de `.staging`, cópia e flush assíncronos, SHA-256 por streaming com `crypto`, validação de bytes/metadados e publicação por rename no mesmo diretório sem substituir destino existente.": [
+      {
+        "executionId": "1eff6405-5bbf-407f-87de-50f8064c8ca1",
+        "chatSessionId": "sess_7487a6c3-fc00-4038-b9fd-c3052808a7a5",
+        "timestamp": 1792716947729
+      },
+      {
+        "executionId": "1eff6405-5bbf-407f-87de-50f8064c8ca1",
+        "chatSessionId": "sess_7487a6c3-fc00-4038-b9fd-c3052808a7a5",
+        "timestamp": 1792717084164
+      }
+    ],
+    "39.1 Criar o namespace privado durável `e2_queue_images_v1` no diretório de suporte do aplicativo e resolver somente nomes relativos opacos, sem separador, traversal, symlink ou escape do namespace.": [
+      {
+        "executionId": "48f8650a-1b84-4bf8-b3c6-23ab9a8eba07",
+        "chatSessionId": "sess_11767a96-fd73-4787-bee1-2111a5866a90",
+        "timestamp": 1792717099185
+      }
+    ],
+    "39.3 Implementar nomes canônicos e marcadores `.deleting` reconhecíveis, exclusivos e opacos, sem coordenadas, data, classe, UUID completo ou digest no nome.": [
+      {
+        "executionId": "17bbee28-ed8c-4615-a80b-b9ee818df0cf",
+        "chatSessionId": "sess_938ca23e-2f57-4fcd-96e3-6a69a9c85972",
+        "timestamp": 1792717118982
+      },
+      {
+        "executionId": "17bbee28-ed8c-4615-a80b-b9ee818df0cf",
+        "chatSessionId": "sess_938ca23e-2f57-4fcd-96e3-6a69a9c85972",
+        "timestamp": 1792717440225
+      }
+    ],
+    "39.4 Implementar exclusão idempotente e varredura estritamente limitada a artefatos reconhecidos, sem seguir links, percorrer subdiretórios arbitrários ou tocar temporários E1/arquivos externos.": [
+      {
+        "executionId": "0019cedf-88b9-472a-85b0-200f4adee72e",
+        "chatSessionId": "sess_7711ebdf-0d2e-4483-9ad5-3a56c1285044",
+        "timestamp": 1792717452807
+      },
+      {
+        "executionId": "0019cedf-88b9-472a-85b0-200f4adee72e",
+        "chatSessionId": "sess_7711ebdf-0d2e-4483-9ad5-3a56c1285044",
+        "timestamp": 1792717889901
+      }
+    ],
+    "39.5 Escrever testes de filesystem para streaming, flush, digest, MIME/dimensões/qualidade/tamanho, no-overwrite, colisões, traversal, symlink, nomes desconhecidos, falhas de limpeza e logs sanitizados.": [
+      {
+        "executionId": "77afcbc8-d1f5-49f4-9e50-9fae34426d43",
+        "chatSessionId": "sess_537452b2-b020-436f-a260-47a941c1652d",
+        "timestamp": 1792717902748
+      },
+      {
+        "executionId": "77afcbc8-d1f5-49f4-9e50-9fae34426d43",
+        "chatSessionId": "sess_537452b2-b020-436f-a260-47a941c1652d",
+        "timestamp": 1792718154329
+      }
+    ],
+    "40. Configurar a exclusão Android de backup e transferência": [
+      {
+        "executionId": "8f63368b-fbdb-400f-82d0-c712b1e44686",
+        "chatSessionId": "sess_496488da-0243-4821-a5d5-71850e796347",
+        "timestamp": 1792718636215
+      },
+      {
+        "executionId": "8f63368b-fbdb-400f-82d0-c712b1e44686",
+        "chatSessionId": "sess_496488da-0243-4821-a5d5-71850e796347",
+        "timestamp": 1792719355588
+      }
+    ],
+    "40.1 Criar regras legadas de `android:fullBackupContent` que excluam o banco `e2_occurrence_queue_v1.db`, sidecars `-journal`, `-wal`, `-shm` e o diretório `e2_queue_images_v1/` nos domínios efetivos.": [
+      {
+        "executionId": "4597f01a-cc0c-45e0-a2df-44cd1ee0911b",
+        "chatSessionId": "sess_438a8fbc-474f-4962-ab7c-9249e58f87e5",
+        "timestamp": 1792719372365
+      },
+      {
+        "executionId": "4597f01a-cc0c-45e0-a2df-44cd1ee0911b",
+        "chatSessionId": "sess_438a8fbc-474f-4962-ab7c-9249e58f87e5",
+        "timestamp": 1792719721602
+      }
+    ],
+    "40.2 Criar regras Android 12+ de `android:dataExtractionRules` com exclusões simétricas em `cloud-backup` e `device-transfer` para os mesmos artefatos.": [
+      {
+        "executionId": "d0822d2b-4299-4e52-bbe8-4f18fb120ded",
+        "chatSessionId": "sess_0b9ca1c3-266f-418d-b972-7c6fbed5dad2",
+        "timestamp": 1792719739694
+      },
+      {
+        "executionId": "d0822d2b-4299-4e52-bbe8-4f18fb120ded",
+        "chatSessionId": "sess_0b9ca1c3-266f-418d-b972-7c6fbed5dad2",
+        "timestamp": 1792719831708
+      }
+    ],
+    "40.3 Referenciar ambas as regras no elemento `<application>` sem adicionar permissão, desabilitar genericamente todo backup ou alterar cleartext/TLS e permissões aprovadas.": [
+      {
+        "executionId": "27a57474-fc4f-46d1-93e9-581a12ab53ab",
+        "chatSessionId": "sess_8f9702a2-df34-4350-a499-660266a55d67",
+        "timestamp": 1792719844686
+      }
+    ],
+    "40.4 Escrever testes estáticos do manifesto/XML e teste de integração que confronte os paths relativos reais produzidos por `sqflite`/`path_provider` com os paths excluídos.": [
+      {
+        "executionId": "c5c797c6-6841-4918-ac85-860bc39af164",
+        "chatSessionId": "sess_280da8ac-1c2a-4e11-bdb3-138162754787",
+        "timestamp": 1792719854566
+      },
+      {
+        "executionId": "c5c797c6-6841-4918-ac85-860bc39af164",
+        "chatSessionId": "sess_280da8ac-1c2a-4e11-bdb3-138162754787",
+        "timestamp": 1792720113526
+      }
+    ],
+    "40.5 Verificar o manifesto mesclado de debug e registrar qualquer limitação da toolchain para testar backup/transferência sem substituir ausência de evidência por aprovação.": [
+      {
+        "executionId": "ee2672ea-5860-458f-a7f8-df5c0d350836",
+        "chatSessionId": "sess_bd43baf3-8e31-469f-ab31-af4faecde26f",
+        "timestamp": 1792720137677
+      },
+      {
+        "executionId": "ee2672ea-5860-458f-a7f8-df5c0d350836",
+        "chatSessionId": "sess_bd43baf3-8e31-469f-ab31-af4faecde26f",
+        "timestamp": 1792720296971
+      }
+    ],
+    "41. Implementar o coordenador single-writer e o bootstrap da fila": [
+      {
+        "executionId": "0093a439-f25d-4654-83ed-25fbb27cf932",
+        "chatSessionId": "sess_da4c0095-e416-4539-a0f7-fa718721fa44",
+        "timestamp": 1792720459941
+      },
+      {
+        "executionId": "0093a439-f25d-4654-83ed-25fbb27cf932",
+        "chatSessionId": "sess_da4c0095-e416-4539-a0f7-fa718721fa44",
+        "timestamp": 1792720953721
+      }
+    ],
+    "41.1 Implementar uma única região crítica assíncrona para inicialização, retry, recuperação, persistência, leitura confirmada e remoção, compartilhando a mesma execução de bootstrap entre chamadas concorrentes.": [
+      {
+        "executionId": "c8083de0-f2d5-4e9e-87ef-bf6249766cf0",
+        "chatSessionId": "sess_57e148e4-8737-43a6-a394-d4cdbdce109a",
+        "timestamp": 1792721107554
+      },
+      {
+        "executionId": "c8083de0-f2d5-4e9e-87ef-bf6249766cf0",
+        "chatSessionId": "sess_57e148e4-8737-43a6-a394-d4cdbdce109a",
+        "timestamp": 1792721199553
+      }
+    ],
+    "41.2 Abrir/criar o schema sem fallback destrutivo, recusar versão futura, impedir fechamento durante mutação adquirida e bloquear leituras públicas até snapshot confirmado.": [
+      {
+        "executionId": "54eeba74-a307-46fa-8374-f39434da563a",
+        "chatSessionId": "sess_9c29894b-a574-453c-815c-3ec00a268d7f",
+        "timestamp": 1792721210653
+      },
+      {
+        "executionId": "54eeba74-a307-46fa-8374-f39434da563a",
+        "chatSessionId": "sess_9c29894b-a574-453c-815c-3ec00a268d7f",
+        "timestamp": 1792721323772
+      }
+    ],
+    "41.3 Publicar `QueueSnapshot` com estado inicializando, pronta, degradada ou indisponível e contagem derivada das linhas confirmadas, sem dados completos de ocorrências.": [
+      {
+        "executionId": "2ffc1062-6eb1-4fd4-97d0-3146dec24010",
+        "chatSessionId": "sess_5b38bc7d-0369-452f-9714-52d06b7c88f8",
+        "timestamp": 1792721340529
+      },
+      {
+        "executionId": "2ffc1062-6eb1-4fd4-97d0-3146dec24010",
+        "chatSessionId": "sess_5b38bc7d-0369-452f-9714-52d06b7c88f8",
+        "timestamp": 1792721468460
+      }
+    ],
+    "41.4 Implementar retry controlado de inicialização sem reinicializar câmera/GPS e sem impedir abertura do Diagnóstico quando a fila falhar.": [
+      {
+        "executionId": "09a4b65e-1cd9-4e69-8f6c-a3b157bf6ba8",
+        "chatSessionId": "sess_164c34a3-3c64-4fcd-a011-8b2910d8ff73",
+        "timestamp": 1792721477603
+      },
+      {
+        "executionId": "09a4b65e-1cd9-4e69-8f6c-a3b157bf6ba8",
+        "chatSessionId": "sess_164c34a3-3c64-4fcd-a011-8b2910d8ff73",
+        "timestamp": 1792721746923
+      }
+    ],
+    "41.5 Escrever testes determinísticos de concorrência para bootstrap/retry compartilhado, exclusão mútua de mutações, ordem observável, ausência de leitura intermediária e fechamento seguro.": [
+      {
+        "executionId": "3ab270c8-a9e6-44bf-a91d-0fbdfed27b39",
+        "chatSessionId": "sess_7d0c7e71-0a5b-41e5-9647-cd815a4eaf5f",
+        "timestamp": 1792721758830
+      },
+      {
+        "executionId": "3ab270c8-a9e6-44bf-a91d-0fbdfed27b39",
+        "chatSessionId": "sess_7d0c7e71-0a5b-41e5-9647-cd815a4eaf5f",
+        "timestamp": 1792721833489
+      }
+    ],
+    "42.1 Implementar preflight por `idempotencyKey` antes de criar arquivo E2 e comparar todos os campos canônicos, metadados e SHA-256 do preparado, da linha e do JPEG existente.": [
+      {
+        "executionId": "f70e6d43-04a8-4bcc-b1ca-f5b2a784ad83",
+        "chatSessionId": "sess_98f39cab-2035-4e81-8116-d3cf7840994f",
+        "timestamp": 1792721923764
+      },
+      {
+        "executionId": "f70e6d43-04a8-4bcc-b1ca-f5b2a784ad83",
+        "chatSessionId": "sess_98f39cab-2035-4e81-8116-d3cf7840994f",
+        "timestamp": 1792722272014
+      }
+    ],
+    "42.2 Para chave nova, criar staging exclusivo, copiar/validar/hash, reconsultar a chave dentro da transação, confirmar destino livre, publicar sem overwrite, inserir a linha e confirmar a transação nessa ordem.": [
+      {
+        "executionId": "aa198b61-d87b-4a9b-9ff3-3d2e2675b402",
+        "chatSessionId": "sess_90577165-10f1-4a57-a081-f4da3944b8b5",
+        "timestamp": 1792722364916
+      },
+      {
+        "executionId": "aa198b61-d87b-4a9b-9ff3-3d2e2675b402",
+        "chatSessionId": "sess_90577165-10f1-4a57-a081-f4da3944b8b5",
+        "timestamp": 1792722658254
+      }
+    ],
+    "42.3 Tratar chave equivalente como confirmação idempotente sem nova linha, imagem, contagem ou aceite da sessão; tratar qualquer divergência como conflito que preserva integralmente a primeira pendência.": [
+      {
+        "executionId": "e0977901-9a55-4051-9560-5eaac3b15515",
+        "chatSessionId": "sess_5b69f181-702b-4f51-933d-1b95135bcb23",
+        "timestamp": 1792722676429
+      },
+      {
+        "executionId": "e0977901-9a55-4051-9560-5eaac3b15515",
+        "chatSessionId": "sess_5b69f181-702b-4f51-933d-1b95135bcb23",
+        "timestamp": 1792722955155
+      }
+    ],
+    "42.4 Compensar falha após publicação removendo somente o canônico criado pela operação corrente; preservar órfão reconhecível para recuperação se a compensação falhar e jamais remover destino preexistente.": [
+      {
+        "executionId": "1854dd76-bb0d-4eef-b344-eb20a189c2c7",
+        "chatSessionId": "sess_6109ff02-7813-4dec-a77d-7c7cd1074529",
+        "timestamp": 1792722969443
+      },
+      {
+        "executionId": "1854dd76-bb0d-4eef-b344-eb20a189c2c7",
+        "chatSessionId": "sess_6109ff02-7813-4dec-a77d-7c7cd1074529",
+        "timestamp": 1792723244387
+      }
+    ],
+    "42.5 Transferir ownership à fila somente após linha e JPEG íntegros confirmados; manter/limpar a lease E1 no caminho correto e retornar resultado `persistida` somente para novo aceite.": [
+      {
+        "executionId": "889172e6-2619-4221-9482-4b2050f26427",
+        "chatSessionId": "sess_3e2f70ac-65ba-4f68-a9fc-0b570d514fb4",
+        "timestamp": 1792723277206
+      },
+      {
+        "executionId": "889172e6-2619-4221-9482-4b2050f26427",
+        "chatSessionId": "sess_3e2f70ac-65ba-4f68-a9fc-0b570d514fb4",
+        "timestamp": 1792723519095
+      }
+    ],
+    "42.6 Escrever testes com falhas injetadas em preflight, staging, copy, flush, hash, rechecagem, destino, rename, insert, commit e retirada de lease, além de concorrência da mesma chave e imagens diferentes com mesmo tamanho.": [
+      {
+        "executionId": "cadc2555-2cc1-435d-94c9-3b6d8aafe2b1",
+        "chatSessionId": "sess_00f9fc68-a778-4e0c-bb2b-896f8dbc2d6c",
+        "timestamp": 1792723533110
+      },
+      {
+        "executionId": "cadc2555-2cc1-435d-94c9-3b6d8aafe2b1",
+        "chatSessionId": "sess_00f9fc68-a778-4e0c-bb2b-896f8dbc2d6c",
+        "timestamp": 1792723762091
+      }
+    ],
+    "42. Implementar persistência crash-consistent, idempotente e sem substituição": [
+      {
+        "executionId": "cadc2555-2cc1-435d-94c9-3b6d8aafe2b1",
+        "chatSessionId": "sess_00f9fc68-a778-4e0c-bb2b-896f8dbc2d6c",
+        "timestamp": 1792723762259
+      }
+    ],
+    "43.1 Sob o coordenador exclusivo, ler linhas antes da varredura, restaurar ou concluir `.deleting` conforme a linha, remover `.staging` não confirmado e remover canônico reconhecido sem linha somente após leitura confirmada.": [
+      {
+        "executionId": "988a6cec-3f25-451d-85f2-405c7d86203e",
+        "chatSessionId": "sess_26eb3290-cdfd-4735-ad61-b0ae9416e8f3",
+        "timestamp": 1792851353464
+      },
+      {
+        "executionId": "988a6cec-3f25-451d-85f2-405c7d86203e",
+        "chatSessionId": "sess_26eb3290-cdfd-4735-ad61-b0ae9416e8f3",
+        "timestamp": 1792852123657
+      }
+    ],
+    "43.2 Validar por streaming nome, existência, tamanho e SHA-256 de cada JPEG referenciado; preservar linha/arquivo e marcar fila degradada em ausência, corrupção ou divergência, sem descarte silencioso.": [
+      {
+        "executionId": "55f9ec47-94c6-46e5-9067-ca3ba7c4ea03",
+        "chatSessionId": "sess_b6dfef89-7829-4605-89cf-20b2920c4412",
+        "timestamp": 1792852141182
+      },
+      {
+        "executionId": "55f9ec47-94c6-46e5-9067-ca3ba7c4ea03",
+        "chatSessionId": "sess_b6dfef89-7829-4605-89cf-20b2920c4412",
+        "timestamp": 1792852585441
+      }
+    ],
+    "43.3 Reconstruir pendências por `queueSequence` com os mesmos campos canônicos, referência privada validada e distinção entre velocidade nula e zero, sem abrir/enviar imagens.": [
+      {
+        "executionId": "5a97d308-2796-4b1c-8ce3-e221cc792266",
+        "chatSessionId": "sess_c4628500-e4be-42f8-bf1f-0c971dc465a9",
+        "timestamp": 1792852598979
+      }
+    ],
+    "43.4 Tornar a recuperação idempotente e restrita ao namespace E2, sem importar temporários E1 nem apagar arquivo desconhecido, externo, em subdiretório ou operação corrente.": [
+      {
+        "executionId": "7326e05d-ce3e-4b67-b6e6-519ec6b89413",
+        "chatSessionId": "sess_e8a2e6c8-7548-4c81-bae0-a9665dcfbadc",
+        "timestamp": 1792852617833
+      },
+      {
+        "executionId": "7326e05d-ce3e-4b67-b6e6-519ec6b89413",
+        "chatSessionId": "sess_e8a2e6c8-7548-4c81-bae0-a9665dcfbadc",
+        "timestamp": 1792852807826
+      }
+    ],
+    "43.5 Escrever testes de reabertura e estados de crash para cada fronteira alcançável: staging, canônico órfão, deleting, linha íntegra, linha sem imagem, digest divergente, colisão e repetição da recuperação.": [
+      {
+        "executionId": "707fc4ad-23f0-4f7d-8276-55def4bbdad2",
+        "chatSessionId": "sess_e0c7f848-f2f8-4978-be44-f3322b59e523",
+        "timestamp": 1792852837166
+      },
+      {
+        "executionId": "707fc4ad-23f0-4f7d-8276-55def4bbdad2",
+        "chatSessionId": "sess_e0c7f848-f2f8-4978-be44-f3322b59e523",
+        "timestamp": 1792853137642
+      }
+    ],
+    "43. Implementar recuperação e reconstrução idempotentes": [
+      {
+        "executionId": "707fc4ad-23f0-4f7d-8276-55def4bbdad2",
+        "chatSessionId": "sess_e0c7f848-f2f8-4978-be44-f3322b59e523",
+        "timestamp": 1792853137732
+      }
+    ],
+    "44.1 Implementar o contrato interno de remoção por `idempotencyKey`: localizar/revalidar linha, renomear JPEG para `.deleting` exclusivo sem overwrite, remover a linha em transação e apagar o marcador após commit.": [
+      {
+        "executionId": "227a4113-79b9-4366-9ba2-84568580cce7",
+        "chatSessionId": "sess_7f3629ef-bcfb-4a25-b280-53ca156179fd",
+        "timestamp": 1792853162994
+      },
+      {
+        "executionId": "227a4113-79b9-4366-9ba2-84568580cce7",
+        "chatSessionId": "sess_7f3629ef-bcfb-4a25-b280-53ca156179fd",
+        "timestamp": 1792853354449
+      }
+    ],
+    "44.2 Restaurar `.deleting` quando a linha ainda existir e o destino estiver livre; excluir o marcador quando a linha não existir; preservar ambos e degradar em colisão.": [
+      {
+        "executionId": "ae4bcb72-b7f8-4a5d-a2ad-475c934d1734",
+        "chatSessionId": "sess_09672161-9cd8-4ff2-b699-6942f830dfee",
+        "timestamp": 1792853364649
+      },
+      {
+        "executionId": "ae4bcb72-b7f8-4a5d-a2ad-475c934d1734",
+        "chatSessionId": "sess_09672161-9cd8-4ff2-b699-6942f830dfee",
+        "timestamp": 1792853520579
+      }
+    ],
+    "44.3 Atualizar a contagem somente após remoção confirmada e garantir que a operação use o mesmo coordenador single-writer.": [
+      {
+        "executionId": "23bf7f86-5945-4639-8b47-f772ffb9ed1d",
+        "chatSessionId": "sess_9cf3a8dd-d125-44d2-88bb-f3f06f5b2b6d",
+        "timestamp": 1792853529729
+      },
+      {
+        "executionId": "23bf7f86-5945-4639-8b47-f772ffb9ed1d",
+        "chatSessionId": "sess_9cf3a8dd-d125-44d2-88bb-f3f06f5b2b6d",
+        "timestamp": 1792853675699
+      }
+    ],
+    "44.4 Escrever testes para sucesso, chave ausente, referência divergente, falha/interrupção em cada etapa, recuperação antes/depois do commit, colisão e repetição idempotente.": [
+      {
+        "executionId": "2b83de2f-c070-40af-8b0c-102f845d00ea",
+        "chatSessionId": "sess_955bdf54-dace-4692-804b-affb914316af",
+        "timestamp": 1792853685960
+      },
+      {
+        "executionId": "2b83de2f-c070-40af-8b0c-102f845d00ea",
+        "chatSessionId": "sess_955bdf54-dace-4692-804b-affb914316af",
+        "timestamp": 1792853933235
+      }
+    ],
+    "44.5 Confirmar por inspeção/teste arquitetural que nenhum widget, botão, rota, controller de produção, timer, worker ou serviço chama a remoção na E2.": [
+      {
+        "executionId": "6edf3147-1ab7-4219-b49b-a5bbc7d15b9e",
+        "chatSessionId": "sess_8a447544-2f88-4210-b917-fa18c5bafa69",
+        "timestamp": 1792853942106
+      },
+      {
+        "executionId": "6edf3147-1ab7-4219-b49b-a5bbc7d15b9e",
+        "chatSessionId": "sess_8a447544-2f88-4210-b917-fa18c5bafa69",
+        "timestamp": 1792854266967
+      }
+    ],
+    "44. Implementar remoção interna consistente sem chamador funcional": [
+      {
+        "executionId": "6edf3147-1ab7-4219-b49b-a5bbc7d15b9e",
+        "chatSessionId": "sess_8a447544-2f88-4210-b917-fa18c5bafa69",
+        "timestamp": 1792854267072
+      }
+    ],
+    "45.1 Injetar `OccurrenceAcceptancePort` no `PostCandidateProcessor` e preservar a ordem E1 até a criação completa em memória.": [
+      {
+        "executionId": "26423f34-7117-47d2-b253-0a2c3a73a4c9",
+        "chatSessionId": "sess_00c044c5-9518-4ab5-98b4-a01f9c511705",
+        "timestamp": 1792854351024
+      },
+      {
+        "executionId": "26423f34-7117-47d2-b253-0a2c3a73a4c9",
+        "chatSessionId": "sess_00c044c5-9518-4ab5-98b4-a01f9c511705",
+        "timestamp": 1792856534849
+      }
+    ],
+    "45.2 Inserir o aceite durável depois da fábrica e antes de commit do cooldown, contador da sessão e resultado de sucesso.": [
+      {
+        "executionId": "b7ccce44-35b2-48b8-abd6-ecc56a828275",
+        "chatSessionId": "sess_1196bebd-1284-4f58-af70-a8a8cd39403f",
+        "timestamp": 1792856544303
+      },
+      {
+        "executionId": "b7ccce44-35b2-48b8-abd6-ecc56a828275",
+        "chatSessionId": "sess_1196bebd-1284-4f58-af70-a8a8cd39403f",
+        "timestamp": 1792856709535
+      }
+    ],
+    "45.4 Tratar lifecycle antes do commit com cancelamento/limpeza e, depois de iniciada a seção final durável, concluir sucesso ou rollback sem publicar callback obsoleto.": [
+      {
+        "executionId": "44382f1a-3950-4984-a6c5-e83e5c0044bf",
+        "chatSessionId": "sess_fac44ead-6fa3-4657-b470-2cddca1fbaa9",
+        "timestamp": 1792856733689
+      },
+      {
+        "executionId": "44382f1a-3950-4984-a6c5-e83e5c0044bf",
+        "chatSessionId": "sess_fac44ead-6fa3-4657-b470-2cddca1fbaa9",
+        "timestamp": 1792857363118
+      }
+    ],
+    "45.5 Substituir no controlador qualquer retenção de lease/path por resumo sanitizado após aceite, preservando o JPEG da fila ao navegar, pausar ou encerrar sessão.": [
+      {
+        "executionId": "99368764-47af-46e2-bbda-4130aa1f9068",
+        "chatSessionId": "sess_9dbf5a18-aa85-4e59-82ff-85770e40bb98",
+        "timestamp": 1792857389129
+      },
+      {
+        "executionId": "99368764-47af-46e2-bbda-4130aa1f9068",
+        "chatSessionId": "sess_9dbf5a18-aa85-4e59-82ff-85770e40bb98",
+        "timestamp": 1792857585216
+      }
+    ],
+    "45.6 Escrever testes de aplicação para ordem `fábrica -> persistência -> cooldown -> sucesso`, equivalência, conflito, falhas, lifecycle nos dois lados do ponto de não retorno e transferência única de ownership.": [
+      {
+        "executionId": "2174ec75-e316-49d2-9fd0-dbceb27acb58",
+        "chatSessionId": "sess_4a2fa5ab-9217-4c02-8bf2-4132726e7b5c",
+        "timestamp": 1792857594494
+      },
+      {
+        "executionId": "2174ec75-e316-49d2-9fd0-dbceb27acb58",
+        "chatSessionId": "sess_4a2fa5ab-9217-4c02-8bf2-4132726e7b5c",
+        "timestamp": 1792857858205
+      }
+    ],
+    "45. Integrar o aceite persistente ao pós-candidato e ao ownership": [
+      {
+        "executionId": "2174ec75-e316-49d2-9fd0-dbceb27acb58",
+        "chatSessionId": "sess_4a2fa5ab-9217-4c02-8bf2-4132726e7b5c",
+        "timestamp": 1792857858358
+      }
+    ],
+    "46.1 Inicializar e recuperar a fila antes de habilitar “Registrar buraco”, mantendo câmera, GPS, interface e acesso ao Diagnóstico independentes durante inicialização ou falha.": [
+      {
+        "executionId": "35ce1316-dfb4-4302-9705-1ff6aa2ce697",
+        "chatSessionId": "sess_b6f300d9-a51d-4514-8d62-76f4cfe4f3f1",
+        "timestamp": 1792857929498
+      },
+      {
+        "executionId": "35ce1316-dfb4-4302-9705-1ff6aa2ce697",
+        "chatSessionId": "sess_b6f300d9-a51d-4514-8d62-76f4cfe4f3f1",
+        "timestamp": 1792858241272
+      }
+    ],
+    "46.2 Restaurar no `CooldownPolicy` a ocorrência pendente de maior `queueSequence`; limpar a referência somente quando a fila recuperada estiver vazia e não incrementar o contador da sessão por recuperação.": [
+      {
+        "executionId": "ebcfb376-0a63-4d0c-b443-d2947acf43e0",
+        "chatSessionId": "sess_10292151-10ae-46fe-81df-26b0263d331d",
+        "timestamp": 1792858251575
+      },
+      {
+        "executionId": "ebcfb376-0a63-4d0c-b443-d2947acf43e0",
+        "chatSessionId": "sess_10292151-10ae-46fe-81df-26b0263d331d",
+        "timestamp": 1792858697405
+      }
+    ],
+    "46.3 Ampliar `OperationState` com saúde da fila, recuperação, persistência e `pendingCount`, calculando `canRegister` somente com fila pronta além das precondições E1.": [
+      {
+        "executionId": "310347db-d1ab-4a39-8b56-be74499605b6",
+        "chatSessionId": "sess_5e2c4953-e5f5-4e71-912d-27f6ed9d34b6",
+        "timestamp": 1792858707698
+      },
+      {
+        "executionId": "310347db-d1ab-4a39-8b56-be74499605b6",
+        "chatSessionId": "sess_5e2c4953-e5f5-4e71-912d-27f6ed9d34b6",
+        "timestamp": 1792859410018
+      }
+    ],
+    "46.4 Observar snapshots confirmados para atualizar pendências; incrementar contador da sessão uma vez apenas para novo aceite corrente e reiniciá-lo em nova execução sem zerar a fila.": [
+      {
+        "executionId": "f779c9c2-e42c-4363-a25a-a31b97a9cffd",
+        "chatSessionId": "sess_38cb0ba4-f8bf-4ab0-99bf-41d0402409f8",
+        "timestamp": 1792859422995
+      },
+      {
+        "executionId": "f779c9c2-e42c-4363-a25a-a31b97a9cffd",
+        "chatSessionId": "sess_38cb0ba4-f8bf-4ab0-99bf-41d0402409f8",
+        "timestamp": 1792864246647
+      }
+    ],
+    "46.5 Escrever testes de controller/composição para fila vazia/não vazia, inicializando, pronta, degradada, indisponível, retry, reabertura, relógio regressivo, restauração por maior sequência e separação dos contadores.": [
+      {
+        "executionId": "6f63940e-3ff4-4a86-9dba-05bccbd88359",
+        "chatSessionId": "sess_8843edb7-5391-4314-9212-9f4686b34a8a",
+        "timestamp": 1792864256256
+      },
+      {
+        "executionId": "6f63940e-3ff4-4a86-9dba-05bccbd88359",
+        "chatSessionId": "sess_8843edb7-5391-4314-9212-9f4686b34a8a",
+        "timestamp": 1792864474908
+      }
+    ],
+    "46. Integrar bootstrap, contagem, cooldown restaurado e estado da Operação": [
+      {
+        "executionId": "6f63940e-3ff4-4a86-9dba-05bccbd88359",
+        "chatSessionId": "sess_8843edb7-5391-4314-9212-9f4686b34a8a",
+        "timestamp": 1792864475024
+      }
+    ],
+    "47.1 Exibir “Pendências: N” e estados textuais de fila inicializando, pronta, degradada ou indisponível, sem listar registros, paths, UUIDs, horários, coordenadas ou digests.": [
+      {
+        "executionId": "5a94f235-f5c8-4ed3-8f7c-515f341d32fd",
+        "chatSessionId": "sess_1dc6ba37-e24e-4dea-affa-e5ee7735e597",
+        "timestamp": 1792864595769
+      },
+      {
+        "executionId": "5a94f235-f5c8-4ed3-8f7c-515f341d32fd",
+        "chatSessionId": "sess_1dc6ba37-e24e-4dea-affa-e5ee7735e597",
+        "timestamp": 1792865444436
+      }
+    ],
+    "47.2 Exibir etapa de persistência no processamento e alterar o feedback nominal para “Buraco salvo na fila local” ou equivalente inequívoco somente após novo aceite.": [
+      {
+        "executionId": "50e844b6-8068-485c-b255-504f1ff67687",
+        "chatSessionId": "sess_b5175cf2-aa59-46eb-a2f1-f8a82283a7f2",
+        "timestamp": 1792865454833
+      },
+      {
+        "executionId": "50e844b6-8068-485c-b255-504f1ff67687",
+        "chatSessionId": "sess_b5175cf2-aa59-46eb-a2f1-f8a82283a7f2",
+        "timestamp": 1792865662750
+      }
+    ],
+    "47.3 Manter botão desabilitado enquanto a fila não estiver pronta e oferecer retry controlado de fila sem reinicializar câmera/GPS ou esconder o acesso ao Diagnóstico.": [
+      {
+        "executionId": "86a5f3ab-02d1-4a8a-818e-0796fc97b92d",
+        "chatSessionId": "sess_d9de3825-b284-41b2-9587-a907a7760cf0",
+        "timestamp": 1792865673643
+      },
+      {
+        "executionId": "86a5f3ab-02d1-4a8a-818e-0796fc97b92d",
+        "chatSessionId": "sess_d9de3825-b284-41b2-9587-a907a7760cf0",
+        "timestamp": 1792865996700
+      }
+    ],
+    "47.5 Escrever widget tests para zero/múltiplas pendências, estados e mensagens, persistência em andamento, erro sanitizado, retry, contadores separados e ausência de lista/remoção/configuração/envio/detecção automática.": [
+      {
+        "executionId": "6bf83236-d523-492b-a1a5-3a059dc50227",
+        "chatSessionId": "sess_5723b6f2-44f5-41dc-a481-c1817d696e51",
+        "timestamp": 1792866007193
+      },
+      {
+        "executionId": "73db075a-5507-42dd-88d3-13693370b017",
+        "chatSessionId": "sess_30a228a0-aff0-4bb4-87b7-37d690e50ea2",
+        "timestamp": 1792866263224
+      },
+      {
+        "executionId": "73db075a-5507-42dd-88d3-13693370b017",
+        "chatSessionId": "sess_30a228a0-aff0-4bb4-87b7-37d690e50ea2",
+        "timestamp": 1792866907645
+      }
+    ],
+    "47.4 Preservar integralmente banner manual, preview, GPS, cooldown, tema, acessibilidade, lifecycle, wake lock e navegação aprovados na E1.": [
+      {
+        "executionId": "84cd4204-f293-4ff2-bdf8-c2c2ff686fd2",
+        "chatSessionId": "sess_cbfc7132-580e-445c-90a1-6ad58bb87896",
+        "timestamp": 1792866041166
+      },
+      {
+        "executionId": "84cd4204-f293-4ff2-bdf8-c2c2ff686fd2",
+        "chatSessionId": "sess_cbfc7132-580e-445c-90a1-6ad58bb87896",
+        "timestamp": 1792866239635
+      }
+    ],
+    "47. Atualizar a interface E2 sem criar gestão de fila": [
+      {
+        "executionId": "73db075a-5507-42dd-88d3-13693370b017",
+        "chatSessionId": "sess_30a228a0-aff0-4bb4-87b7-37d690e50ea2",
+        "timestamp": 1792866907760
+      }
+    ],
+    "48.1 Implementar com `glados` exatamente um teste de no mínimo 100 casos para a **Property 13: Aceite somente após persistência íntegra**, com comentário `Feature: mvp-app-flutter, Property 13: Aceite somente após persistência íntegra`.": [
+      {
+        "executionId": "6aaf5f80-d19e-49b1-9dcc-ad85949ed959",
+        "chatSessionId": "sess_c9150b69-6d15-4891-ac88-ca29e4b91413",
+        "timestamp": 1792866952006
+      }
+    ],
+    "48.2 Implementar com `glados` exatamente um teste de no mínimo 100 casos para a **Property 14: Round-trip da fila**, com o comentário de rastreabilidade correspondente.": [
+      {
+        "executionId": "5be7aa60-9c1c-427e-99ea-1effa30bae14",
+        "chatSessionId": "sess_d5f4ebdf-ba9b-4cca-a756-3659108c8ffe",
+        "timestamp": 1792867831929
+      }
+    ],
+    "48.3 Implementar com `glados` exatamente um teste de no mínimo 100 casos para a **Property 15: Unicidade idempotente**, cobrindo sequências serializadas/concorrentes, equivalência, conflito e no-overwrite.": [
+      {
+        "executionId": "e81ae263-c874-4396-968d-eb2b0189b420",
+        "chatSessionId": "sess_76056c45-4060-4880-a26d-93fc07ab9cd4",
+        "timestamp": 1792867967208
+      },
+      {
+        "executionId": "e81ae263-c874-4396-968d-eb2b0189b420",
+        "chatSessionId": "sess_76056c45-4060-4880-a26d-93fc07ab9cd4",
+        "timestamp": 1792868203926
+      }
+    ],
+    "48.4 Implementar com `glados` exatamente um teste de no mínimo 100 casos para a **Property 16: Contagem derivada da fila**, cobrindo aceite, falha, recuperação e remoção interna.": [
+      {
+        "executionId": "2be00165-c8e8-4585-a25c-997a8052a008",
+        "chatSessionId": "sess_33ed0c26-23b0-4cad-ae00-cf646e2d5305",
+        "timestamp": 1792868214400
+      },
+      {
+        "executionId": "2be00165-c8e8-4585-a25c-997a8052a008",
+        "chatSessionId": "sess_33ed0c26-23b0-4cad-ae00-cf646e2d5305",
+        "timestamp": 1792868367791
+      }
+    ],
+    "48.5 Implementar com `glados` exatamente um teste de no mínimo 100 casos para a **Property 17: Ownership exclusivo após aceite**, cobrindo retirada/limpeza da lease e ausência de JPEG E2 referenciado em rejeição.": [
+      {
+        "executionId": "eedc32f7-72e8-4d33-bb5e-1b29dd0e8482",
+        "chatSessionId": "sess_1f8a03d6-4dcd-42a7-8c65-1091fdf03a88",
+        "timestamp": 1792868387756
+      },
+      {
+        "executionId": "eedc32f7-72e8-4d33-bb5e-1b29dd0e8482",
+        "chatSessionId": "sess_1f8a03d6-4dcd-42a7-8c65-1091fdf03a88",
+        "timestamp": 1792868511466
+      }
+    ],
+    "48.6 Implementar com `glados` exatamente um teste de no mínimo 100 casos para a **Property 18: Remoção consistente**, cobrindo interrupção antes/depois do commit e recuperação.": [
+      {
+        "executionId": "f8099e35-a0fb-402e-85d7-6804852b82eb",
+        "chatSessionId": "sess_bd19e4c8-4353-412d-a5af-d43f5cf67fec",
+        "timestamp": 1792868535780
+      },
+      {
+        "executionId": "f8099e35-a0fb-402e-85d7-6804852b82eb",
+        "chatSessionId": "sess_bd19e4c8-4353-412d-a5af-d43f5cf67fec",
+        "timestamp": 1792868664917
+      }
+    ],
+    "48.7 Implementar com `glados` exatamente um teste de no mínimo 100 casos para a **Property 19: Recuperação idempotente**, gerando somente estados alcançáveis e artefatos reconhecíveis dentro do sandbox.": [
+      {
+        "executionId": "4ca5379f-6710-4a5f-a3c2-b54ebfb34f53",
+        "chatSessionId": "sess_a28d4b89-79f0-407f-96d0-c72803442d6e",
+        "timestamp": 1792868681980
+      },
+      {
+        "executionId": "4ca5379f-6710-4a5f-a3c2-b54ebfb34f53",
+        "chatSessionId": "sess_a28d4b89-79f0-407f-96d0-c72803442d6e",
+        "timestamp": 1792868842498
+      }
+    ],
+    "48.8 Implementar com `glados` exatamente um teste de no mínimo 100 casos para a **Property 20: Restauração da referência de cooldown**, incluindo fila vazia e ordenação independente do relógio.": [
+      {
+        "executionId": "387b80d7-ca2e-4076-bc0f-2b6505cb32a0",
+        "chatSessionId": "sess_e0ad1096-e350-4eb6-8e60-f13a6dc97c5e",
+        "timestamp": 1792868851976
+      },
+      {
+        "executionId": "387b80d7-ca2e-4076-bc0f-2b6505cb32a0",
+        "chatSessionId": "sess_e0ad1096-e350-4eb6-8e60-f13a6dc97c5e",
+        "timestamp": 1792868980000
+      }
+    ],
+    "48.9 Consolidar testes com SQLite temporário real e filesystem sandbox para mapper, reabertura, digest, falhas injetadas, concorrência single-writer, regras de backup e regressões E0/E1.": [
+      {
+        "executionId": "57a96091-bc6c-42e4-9bc0-6e40f388fd16",
+        "chatSessionId": "sess_3a01b4e1-7e49-4b06-94b7-7c037d489f31",
+        "timestamp": 1792868991068
+      },
+      {
+        "executionId": "57a96091-bc6c-42e4-9bc0-6e40f388fd16",
+        "chatSessionId": "sess_3a01b4e1-7e49-4b06-94b7-7c037d489f31",
+        "timestamp": 1792869284592
+      }
+    ],
+    "48.10 Confirmar que cada propriedade possui um único teste, no mínimo 100 iterações e referência ao requisito/propriedade do design, sem substituir os testes de exemplos, erros e integração.": [
+      {
+        "executionId": "d919caf1-232e-407f-a722-c2afffaa785e",
+        "chatSessionId": "sess_adf0ba1f-91ef-493c-9011-d7c8cb020c2b",
+        "timestamp": 1792869296145
+      },
+      {
+        "executionId": "d919caf1-232e-407f-a722-c2afffaa785e",
+        "chatSessionId": "sess_adf0ba1f-91ef-493c-9011-d7c8cb020c2b",
+        "timestamp": 1792869544792
+      }
+    ],
+    "48. Implementar as propriedades PBT 13–20 e consolidar testes de integração": [
+      {
+        "executionId": "d919caf1-232e-407f-a722-c2afffaa785e",
+        "chatSessionId": "sess_adf0ba1f-91ef-493c-9011-d7c8cb020c2b",
+        "timestamp": 1792869545051
+      }
+    ],
+    "49.1 Executar `dart format` somente nos arquivos Dart criados/modificados pela E2 e repetir em modo de verificação até não haver alteração pendente.": [
+      {
+        "executionId": "fa12afdf-70a6-48c0-a426-e4eb55b1c947",
+        "chatSessionId": "sess_0c539278-c81d-451c-b4f4-166a3e1ecfed",
+        "timestamp": 1792869670817
+      },
+      {
+        "executionId": "fa12afdf-70a6-48c0-a426-e4eb55b1c947",
+        "chatSessionId": "sess_0c539278-c81d-451c-b4f4-166a3e1ecfed",
+        "timestamp": 1792869774909
+      }
+    ],
+    "49.2 Executar `flutter analyze` em modo não interativo, corrigir somente problemas E2 ou regressões introduzidas e repetir até zero issues.": [
+      {
+        "executionId": "d28927b2-d237-40bb-9211-e9fa8ee23958",
+        "chatSessionId": "sess_9b6eae0f-b1f9-40ae-9878-c09f5f852bad",
+        "timestamp": 1792869784781
+      },
+      {
+        "executionId": "d28927b2-d237-40bb-9211-e9fa8ee23958",
+        "chatSessionId": "sess_9b6eae0f-b1f9-40ae-9878-c09f5f852bad",
+        "timestamp": 1792869881453
+      }
+    ],
+    "49.3 Executar `flutter test` completo, incluindo PBT 13–20, SQLite/filesystem, manifesto/XML e regressões E0/E1, corrigindo somente problemas da E2 ou regressões da integração.": [
+      {
+        "executionId": "598c6db5-cb25-4a46-8800-94b5f7ad9108",
+        "chatSessionId": "sess_bd3794c8-0354-400e-a6ef-ce6e2aef63ff",
+        "timestamp": 1792869891659
+      },
+      {
+        "executionId": "598c6db5-cb25-4a46-8800-94b5f7ad9108",
+        "chatSessionId": "sess_bd3794c8-0354-400e-a6ef-ce6e2aef63ff",
+        "timestamp": 1792870072340
+      }
+    ],
+    "49.4 Inspecionar dependências, fontes, schema, manifesto, assets e strings para confirmar ausência de `BASE_URL`, API key, secure storage, cliente de ocorrências, endpoint, multipart, envio, HTTP status, retry/backoff, worker/background, YOLO, TFLite, inferência e FPS.": [
+      {
+        "executionId": "d16ce7ef-9e53-424f-8e48-9c829b8c9cde",
+        "chatSessionId": "sess_3d5e1d89-c20a-49a6-8593-7a179f2d88d0",
+        "timestamp": 1792870082826
+      },
+      {
+        "executionId": "d16ce7ef-9e53-424f-8e48-9c829b8c9cde",
+        "chatSessionId": "sess_3d5e1d89-c20a-49a6-8593-7a179f2d88d0",
+        "timestamp": 1792870291870
+      }
+    ],
+    "49.5 Confirmar que o único HTTP permitido continua isolado no Diagnóstico E0 e que não existe chamador funcional da remoção interna E2.": [
+      {
+        "executionId": "d3158eed-571a-4e25-9666-bd7d50c8107c",
+        "chatSessionId": "sess_34faf8da-e5b4-4966-857a-6c3d658bc745",
+        "timestamp": 1792870309953
+      },
+      {
+        "executionId": "d3158eed-571a-4e25-9666-bd7d50c8107c",
+        "chatSessionId": "sess_34faf8da-e5b4-4966-857a-6c3d658bc745",
+        "timestamp": 1792870421238
+      }
+    ],
+    "49.6 Registrar saídas completas, quantidade de testes/propriedades e inspeção negativa em evidência E2 nova, sem alterar evidências históricas E0/E1.": [
+      {
+        "executionId": "f570a8be-7642-4cca-b9c2-a54ad73e8fea",
+        "chatSessionId": "sess_eb189896-0ac3-4150-851c-81cf1324a746",
+        "timestamp": 1792870432523
+      },
+      {
+        "executionId": "f570a8be-7642-4cca-b9c2-a54ad73e8fea",
+        "chatSessionId": "sess_eb189896-0ac3-4150-851c-81cf1324a746",
+        "timestamp": 1792870795884
+      }
+    ],
+    "49. Executar formatação, análise, suíte completa e inspeção negativa": [
+      {
+        "executionId": "f570a8be-7642-4cca-b9c2-a54ad73e8fea",
+        "chatSessionId": "sess_eb189896-0ac3-4150-851c-81cf1324a746",
+        "timestamp": 1792870796093
+      }
+    ],
+    "50.1 Gerar APK debug em execução única, sem URL/API key de ocorrências ou configuração E3–E5.": [
+      {
+        "executionId": "992b94d1-63c8-45d1-9e37-41cb7188892d",
+        "chatSessionId": "sess_a812962a-8f0e-4a80-bae8-a4ae4e7f9abd",
+        "timestamp": 1792870871649
+      },
+      {
+        "executionId": "992b94d1-63c8-45d1-9e37-41cb7188892d",
+        "chatSessionId": "sess_a812962a-8f0e-4a80-bae8-a4ae4e7f9abd",
+        "timestamp": 1792871046797
+      }
+    ],
+    "50.2 Registrar versões da toolchain, pins diretos, resultado, caminho, tamanho e SHA-256 do APK, preservando o `applicationId` aprovado.": [
+      {
+        "executionId": "7027fbf6-2219-45cb-9452-b921475922d4",
+        "chatSessionId": "sess_bd622040-26ff-4a7a-b968-d7698d489a26",
+        "timestamp": 1792871058470
+      },
+      {
+        "executionId": "7027fbf6-2219-45cb-9452-b921475922d4",
+        "chatSessionId": "sess_bd622040-26ff-4a7a-b968-d7698d489a26",
+        "timestamp": 1792871170914
+      }
+    ],
+    "50.3 Inspecionar manifesto mesclado e APK para permissões inalteradas, referências corretas às regras de backup e ausência de componentes/serviços/workers E3–E5.": [
+      {
+        "executionId": "ec3fa996-30fd-4aff-a23e-46fb3f7f83bf",
+        "chatSessionId": "sess_c54e5e04-0b9f-4d35-98c7-7dc601d1c3d5",
+        "timestamp": 1792871181476
+      },
+      {
+        "executionId": "ec3fa996-30fd-4aff-a23e-46fb3f7f83bf",
+        "chatSessionId": "sess_c54e5e04-0b9f-4d35-98c7-7dc601d1c3d5",
+        "timestamp": 1792871366014
+      }
+    ],
+    "50.4 Instalar o APK no Galaxy S25+ pelo ambiente Flutter/ADB aprovado quando disponível; se indisponível, registrar bloqueio manual sem alterar toolchain ou presumir validação física.": [
+      {
+        "executionId": "c35b5bdc-1da6-4087-ac5f-33024f739545",
+        "chatSessionId": "sess_4537de79-512a-477c-b018-ce15cf808fcd",
+        "timestamp": 1792871377491
+      },
+      {
+        "executionId": "c35b5bdc-1da6-4087-ac5f-33024f739545",
+        "chatSessionId": "sess_4537de79-512a-477c-b018-ce15cf808fcd",
+        "timestamp": 1792871547011
+      }
+    ],
+    "50. Gerar e inspecionar o build Android debug E2": [
+      {
+        "executionId": "c35b5bdc-1da6-4087-ac5f-33024f739545",
+        "chatSessionId": "sess_4537de79-512a-477c-b018-ce15cf808fcd",
+        "timestamp": 1792871547109
+      }
+    ],
+    "51.1 Preservar o pacote histórico E0/E1, instalar E2 como atualização quando possível e registrar toolchain, hash, dispositivo e ausência de configuração de ocorrências.": [
+      {
+        "executionId": "70e78cf8-2472-4a2d-8810-e9788186cbd4",
+        "chatSessionId": "sess_134d7b3c-46eb-4912-a0bb-89d33c900263",
+        "timestamp": 1792871795584
+      },
+      {
+        "executionId": "70e78cf8-2472-4a2d-8810-e9788186cbd4",
+        "chatSessionId": "sess_134d7b3c-46eb-4912-a0bb-89d33c900263",
+        "timestamp": 1792872007216
+      }
+    ],
+    "51.2 Confirmar criação/inicialização da fila, zero pendências em instalação sem fila E2, preview/GPS/banner/permissões E1 preservados e botão bloqueado até fila pronta.": [
+      {
+        "executionId": "dd9541ed-0ebc-44ed-a8c7-d0807ea0bfed",
+        "chatSessionId": "sess_f55e74d4-f552-4188-956f-23ce7fab5750",
+        "timestamp": 1792872049930
+      },
+      {
+        "executionId": "1f3d8a86-0a77-4aff-a8ac-c73b445b11aa",
+        "chatSessionId": "sess_f55e74d4-f552-4188-956f-23ce7fab5750",
+        "timestamp": 1792872462274
+      },
+      {
+        "executionId": "1f3d8a86-0a77-4aff-a8ac-c73b445b11aa",
+        "chatSessionId": "sess_f55e74d4-f552-4188-956f-23ce7fab5750",
+        "timestamp": 1792872752569
+      }
+    ],
+    "51.3 Registrar ocorrências válidas respeitando cooldown e confirmar salvamento local antes do sucesso, contador da sessão e aumento derivado de pendências.": [
+      {
+        "executionId": "6ed1afc8-1a45-43e5-bd07-5fcfb3160f95",
+        "chatSessionId": "sess_7a0ddc09-91ea-440d-ad5d-076cbaf5b884",
+        "timestamp": 1792872184929
+      },
+      {
+        "executionId": "6ad4f5a4-eefb-4f6d-bf24-16068b62fbcf",
+        "chatSessionId": "sess_a023325c-c350-43c5-9196-064c372e3907",
+        "timestamp": 1792872786416
+      }
+    ],
+    "51.4 Pausar/retomar, fechar ou force-stop e reabrir; confirmar pendências recuperadas, contador da sessão reiniciado sem zerar a fila e cooldown restaurado de forma observável segura.": [
+      {
+        "executionId": "f5b4327c-3444-4fef-98e5-13dc95c53b3a",
+        "chatSessionId": "sess_26520c21-5c50-4224-9279-e28e33d06c3e",
+        "timestamp": 1792872299712
+      },
+      {
+        "executionId": "abd64586-9659-4d9f-9c07-1f0aacc31bef",
+        "chatSessionId": "sess_7e3a82af-0d65-4991-a213-82801cb48930",
+        "timestamp": 1792873585248
+      },
+      {
+        "executionId": "abd64586-9659-4d9f-9c07-1f0aacc31bef",
+        "chatSessionId": "sess_7e3a82af-0d65-4991-a213-82801cb48930",
+        "timestamp": 1792874752870
+      }
+    ],
+    "51.5 Confirmar por evidência técnica sanitizada a reconstrução de UUID, horário, coordenadas, velocidade opcional, classe, confiança, SHA-256 e JPEG associados, sem imprimir ou expor os valores sensíveis proibidos.": [
+      {
+        "executionId": "99604878-8e19-4b00-8476-11c5f426794b",
+        "chatSessionId": "sess_893648db-1947-4c4e-b690-4600f639f7b4",
+        "timestamp": 1792872314142
+      },
+      {
+        "executionId": "640c777a-39ea-4d3f-b00f-5e417d5c7ae2",
+        "chatSessionId": "sess_f4f5edb2-9b9e-4c9e-8b26-799fb51cdc42",
+        "timestamp": 1792874766203
+      },
+      {
+        "executionId": "640c777a-39ea-4d3f-b00f-5e417d5c7ae2",
+        "chatSessionId": "sess_f4f5edb2-9b9e-4c9e-8b26-799fb51cdc42",
+        "timestamp": 1792874910136
+      }
+    ],
+    "51.7 Inspecionar manifesto/regras para exclusão conjunta de banco, sidecars e imagens de backup/transferência; executar ciclo controlado somente se suportado e marcar honestamente como não executado quando indisponível.": [
+      {
+        "executionId": "fe1b1b31-ce2f-47bd-889e-3f1609985481",
+        "chatSessionId": "sess_ec56794e-6c9f-434a-8ce3-2524f595f05b",
+        "timestamp": 1792874941980
+      },
+      {
+        "executionId": "fe1b1b31-ce2f-47bd-889e-3f1609985481",
+        "chatSessionId": "sess_ec56794e-6c9f-434a-8ce3-2524f595f05b",
+        "timestamp": 1792875153880
+      }
+    ],
+    "51.6 Confirmar JPEG privado fora da galeria, responsividade durante persistência, navegação ao Diagnóstico sem alteração da fila e exclusão mútua de câmera/GPS.": [
+      {
+        "executionId": "5cb71140-e73b-495b-baf0-a01122695d86",
+        "chatSessionId": "sess_5f7c29af-d07f-478c-a94f-10ac9c3285f5",
+        "timestamp": 1792875167283
+      },
+      {
+        "executionId": "5cb71140-e73b-495b-baf0-a01122695d86",
+        "chatSessionId": "sess_5f7c29af-d07f-478c-a94f-10ac9c3285f5",
+        "timestamp": 1792875378316
+      },
+      {
+        "executionId": "6d54a9e5-2c39-40eb-8084-4054eb370426",
+        "chatSessionId": "sess_5f7c29af-d07f-478c-a94f-10ac9c3285f5",
+        "timestamp": 1792875496702
+      },
+      {
+        "executionId": "6d54a9e5-2c39-40eb-8084-4054eb370426",
+        "chatSessionId": "sess_5f7c29af-d07f-478c-a94f-10ac9c3285f5",
+        "timestamp": 1792876019049
+      }
+    ],
+    "51.8 Reexecutar regressão física essencial E0/E1 e inspecionar tráfego/interface/dependências para ausência de envio e de funcionalidades E3–E5.": [
+      {
+        "executionId": "e54ca3f4-4b1c-426d-b02b-04fb9bad6925",
+        "chatSessionId": "sess_a200298d-fb60-4e1b-852f-4cf543470cb1",
+        "timestamp": 1792875390316
+      },
+      {
+        "executionId": "ceab3a80-4250-489d-95ae-369982292a5a",
+        "chatSessionId": "sess_822661e3-a652-4f96-a08f-db7226f4b07b",
+        "timestamp": 1792876110871
+      },
+      {
+        "executionId": "641f820e-4cd3-4c44-a01c-1099d5ad0614",
+        "chatSessionId": "sess_822661e3-a652-4f96-a08f-db7226f4b07b",
+        "timestamp": 1792876341074
+      },
+      {
+        "executionId": "641f820e-4cd3-4c44-a01c-1099d5ad0614",
+        "chatSessionId": "sess_822661e3-a652-4f96-a08f-db7226f4b07b",
+        "timestamp": 1792877034180
+      }
+    ],
+    "51.9 Classificar cada cenário como aprovado, reprovado ou não executado, referenciar as evidências novas E2 e não criar UI de debug nem manipular o sandbox de forma insegura para simular corrupção.": [
+      {
+        "executionId": "defc0b30-d03c-4b26-a9e7-42620298105e",
+        "chatSessionId": "sess_dd5fd9aa-86b0-4eb9-aa38-6a007de5d246",
+        "timestamp": 1792876263992
+      },
+      {
+        "executionId": "3724a6ff-61a6-43ac-b22e-e8a250b47ce9",
+        "chatSessionId": "sess_d7f2ab52-1622-4446-ab12-766b22676aef",
+        "timestamp": 1792877083909
+      },
+      {
+        "executionId": "3724a6ff-61a6-43ac-b22e-e8a250b47ce9",
+        "chatSessionId": "sess_d7f2ab52-1622-4446-ab12-766b22676aef",
+        "timestamp": 1792877274224
+      }
+    ],
+    "51. Preparar e executar o roteiro físico E2 no Samsung Galaxy S25+": [
+      {
+        "executionId": "3724a6ff-61a6-43ac-b22e-e8a250b47ce9",
+        "chatSessionId": "sess_d7f2ab52-1622-4446-ab12-766b22676aef",
+        "timestamp": 1792877274345
+      }
+    ],
+    "52.1 Apresentar `flutter analyze` sem issues, `flutter test` completo, propriedades 13–20, integrações SQLite/filesystem, build, hash, identidade, instalação e abertura do APK E2.": [
+      {
+        "executionId": "3544efa6-d5bb-4825-9b29-3359173c2a79",
+        "chatSessionId": "sess_0ae7a8ad-a475-476b-967a-9716ca286708",
+        "timestamp": 1792877302267
+      },
+      {
+        "executionId": "3544efa6-d5bb-4825-9b29-3359173c2a79",
+        "chatSessionId": "sess_0ae7a8ad-a475-476b-967a-9716ca286708",
+        "timestamp": 1792877678436
+      }
+    ],
+    "52.2 Apresentar evidência de persistência antes do sucesso, recuperação após fechamento/force-stop, reconstrução íntegra com SHA-256, pendências corretas e contador da sessão separado.": [
+      {
+        "executionId": "60c8a05c-abae-40ee-83c1-55403e61e11f",
+        "chatSessionId": "sess_99be8da0-a924-4c83-ab73-552b2f9ac166",
+        "timestamp": 1792877692753
+      },
+      {
+        "executionId": "60c8a05c-abae-40ee-83c1-55403e61e11f",
+        "chatSessionId": "sess_99be8da0-a924-4c83-ab73-552b2f9ac166",
+        "timestamp": 1792877824712
+      }
+    ],
+    "52.3 Apresentar evidência automatizada de idempotência equivalente, conflito preservador, no-overwrite, single-writer, crash consistency, ownership/lease, rollback, remoção interna e recuperação idempotente.": [
+      {
+        "executionId": "15161b77-a1ad-4b7d-965f-00c69c471d34",
+        "chatSessionId": "sess_7c84b583-0a0f-47d5-a026-f4f1893d3d21",
+        "timestamp": 1792877871606
+      },
+      {
+        "executionId": "15161b77-a1ad-4b7d-965f-00c69c471d34",
+        "chatSessionId": "sess_7c84b583-0a0f-47d5-a026-f4f1893d3d21",
+        "timestamp": 1792878127440
+      }
+    ],
+    "52.4 Apresentar manifesto mesclado e regras Android que excluem conjuntamente banco, sidecars e JPEGs E2 de backup e transferência, registrando como não executado qualquer ciclo físico não suportado.": [
+      {
+        "executionId": "403db0f5-b2de-4843-9b4f-48bf11b38f73",
+        "chatSessionId": "sess_98b812fa-df5c-434c-84f7-c6412e2d7f3c",
+        "timestamp": 1792878212301
+      },
+      {
+        "executionId": "403db0f5-b2de-4843-9b4f-48bf11b38f73",
+        "chatSessionId": "sess_98b812fa-df5c-434c-84f7-c6412e2d7f3c",
+        "timestamp": 1792878707759
+      }
+    ],
+    "52.5 Apresentar regressão E0/E1, responsividade, privacidade, logs sanitizados e inspeção negativa demonstrando ausência de configuração, credencial, envio, backoff, worker, YOLO, TFLite, inferência e FPS.": [
+      {
+        "executionId": "e5fb92d1-fd28-4c52-a489-2dbf36d8c077",
+        "chatSessionId": "sess_70ea4180-f19b-4466-8ba8-d5ba37ae2c2c",
+        "timestamp": 1792878739910
+      },
+      {
+        "executionId": "e5fb92d1-fd28-4c52-a489-2dbf36d8c077",
+        "chatSessionId": "sess_70ea4180-f19b-4466-8ba8-d5ba37ae2c2c",
+        "timestamp": 1792879069162
+      }
+    ],
+    "52.6 Reunir roteiro e evidências E2, registrar a decisão do usuário exatamente como aprovação ou reprovação explícita e manter a tarefa pendente se a decisão não existir.": [
+      {
+        "executionId": "244719ce-4094-4207-b550-7a499d4235fa",
+        "chatSessionId": "sess_3bed39be-e475-48ac-9454-2489d22830c7",
+        "timestamp": 1792879080689
+      }
+    ],
+    "52.7 Parar obrigatoriamente após a decisão: se reprovado, permitir somente correções E2; se aprovado, encerrar E2 sem iniciar E3 e aguardar nova solicitação.": [
+      {
+        "executionId": "a6a78750-a77c-402d-a64e-f408ca2ec040",
+        "chatSessionId": "sess_5529d0a7-0fcb-4539-894f-da34845c4eb2",
+        "timestamp": 1792879167345
+      }
     ]
   }
 }
