@@ -14,6 +14,7 @@ typedef OperationPreviewBuilder<TPreview extends Object> = Widget Function(
 );
 
 typedef OpenDiagnostic = Future<void> Function(BuildContext context);
+typedef OpenSettings = Future<void> Function(BuildContext context);
 
 /// E1 operational presentation. Business decisions stay in [OperationController].
 final class OperationScreen<TPreview extends Object> extends StatefulWidget {
@@ -21,12 +22,14 @@ final class OperationScreen<TPreview extends Object> extends StatefulWidget {
     required this.controller,
     required this.previewBuilder,
     required this.onOpenDiagnostic,
+    this.onOpenSettings,
     super.key,
   });
 
   final OperationController<TPreview> controller;
   final OperationPreviewBuilder<TPreview> previewBuilder;
   final OpenDiagnostic onOpenDiagnostic;
+  final OpenSettings? onOpenSettings;
 
   @override
   State<OperationScreen<TPreview>> createState() =>
@@ -90,7 +93,18 @@ final class _OperationScreenState<TPreview extends Object>
         final state = controller.state;
         return Scaffold(
           key: const Key('operation-screen'),
-          appBar: AppBar(title: const Text('Operação')),
+          appBar: AppBar(
+            title: const Text('Operação'),
+            actions: [
+              if (widget.onOpenSettings case final onOpenSettings?)
+                IconButton(
+                  key: const Key('open-settings-button'),
+                  tooltip: 'Abrir configurações',
+                  onPressed: () => unawaited(onOpenSettings(context)),
+                  icon: const Icon(Icons.settings_outlined),
+                ),
+            ],
+          ),
           body: SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -431,6 +445,8 @@ final class _OperationDetails extends StatelessWidget {
         const SizedBox(height: 12),
         _QueuePanel(state: state, onRetry: onRetryQueue),
         const SizedBox(height: 12),
+        _SendingConfigurationPanel(state: state),
+        const SizedBox(height: 12),
         _ProcessingPanel(state: state),
         if (lifecycleMessage != null) ...[
           const SizedBox(height: 12),
@@ -724,6 +740,52 @@ final class _QueuePanel extends StatelessWidget {
                 label: const Text('Tentar fila novamente'),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+final class _SendingConfigurationPanel extends StatelessWidget {
+  const _SendingConfigurationPanel({required this.state});
+
+  final OperationState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final isReady = state.sendingConfigurationStatus ==
+        OperationSendingConfigurationStatus.ready;
+    final label = isReady
+        ? 'Configuração para envio pronta'
+        : 'Configuração para envio pendente';
+    final description = isReady
+        ? 'Destino e credencial estão configurados para uso futuro.'
+        : 'Configure destino e credencial para habilitar o envio futuro.';
+
+    return _Panel(
+      key: const Key('sending-configuration-panel'),
+      title: 'Envio futuro',
+      status: isReady ? 'Pronta' : 'Pendente',
+      statusKind: isReady ? _VisualStatus.success : _VisualStatus.neutral,
+      child: Semantics(
+        container: true,
+        excludeSemantics: true,
+        label: '$label. $description',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              label,
+              key: const Key('sending-configuration-label'),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              description,
+              key: const Key('sending-configuration-message'),
+              softWrap: true,
+            ),
           ],
         ),
       ),

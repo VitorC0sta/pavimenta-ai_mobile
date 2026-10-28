@@ -9,6 +9,8 @@ const _approvedHostedPins = <String, String>{
   'uuid': '4.6.0',
   'wakelock_plus': '1.2.8',
   'path_provider': '2.1.4',
+  'shared_preferences': '2.5.2',
+  'flutter_secure_storage': '9.2.4',
   'sqflite': '2.4.1',
   'crypto': '3.0.7',
   'glados': '1.1.7',
@@ -23,6 +25,8 @@ const _approvedMainDependencies = <String>{
   'uuid',
   'wakelock_plus',
   'path_provider',
+  'shared_preferences',
+  'flutter_secure_storage',
   'sqflite',
   'crypto',
 };
@@ -36,7 +40,6 @@ const _approvedDevDependencies = <String>{
 
 const _laterStageDependencyFamilies = <String>{
   'dio',
-  'flutter_secure_storage',
   'hive',
   'hive_flutter',
   'drift',
@@ -64,7 +67,7 @@ void main() {
   final devDependencies = _parsePubspecSection(pubspec, 'dev_dependencies');
   final lockedPackages = _parseLockPackages(lockfile);
 
-  group('E2 direct dependency policy', () {
+  group('E3 direct dependency policy', () {
     test('keeps only the approved production and development dependencies', () {
       expect(mainDependencies.keys.toSet(), _approvedMainDependencies);
       expect(devDependencies.keys.toSet(), _approvedDevDependencies);
@@ -77,7 +80,7 @@ void main() {
         allDirectNames.intersection(_laterStageDependencyFamilies),
         isEmpty,
         reason:
-            'E3-E5 dependency families must not be direct dependencies in E2.',
+            'E4-E5 dependency families must not be direct dependencies in E3.',
       );
     });
 
@@ -91,7 +94,7 @@ void main() {
         expect(
           allDirectDependencies[pin.key],
           pin.value,
-          reason: '${pin.key} must use the approved exact E1/E2 pin.',
+          reason: '${pin.key} must use the approved exact E1-E3 pin.',
         );
       }
     });

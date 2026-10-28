@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pavimenta_ai_mobile/application/e1_ports.dart';
+import 'package:pavimenta_ai_mobile/application/e3_storage_ports.dart';
 import 'package:pavimenta_ai_mobile/application/occurrence_acceptance_port.dart';
 import 'package:pavimenta_ai_mobile/application/post_candidate_processor.dart';
 import 'package:pavimenta_ai_mobile/candidate/occurrence_candidate_source.dart';
 import 'package:pavimenta_ai_mobile/domain/cooldown_policy.dart';
 import 'package:pavimenta_ai_mobile/domain/in_memory_occurrence.dart';
 import 'package:pavimenta_ai_mobile/domain/location_snapshot.dart';
+import 'package:pavimenta_ai_mobile/domain/operational_configuration.dart';
 import 'package:pavimenta_ai_mobile/infrastructure/image_artifacts.dart';
 import 'package:pavimenta_ai_mobile/operation/operation_controller.dart';
 import 'package:pavimenta_ai_mobile/operation/operation_state.dart';
@@ -65,6 +67,100 @@ void main() {
       expect(harness.camera.captureCount, 0);
       expect(harness.controller.state.feedback?.message, contains('GPS'));
       expect(harness.controller.state.sessionOccurrenceCount, 0);
+    });
+
+    // **Validates: Requirements RF-05.6, RNF-05.5**
+    test('projects future sending readiness without blocking local operation',
+        () async {
+      final configuration = _FakeConfigurationRepository();
+      final credentialStore = _FakeCredentialStatusStore();
+      final harness = _Harness(
+        configurationRepository: configuration,
+        credentialStore: credentialStore,
+      );
+      harness.makeReady();
+      addTearDown(harness.controller.dispose);
+
+      final initialPendingCount = harness.controller.state.pendingCount;
+      expect(harness.controller.state.canRegister, isTrue);
+
+      await harness.controller.refreshSendingConfigurationStatus();
+      expect(
+        harness.controller.state.sendingConfigurationStatus,
+        OperationSendingConfigurationStatus.pending,
+      );
+      expect(harness.controller.state.canRegister, isTrue);
+      expect(harness.controller.state.pendingCount, initialPendingCount);
+      expect(credentialStore.hasCredentialCalls, 0);
+
+      configuration.value = OperationalConfiguration(
+        baseUrl: Uri.parse('https://delivery.example.invalid'),
+        cooldown: const Duration(seconds: 5),
+        minimumDistanceMeters: 15,
+        confidenceThreshold: 0.5,
+        maximumInferenceFps: 5,
+      );
+      credentialStore.isConfigured = true;
+
+      await harness.controller.refreshSendingConfigurationStatus();
+      expect(
+        harness.controller.state.sendingConfigurationStatus,
+        OperationSendingConfigurationStatus.ready,
+      );
+      expect(harness.controller.state.canRegister, isTrue);
+      expect(harness.controller.state.pendingCount, initialPendingCount);
+      expect(credentialStore.hasCredentialCalls, 1);
+    });
+
+    // **Validates: Requirements RF-09.5–6, RF-19.2–5, RNF-05.5**
+    test(
+        'applies persisted cooldown parameters without resetting acceptance or allowing an early touch',
+        () async {
+      final configuration = _FakeConfigurationRepository()
+        ..value = const OperationalConfiguration(
+          baseUrl: null,
+          cooldown: Duration(seconds: 9),
+          minimumDistanceMeters: 24,
+          confidenceThreshold: 0.5,
+          maximumInferenceFps: 5,
+        );
+      final cooldown = CooldownPolicy();
+      final acceptedAt = DateTime.utc(2025, 1, 1, 12);
+      cooldown.commit(
+        _occurrence(
+          detectedAt: acceptedAt,
+          image: _FakePreparedImage(),
+        ),
+      );
+      final harness = _Harness(
+        configurationRepository: configuration,
+        cooldownConfigurationUpdater: cooldown,
+        processor: _CooldownEvaluatingProcessor(cooldown),
+        clock: _FakeClock(acceptedAt.add(const Duration(seconds: 5))),
+      );
+      addTearDown(harness.controller.dispose);
+
+      await harness.controller.refreshCooldownConfiguration();
+      harness.makeReady();
+      final result = await harness.controller.registerManualPothole();
+
+      expect(cooldown.minimumElapsed, const Duration(seconds: 9));
+      expect(cooldown.minimumDistanceMeters, 24);
+      expect(result, isA<CandidateBlockedByCooldown<InMemoryOccurrence>>());
+      expect(
+        cooldown
+            .evaluate(
+              acceptedAt.add(const Duration(seconds: 5)),
+              const _Point(-23.5505, -46.6333),
+            )
+            .isBlocked,
+        isTrue,
+      );
+      expect(harness.camera.captureCount, 0);
+      expect(
+        harness.controller.state.processingStatus,
+        OperationProcessingStatus.blockedByCooldown,
+      );
     });
   });
 
@@ -576,6 +672,9 @@ final class _Harness {
     PostCandidateProcessor<InMemoryOccurrence>? processor,
     _FakeClock? clock,
     _FakeScreenAwake? screenAwake,
+    OperationalConfigurationRepository? configurationRepository,
+    DeviceCredentialStatusPort? credentialStore,
+    CooldownConfigurationUpdater? cooldownConfigurationUpdater,
   })  : source = source ?? _RecordingSource(),
         processor = processor ??
             _RecordingProcessor(
@@ -593,6 +692,9 @@ final class _Harness {
       location: location,
       screenAwake: this.screenAwake,
       clock: this.clock,
+      configurationRepository: configurationRepository,
+      credentialStore: credentialStore,
+      cooldownConfigurationUpdater: cooldownConfigurationUpdater,
     );
   }
 
@@ -720,6 +822,40 @@ final class _FakeClock implements Clock {
   }
 }
 
+final class _FakeConfigurationRepository
+    implements OperationalConfigurationRepository {
+  OperationalConfiguration value = const OperationalConfiguration.defaults();
+
+  @override
+  Future<OperationalConfiguration> load() async => value;
+
+  @override
+  Future<void> save(OperationalConfiguration configuration) async {
+    value = configuration;
+  }
+}
+
+final class _FakeCredentialStatusStore implements DeviceCredentialStatusPort {
+  bool isConfigured = false;
+  var hasCredentialCalls = 0;
+
+  @override
+  Future<bool> hasCredential() async {
+    hasCredentialCalls++;
+    return isConfigured;
+  }
+
+  @override
+  Future<void> removeCredential() async {
+    isConfigured = false;
+  }
+
+  @override
+  Future<void> saveCredential(String credential) async {
+    isConfigured = true;
+  }
+}
+
 class _RecordingSource implements OccurrenceCandidateSource {
   int callCount = 0;
 
@@ -774,6 +910,30 @@ class _RecordingProcessor
   ) async {
     this.candidate = candidate;
     return result;
+  }
+}
+
+final class _CooldownEvaluatingProcessor
+    implements PostCandidateProcessor<InMemoryOccurrence> {
+  const _CooldownEvaluatingProcessor(this.cooldown);
+
+  final CandidateCooldown cooldown;
+
+  @override
+  Future<CandidateResult<InMemoryOccurrence>> process(
+    CandidateInput candidate,
+  ) async {
+    final decision = cooldown.evaluate(
+      candidate.observedAt,
+      candidate.location.point,
+    );
+    if (decision.isBlocked) {
+      return CandidateBlockedByCooldown(
+        elapsed: decision.elapsed!,
+        distanceMeters: decision.distanceMeters!,
+      );
+    }
+    throw StateError('The restored cooldown must block this candidate.');
   }
 }
 

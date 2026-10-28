@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pavimenta_ai_mobile/application/e1_ports.dart';
+import 'package:pavimenta_ai_mobile/application/e3_storage_ports.dart';
 import 'package:pavimenta_ai_mobile/application/post_candidate_processor.dart';
 import 'package:pavimenta_ai_mobile/candidate/occurrence_candidate_source.dart';
+import 'package:pavimenta_ai_mobile/domain/cooldown_policy.dart';
 import 'package:pavimenta_ai_mobile/domain/in_memory_occurrence.dart';
 import 'package:pavimenta_ai_mobile/domain/location_snapshot.dart';
+import 'package:pavimenta_ai_mobile/domain/operational_configuration.dart';
 import 'package:pavimenta_ai_mobile/infrastructure/image_artifacts.dart';
 import 'package:pavimenta_ai_mobile/main.dart';
 import 'package:pavimenta_ai_mobile/operation/diagnostic_session_disposal.dart';
 import 'package:pavimenta_ai_mobile/operation/operation_controller.dart';
+import 'package:pavimenta_ai_mobile/settings/settings_controller.dart';
+import 'package:pavimenta_ai_mobile/settings/settings_screen.dart';
 
 void main() {
   group('Operation and Diagnostic resource ownership', () {
@@ -96,6 +101,113 @@ void main() {
       );
     });
 
+    // **Validates: Requirements RF-19.1–3, RF-21.1–3, RNF-04.2–3**
+    testWidgets(
+        'opens Settings after releasing Operation resources and reconciles on return',
+        (tester) async {
+      final harness = _NavigationHarness();
+      addTearDown(harness.dispose);
+
+      await tester.pumpWidget(
+        harness.buildApp(
+          settingsPageBuilder: (context) =>
+              const Scaffold(body: Text('Configurações E3')),
+        ),
+      );
+      await _settleRouteAndResources(tester);
+
+      expect(harness.tracker.activeCameraOwner, 'operation-1');
+      expect(harness.tracker.activeLocationOwner, 'operation-1');
+      expect(harness.screenAwake.calls, [true]);
+
+      await tester.tap(find.byKey(const Key('open-settings-button')));
+      await _settleRouteAndResources(tester);
+
+      expect(find.text('Configurações E3'), findsOneWidget);
+      expect(harness.controller.state.isCurrentRoute, isFalse);
+      expect(harness.controller.state.canRegister, isFalse);
+      expect(harness.tracker.activeCameraOwner, isNull);
+      expect(harness.tracker.activeLocationOwner, isNull);
+      expect(harness.screenAwake.calls, [true, false]);
+      expect(harness.tracker.violations, isEmpty);
+
+      Navigator.of(tester.element(find.text('Configurações E3'))).pop();
+      await _settleRouteAndResources(tester);
+
+      expect(harness.tracker.activeCameraOwner, 'operation-2');
+      expect(harness.tracker.activeLocationOwner, 'operation-2');
+      expect(harness.operationCamera.acquireCount, 2);
+      expect(harness.operationCamera.releaseCount, 1);
+      expect(harness.operationLocation.streamStartCount, 2);
+      expect(harness.operationLocation.streamStopCount, 1);
+      expect(harness.screenAwake.calls, [true, false, true]);
+      expect(harness.tracker.violations, isEmpty);
+    });
+
+    // **Validates: Requirements RF-05.6, RF-09.5–6, RF-19.2–5,12,
+    // RF-21.1–7, RNF-04.2–3, RNF-05.5**
+    testWidgets(
+        'saves configuration through Settings and restores one operational resource set',
+        (tester) async {
+      final configuration = _FakeConfigurationRepository();
+      final credentialStore = _FakeCredentialStatusStore();
+      final cooldown = CooldownPolicy();
+      final settingsController = SettingsController(
+        configurationRepository: configuration,
+        credentialStore: credentialStore,
+      );
+      final harness = _NavigationHarness(
+        configurationRepository: configuration,
+        credentialStore: credentialStore,
+        cooldownConfigurationUpdater: cooldown,
+      );
+      addTearDown(settingsController.dispose);
+      addTearDown(harness.dispose);
+
+      await tester.pumpWidget(
+        harness.buildApp(
+          settingsPageBuilder: (context) => SettingsScreen(
+            controller: settingsController,
+          ),
+        ),
+      );
+      await _settleRouteAndResources(tester);
+
+      await tester.tap(find.byKey(const Key('open-settings-button')));
+      await _settleRouteAndResources(tester);
+      expect(find.byKey(const Key('settings-screen')), findsOneWidget);
+      expect(harness.tracker.activeCameraOwner, isNull);
+      expect(harness.tracker.activeLocationOwner, isNull);
+
+      await tester.enterText(find.byKey(const Key('cooldown-field')), '9');
+      await tester.enterText(
+        find.byKey(const Key('minimum-distance-field')),
+        '24',
+      );
+      await tester.ensureVisible(
+        find.byKey(const Key('save-parameters-button')),
+      );
+      await tester.tap(find.byKey(const Key('save-parameters-button')));
+      await _settleRouteAndResources(tester);
+
+      expect(configuration.value.cooldown, const Duration(seconds: 9));
+      expect(configuration.value.minimumDistanceMeters, 24);
+
+      Navigator.of(tester.element(find.byKey(const Key('settings-screen'))))
+          .pop();
+      await _settleRouteAndResources(tester);
+
+      expect(cooldown.minimumElapsed, const Duration(seconds: 9));
+      expect(cooldown.minimumDistanceMeters, 24);
+      expect(harness.controller.state.canRegister, isTrue);
+      expect(harness.operationCamera.acquireCount, 2);
+      expect(harness.operationCamera.releaseCount, 1);
+      expect(harness.operationLocation.streamStartCount, 2);
+      expect(harness.operationLocation.streamStopCount, 1);
+      expect(harness.screenAwake.calls, [true, false, true]);
+      expect(harness.tracker.violations, isEmpty);
+    });
+
     // **Validates: Requirements 00.20, 03.11, 21.2, 21.6, RNF-04.1–3**
     testWidgets(
         'repeated routes use fresh sessions without duplicate permission or streams',
@@ -171,33 +283,43 @@ Future<void> _settleRouteAndResources(WidgetTester tester) async {
 }
 
 final class _NavigationHarness {
-  _NavigationHarness() {
+  _NavigationHarness({
+    OperationalConfigurationRepository? configurationRepository,
+    DeviceCredentialStatusPort? credentialStore,
+    CooldownConfigurationUpdater? cooldownConfigurationUpdater,
+  }) {
     operationCamera = _TrackedOperationCamera(tracker);
     operationLocation = _TrackedOperationLocation(
       tracker,
       () => operationCamera.currentOwner,
     );
+    screenAwake = _FakeScreenAwake();
     controller = OperationController<String>(
       candidateSource: const _UnusedCandidateSource(),
       postCandidateProcessor: const _UnusedProcessor(),
       camera: operationCamera,
       location: operationLocation,
-      screenAwake: _FakeScreenAwake(),
+      screenAwake: screenAwake,
       clock: const _FakeClock(),
+      configurationRepository: configurationRepository,
+      credentialStore: credentialStore,
+      cooldownConfigurationUpdater: cooldownConfigurationUpdater,
     );
   }
 
   final _ResourceOwnershipTracker tracker = _ResourceOwnershipTracker();
   late final _TrackedOperationCamera operationCamera;
   late final _TrackedOperationLocation operationLocation;
+  late final _FakeScreenAwake screenAwake;
   late final OperationController<String> controller;
   var diagnosticBuildCount = 0;
   var diagnosticDisposeCount = 0;
 
-  Widget buildApp() {
+  Widget buildApp({SettingsPageBuilder? settingsPageBuilder}) {
     return PavimentaAiMobileApp<String>(
       operationController: controller,
       previewBuilder: (context, preview) => Text(preview),
+      settingsPageBuilder: settingsPageBuilder,
       diagnosticPageBuilder: (context, disposal) {
         final session = ++diagnosticBuildCount;
         return _TrackedDiagnosticSession(
@@ -449,8 +571,12 @@ final class _Snapshot implements LocationSnapshot {
 }
 
 final class _FakeScreenAwake implements ScreenAwakePort {
+  final calls = <bool>[];
+
   @override
-  Future<void> setEnabled(bool enabled) async {}
+  Future<void> setEnabled(bool enabled) async {
+    calls.add(enabled);
+  }
 }
 
 final class _FakeClock implements Clock {
@@ -458,6 +584,36 @@ final class _FakeClock implements Clock {
 
   @override
   DateTime now() => DateTime.utc(2025);
+}
+
+final class _FakeConfigurationRepository
+    implements OperationalConfigurationRepository {
+  OperationalConfiguration value = const OperationalConfiguration.defaults();
+
+  @override
+  Future<OperationalConfiguration> load() async => value;
+
+  @override
+  Future<void> save(OperationalConfiguration configuration) async {
+    value = configuration;
+  }
+}
+
+final class _FakeCredentialStatusStore implements DeviceCredentialStatusPort {
+  var isConfigured = false;
+
+  @override
+  Future<bool> hasCredential() async => isConfigured;
+
+  @override
+  Future<void> removeCredential() async {
+    isConfigured = false;
+  }
+
+  @override
+  Future<void> saveCredential(String credential) async {
+    isConfigured = true;
+  }
 }
 
 final class _UnusedCandidateSource implements OccurrenceCandidateSource {

@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 
 import '../application/e1_ports.dart';
 import '../application/e2_persistence_ports.dart';
+import '../application/e3_storage_ports.dart';
 import '../application/post_candidate_processor.dart';
 import '../candidate/occurrence_candidate_source.dart';
 import '../domain/cooldown_policy.dart';
@@ -25,7 +26,10 @@ final class OperationController<TPreview extends Object>
     required Clock clock,
     PersistentOccurrenceQueue? queue,
     CooldownReferenceRestorer? cooldownRestorer,
+    CooldownConfigurationUpdater? cooldownConfigurationUpdater,
     AppSettingsPort? appSettings,
+    OperationalConfigurationRepository? configurationRepository,
+    DeviceCredentialStatusPort? credentialStore,
     OperationState? initialState,
   })  : _candidateSource = candidateSource,
         _postCandidateProcessor = postCandidateProcessor,
@@ -35,7 +39,10 @@ final class OperationController<TPreview extends Object>
         _clock = clock,
         _queue = queue,
         _cooldownRestorer = cooldownRestorer,
+        _cooldownConfigurationUpdater = cooldownConfigurationUpdater,
         _appSettings = appSettings ?? const _UnavailableAppSettings(),
+        _configurationRepository = configurationRepository,
+        _credentialStore = credentialStore,
         _state = initialState ??
             OperationState.initial(
               queueSnapshot: queue == null
@@ -54,7 +61,10 @@ final class OperationController<TPreview extends Object>
   final Clock _clock;
   final PersistentOccurrenceQueue? _queue;
   final CooldownReferenceRestorer? _cooldownRestorer;
+  final CooldownConfigurationUpdater? _cooldownConfigurationUpdater;
   final AppSettingsPort _appSettings;
+  final OperationalConfigurationRepository? _configurationRepository;
+  final DeviceCredentialStatusPort? _credentialStore;
 
   OperationState _state;
   Future<void> _resourceTransitions = Future<void>.value();
@@ -73,6 +83,8 @@ final class OperationController<TPreview extends Object>
   bool _wakeLockApplied = false;
   bool _readinessResolutionInProgress = false;
   bool _disposed = false;
+  int _sendingConfigurationRefreshToken = 0;
+  int _operationalConfigurationRefreshToken = 0;
 
   OperationState get state => _state;
 
@@ -84,6 +96,78 @@ final class OperationController<TPreview extends Object>
   /// Completes when the independent E2 queue bootstrap settles.
   Future<void> get queueBootstrapSettled =>
       _queueBootstrap ?? Future<void>.value();
+
+  /// Reloads persisted E3 cooldown parameters without recreating the policy.
+  ///
+  /// Configurações calls this before Operation reacquires resources. A load or
+  /// validation failure deliberately keeps the previous in-memory thresholds
+  /// and E2-restored acceptance reference intact.
+  Future<void> refreshCooldownConfiguration() async {
+    final configurationRepository = _configurationRepository;
+    final updater = _cooldownConfigurationUpdater;
+    if (configurationRepository == null || updater == null) {
+      return;
+    }
+
+    final refreshToken = ++_operationalConfigurationRefreshToken;
+    try {
+      final configuration = await configurationRepository.load();
+      if (_disposed || refreshToken != _operationalConfigurationRefreshToken) {
+        return;
+      }
+      updater.updateMinimums(
+        minimumElapsed: configuration.cooldown,
+        minimumDistanceMeters: configuration.minimumDistanceMeters,
+      );
+    } catch (_) {
+      // The last valid policy remains active. Capture and the E2 queue stay
+      // independent from a recoverable non-secret settings-store failure.
+    }
+  }
+
+  /// Refreshes only the sanitized readiness of future occurrence delivery.
+  ///
+  /// The projection checks the non-secret destination and the credential
+  /// presence separately. It never reads credential material, changes local
+  /// capture or queue state, or performs transport.
+  Future<void> refreshSendingConfigurationStatus() async {
+    final refreshToken = ++_sendingConfigurationRefreshToken;
+    final configurationRepository = _configurationRepository;
+    final credentialStore = _credentialStore;
+    if (configurationRepository == null || credentialStore == null) {
+      return;
+    }
+
+    var isReady = false;
+    try {
+      final configuration = await configurationRepository.load();
+      if (configuration.baseUrl != null) {
+        isReady = await credentialStore.hasCredential();
+      }
+    } catch (_) {
+      // Store failures are represented conservatively as pending and never
+      // interrupt local capture, persistence, or the operational route.
+    }
+
+    _publishSendingConfigurationStatus(
+      refreshToken,
+      isReady
+          ? OperationSendingConfigurationStatus.ready
+          : OperationSendingConfigurationStatus.pending,
+    );
+  }
+
+  void _publishSendingConfigurationStatus(
+    int refreshToken,
+    OperationSendingConfigurationStatus status,
+  ) {
+    if (_disposed || refreshToken != _sendingConfigurationRefreshToken) {
+      return;
+    }
+    if (_state.sendingConfigurationStatus != status) {
+      _publish(_state.copyWith(sendingConfigurationStatus: status));
+    }
+  }
 
   /// Starts recovery without acquiring or releasing camera/GPS resources.
   void _startQueueBootstrapIfNeeded() {
@@ -139,6 +223,7 @@ final class OperationController<TPreview extends Object>
       return _resourceTransitions;
     }
     _startQueueBootstrapIfNeeded();
+    unawaited(refreshSendingConfigurationStatus());
     if (_lifecycleStarted) {
       if (lifecycleState != null ||
           isVisible != null ||
@@ -247,7 +332,15 @@ final class OperationController<TPreview extends Object>
   /// The route is marked non-current synchronously, so registration and stale
   /// callbacks are blocked before this method first awaits. Resource release is
   /// sequenced after any in-flight registration has completed its cleanup.
-  Future<void> suspendForDiagnostic() {
+  Future<void> suspendForDiagnostic() => _suspendForRouteNavigation();
+
+  /// Applies the same ownership hand-off before opening Configurações.
+  ///
+  /// Configurações does not own camera, location, or wake-lock resources, but
+  /// Operation must still release them before its route is covered.
+  Future<void> suspendForSettings() => _suspendForRouteNavigation();
+
+  Future<void> _suspendForRouteNavigation() {
     if (_disposed) {
       return _resourceTransitions;
     }

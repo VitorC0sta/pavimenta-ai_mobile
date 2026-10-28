@@ -232,6 +232,36 @@ void main() {
       );
     });
 
+    // **Validates: Requirements RF-09.2–6, RF-19.2–5**
+    test('updates thresholds without clearing a recovered E2 reference', () {
+      final distance = _FakeDistanceCalculator()..value = 0;
+      final policy = CooldownPolicy(distanceCalculator: distance);
+      policy.restoreRecoveredPending(<ReconstructedPendingOccurrence>[
+        _pending(sequence: 8, detectedAt: initialTime, point: origin),
+      ]);
+
+      policy.updateMinimums(
+        minimumElapsed: const Duration(seconds: 10),
+        minimumDistanceMeters: 20,
+      );
+
+      expect(policy.minimumElapsed, const Duration(seconds: 10));
+      expect(policy.minimumDistanceMeters, 20);
+      expect(
+        policy
+            .evaluate(initialTime.add(const Duration(seconds: 6)), origin)
+            .isBlocked,
+        isTrue,
+        reason: 'the recovered reference still protects the new cooldown',
+      );
+      expect(
+        policy
+            .evaluate(initialTime.add(const Duration(seconds: 10)), origin)
+            .isAllowed,
+        isTrue,
+      );
+    });
+
     // **Validates: Requirements 09.1, 09.2, 09.3, 09.4, 12.3**
     test('clears a restored reference only for a recovered empty queue', () {
       final distance = _FakeDistanceCalculator()..value = 0;

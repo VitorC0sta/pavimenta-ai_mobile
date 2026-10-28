@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pavimenta_ai_mobile/infrastructure/device_credential_store.dart';
 import 'package:pavimenta_ai_mobile/infrastructure/durable_image_store.dart';
 import 'package:pavimenta_ai_mobile/infrastructure/queue_database.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -12,7 +13,7 @@ const _legacyRulesPath = 'android/app/src/main/res/xml/backup_rules.xml';
 const _modernRulesPath =
     'android/app/src/main/res/xml/data_extraction_rules.xml';
 
-final _expectedExclusions = <_Exclusion>{
+final _expectedE2Exclusions = <_Exclusion>{
   const _Exclusion('database', e2QueueDatabaseName),
   const _Exclusion('database', '$e2QueueDatabaseName-journal'),
   const _Exclusion('database', '$e2QueueDatabaseName-wal'),
@@ -20,11 +21,21 @@ final _expectedExclusions = <_Exclusion>{
   const _Exclusion('file', '$e2DurableImageNamespace/'),
 };
 
+const _credentialExclusion = _Exclusion(
+  'sharedpref',
+  '${FlutterSecureCredentialBackend.storageName}.xml',
+);
+
+final _expectedExclusions = <_Exclusion>{
+  ..._expectedE2Exclusions,
+  _credentialExclusion,
+};
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
 
-  group('Android E2 backup policy', () {
+  group('Android E2/E3 backup policy', () {
     // **Validates: Requirements RF-12.2, RF-12.4, RF-12.11, RNF-06.3, RNF-06.9–12**
     test(
         'manifest references both selective policies without broad disablement',
@@ -63,23 +74,30 @@ void main() {
       });
     });
 
-    // **Validates: Requirements RF-12.2, RF-12.4, RF-12.11, RNF-05.1–3, RNF-06.9–12**
-    test('legacy and Android 12 policies exclude the same complete E2 set', () {
-      final legacy = File(_legacyRulesPath).readAsStringSync();
-      final modern = File(_modernRulesPath).readAsStringSync();
+    // **Validates: Requirements RF-12.2, RF-12.4, RF-12.11, RF-13.6, RNF-02.4–5, RNF-06.3, RNF-06.9–12**
+    test(
+      'legacy and Android 12 policies preserve E2 exclusions and exclude the credential artifact',
+      () {
+        final legacy = File(_legacyRulesPath).readAsStringSync();
+        final modern = File(_modernRulesPath).readAsStringSync();
 
-      expect(legacy, contains('<full-backup-content>'));
-      expect(legacy, isNot(contains('<include')));
-      expect(_exclusions(legacy), _expectedExclusions);
+        expect(legacy, contains('<full-backup-content>'));
+        expect(legacy, isNot(contains('<include')));
+        expect(_exclusions(legacy), _expectedExclusions);
+        expect(_exclusions(legacy), containsAll(_expectedE2Exclusions));
+        expect(_exclusions(legacy), contains(_credentialExclusion));
 
-      final cloudBackup = _section(modern, 'cloud-backup');
-      final deviceTransfer = _section(modern, 'device-transfer');
-      expect(modern, contains('<data-extraction-rules>'));
-      expect(modern, isNot(contains('<include')));
-      expect(_exclusions(cloudBackup), _expectedExclusions);
-      expect(_exclusions(deviceTransfer), _expectedExclusions);
-      expect(_exclusions(cloudBackup), _exclusions(deviceTransfer));
-    });
+        final cloudBackup = _section(modern, 'cloud-backup');
+        final deviceTransfer = _section(modern, 'device-transfer');
+        expect(modern, contains('<data-extraction-rules>'));
+        expect(modern, isNot(contains('<include')));
+        expect(_exclusions(cloudBackup), _expectedExclusions);
+        expect(_exclusions(deviceTransfer), _expectedExclusions);
+        expect(_exclusions(cloudBackup), _exclusions(deviceTransfer));
+        expect(_exclusions(cloudBackup), containsAll(_expectedE2Exclusions));
+        expect(_exclusions(deviceTransfer), contains(_credentialExclusion));
+      },
+    );
 
     // **Validates: Requirements RF-12.2, RF-12.4, RF-12.11, RNF-06.3, RNF-06.9–12**
     test(

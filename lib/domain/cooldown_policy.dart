@@ -65,12 +65,26 @@ abstract interface class CooldownReferenceRestorer {
   );
 }
 
+/// Updates cooldown thresholds without changing the accepted reference.
+///
+/// E3 applies the persisted parameters after returning from Configurações.
+/// The reference remains owned by [CandidateCooldown.commit] and E2 recovery.
+abstract interface class CooldownConfigurationUpdater {
+  void updateMinimums({
+    required Duration minimumElapsed,
+    required double minimumDistanceMeters,
+  });
+}
+
 /// In-memory E1 cooldown using elapsed time OR geographic distance.
 ///
 /// Evaluation never changes the reference. The caller can advance it only by
 /// committing an already-created, fully valid occurrence.
 final class CooldownPolicy
-    implements CandidateCooldown, CooldownReferenceRestorer {
+    implements
+        CandidateCooldown,
+        CooldownReferenceRestorer,
+        CooldownConfigurationUpdater {
   factory CooldownPolicy({
     DistanceCalculator distanceCalculator = const HaversineDistanceCalculator(),
     Duration minimumElapsed = const Duration(seconds: 5),
@@ -99,15 +113,48 @@ final class CooldownPolicy
 
   CooldownPolicy._({
     required DistanceCalculator distanceCalculator,
-    required this.minimumElapsed,
-    required this.minimumDistanceMeters,
-  }) : _distanceCalculator = distanceCalculator;
+    required Duration minimumElapsed,
+    required double minimumDistanceMeters,
+  })  : _distanceCalculator = distanceCalculator,
+        _minimumElapsed = minimumElapsed,
+        _minimumDistanceMeters = minimumDistanceMeters;
 
   final DistanceCalculator _distanceCalculator;
-  final Duration minimumElapsed;
-  final double minimumDistanceMeters;
+  Duration _minimumElapsed;
+  double _minimumDistanceMeters;
+
+  Duration get minimumElapsed => _minimumElapsed;
+  double get minimumDistanceMeters => _minimumDistanceMeters;
 
   _CooldownReference? _lastCreated;
+
+  /// Applies new E3 thresholds atomically while retaining the last acceptance.
+  ///
+  /// An invalid update leaves both the active thresholds and the recovered E2
+  /// reference unchanged.
+  @override
+  void updateMinimums({
+    required Duration minimumElapsed,
+    required double minimumDistanceMeters,
+  }) {
+    if (minimumElapsed <= Duration.zero) {
+      throw ArgumentError.value(
+        minimumElapsed,
+        'minimumElapsed',
+        'must be positive',
+      );
+    }
+    if (!minimumDistanceMeters.isFinite || minimumDistanceMeters <= 0) {
+      throw ArgumentError.value(
+        minimumDistanceMeters,
+        'minimumDistanceMeters',
+        'must be finite and positive',
+      );
+    }
+
+    _minimumElapsed = minimumElapsed;
+    _minimumDistanceMeters = minimumDistanceMeters;
+  }
 
   @override
   CooldownDecision evaluate(DateTime attemptedAt, GeoPoint point) {

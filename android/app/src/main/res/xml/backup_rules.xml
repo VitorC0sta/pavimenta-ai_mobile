@@ -5,4 +5,6 @@
     <exclude domain="database" path="e2_occurrence_queue_v1.db-wal" />
     <exclude domain="database" path="e2_occurrence_queue_v1.db-shm" />
     <exclude domain="file" path="e2_queue_images_v1/" />
+    <!-- flutter_secure_storage's named EncryptedSharedPreferences artifact. -->
+    <exclude domain="sharedpref" path="pavimenta_ai_mobile_secure_storage.xml" />
 </full-backup-content>

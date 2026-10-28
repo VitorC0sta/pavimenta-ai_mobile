@@ -40,6 +40,11 @@ void main() {
       expect(find.text('36.0 km/h'), findsOneWidget);
       expect(find.text('Buracos registrados: 0'), findsOneWidget);
       expect(find.text('Pendências: 0'), findsOneWidget);
+      expect(find.text('Configuração para envio pendente'), findsOneWidget);
+      expect(
+        find.byKey(const Key('sending-configuration-panel')),
+        findsOneWidget,
+      );
       expect(find.text('Nenhum registro em processamento.'), findsOneWidget);
 
       final context = tester.element(find.byKey(const Key('operation-screen')));
@@ -70,6 +75,33 @@ void main() {
       expect(find.byIcon(Icons.check_circle_outline), findsWidgets);
       expect(find.text('GPS pronto'), findsOneWidget);
       expect(find.text('Pronta'), findsNWidgets(2));
+    });
+
+    // **Validates: Requirements RF-05.6, RNF-02.6, RNF-05.5**
+    testWidgets('shows only a sanitized ready sending configuration indicator',
+        (tester) async {
+      final state = OperationState.initial().copyWith(
+        sendingConfigurationStatus: OperationSendingConfigurationStatus.ready,
+      );
+      final harness = _ScreenHarness(initialState: state);
+      addTearDown(harness.controller.dispose);
+
+      await _pumpScreen(tester, harness.controller);
+
+      expect(
+        find.text('Configuração para envio pronta'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Destino e credencial estão configurados para uso futuro.'),
+        findsOneWidget,
+      );
+      expect(
+        find.bySemanticsLabel(
+          'Configuração para envio pronta. Destino e credencial estão configurados para uso futuro.',
+        ),
+        findsOneWidget,
+      );
     });
 
     // **Validates: Requirements 05.3, 12.1, 12.2**

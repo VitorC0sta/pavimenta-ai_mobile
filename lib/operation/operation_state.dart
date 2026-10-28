@@ -43,6 +43,12 @@ enum OperationFeedbackKind {
   error,
 }
 
+/// Sanitized readiness for a future occurrence delivery.
+///
+/// This status intentionally contains neither a destination nor credential
+/// material. It has no bearing on local capture or the E2 queue.
+enum OperationSendingConfigurationStatus { pending, ready }
+
 /// Textual operation feedback whose meaning never depends only on color.
 final class OperationFeedback {
   const OperationFeedback({required this.kind, required this.message});
@@ -114,6 +120,7 @@ final class OperationState {
     required this.queueHealth,
     required this.pendingCount,
     required this.queueMessage,
+    required this.sendingConfigurationStatus,
     required this.isPersisting,
     required this.isWakeLockEnabled,
     required this.isDisposed,
@@ -142,6 +149,7 @@ final class OperationState {
       queueHealth: snapshot.health,
       pendingCount: snapshot.pendingCount,
       queueMessage: _queueMessageFor(snapshot.health),
+      sendingConfigurationStatus: OperationSendingConfigurationStatus.pending,
       isPersisting: false,
       isWakeLockEnabled: false,
       isDisposed: false,
@@ -173,6 +181,9 @@ final class OperationState {
 
   /// Sanitized recovery or availability message for the local queue.
   final String queueMessage;
+
+  /// Sanitized readiness for a future occurrence delivery.
+  final OperationSendingConfigurationStatus sendingConfigurationStatus;
 
   /// True only while the current single-flight has entered persistence.
   final bool isPersisting;
@@ -270,6 +281,7 @@ final class OperationState {
     QueueHealth? queueHealth,
     int? pendingCount,
     String? queueMessage,
+    OperationSendingConfigurationStatus? sendingConfigurationStatus,
     bool? isPersisting,
     bool? isWakeLockEnabled,
     bool? isDisposed,
@@ -305,6 +317,8 @@ final class OperationState {
       queueHealth: queueHealth ?? this.queueHealth,
       pendingCount: pendingCount ?? this.pendingCount,
       queueMessage: queueMessage ?? this.queueMessage,
+      sendingConfigurationStatus:
+          sendingConfigurationStatus ?? this.sendingConfigurationStatus,
       isPersisting: isPersisting ?? this.isPersisting,
       isWakeLockEnabled: isWakeLockEnabled ?? this.isWakeLockEnabled,
       isDisposed: isDisposed ?? this.isDisposed,

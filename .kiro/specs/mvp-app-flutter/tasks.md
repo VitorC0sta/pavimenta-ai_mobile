@@ -821,84 +821,84 @@ A E2 adiciona persistência local de ocorrências e JPEGs, recuperação após r
 
 ## 53. Preparar a baseline E3 e fechar as fronteiras
 
-- [ ] 53.1 Registrar a aprovação do Gate E2, revisar o design E3 e executar a baseline de formatação, análise, suíte completa e build sem alterar E0–E2.
-- [ ] 53.2 Inventariar a composição atual de `main.dart`, `CooldownPolicy`, `OperationController`, rotas, permissões, manifestos e regras de backup para definir os pontos mínimos de integração E3.
-- [ ] 53.3 Criar teste arquitetural de fronteira E3: liberar somente stores de configuração/credencial e proibir cliente de ocorrência, endpoint, multipart, `Authorization`, worker, backoff, YOLO/TFLite/modelo/inferência.
+- [x] 53.1 Registrar a aprovação do Gate E2, revisar o design E3 e executar a baseline de formatação, análise, suíte completa e build sem alterar E0–E2.
+- [x] 53.2 Inventariar a composição atual de `main.dart`, `CooldownPolicy`, `OperationController`, rotas, permissões, manifestos e regras de backup para definir os pontos mínimos de integração E3.
+- [x] 53.3 Criar teste arquitetural de fronteira E3: liberar somente stores de configuração/credencial e proibir cliente de ocorrência, endpoint, multipart, `Authorization`, worker, backoff, YOLO/TFLite/modelo/inferência.
 - **Verificação:** baseline aprovada e fronteiras futuras automatizadas sem alterar comportamento E0–E2.
 - **Requisitos:** RF-23.1–10, RNF-01.7–13, RNF-03.6, RNF-07.1,10.
 
 ## 54. Preparar dependências e segurança Android
 
-- [ ] 54.1 Verificar compatibilidade Android/Flutter e escolher versões exatas de `shared_preferences` e `flutter_secure_storage`; atualizar `pubspec.yaml`, lockfile e a política arquitetural E2 que hoje proíbe secure storage.
-- [ ] 54.2 Criar adaptadores/fakes mínimos para preferences e armazenamento seguro, sem expor credencial pela camada de apresentação.
-- [ ] 54.3 Adicionar configuração de segurança exclusiva de debug que permita somente `http://localhost:3000`, mantendo cleartext bloqueado no manifesto principal/release.
-- [ ] 54.4 Identificar os artefatos reais do adaptador de credencial e atualizar regras de backup/data extraction para excluir a credencial sem remover exclusões E2 de banco, sidecars e JPEGs.
-- [ ] 54.5 Criar testes estáticos de manifests/regras de backup e inspeção de dependências: HTTPS obrigatório em release, exceção limitada a localhost/debug e nenhuma abertura global de HTTP.
+- [x] 54.1 Verificar compatibilidade Android/Flutter e escolher versões exatas de `shared_preferences` e `flutter_secure_storage`; atualizar `pubspec.yaml`, lockfile e a política arquitetural E2 que hoje proíbe secure storage.
+- [x] 54.2 Criar adaptadores/fakes mínimos para preferences e armazenamento seguro, sem expor credencial pela camada de apresentação.
+- [x] 54.3 Adicionar configuração de segurança exclusiva de debug que permita somente `http://localhost:3000`, mantendo cleartext bloqueado no manifesto principal/release.
+- [x] 54.4 Identificar os artefatos reais do adaptador de credencial e atualizar regras de backup/data extraction para excluir a credencial sem remover exclusões E2 de banco, sidecars e JPEGs.
+- [x] 54.5 Criar testes estáticos de manifests/regras de backup e inspeção de dependências: HTTPS obrigatório em release, exceção limitada a localhost/debug e nenhuma abertura global de HTTP.
 - **Depende de:** 53.
 - **Verificação:** dependências pinadas, adaptação segura testável e políticas Android preservadas/verificadas.
 - **Requisitos:** RF-13.2–8, RNF-02.4–14, RNF-03.10, RNF-06.9–12.
 
 ## 55. Implementar o núcleo de configuração e validação
 
-- [ ] 55.1 Criar value objects imutáveis para configuração, draft, estado sanitizado da credencial e defaults: 5 s, 15 m, 0,5 e 5 FPS.
-- [ ] 55.2 Implementar validadores de valores numéricos, campos obrigatórios/ausentes, URI e formato mínimo `prefixo.segredo`; assegurar que os erros não carreguem a chave completa.
-- [ ] 55.3 Implementar regra de URI por variante: HTTPS em todas, `http://localhost:3000` apenas debug, sem sufixo de endpoint, query, fragmento, userinfo ou paths indevidos.
-- [ ] 55.4 Escrever testes unitários e de propriedade para defaults, limites inclusivos/exclusivos, normalização de URL, ausência de configuração e sanitização da credencial.
+- [x] 55.1 Criar value objects imutáveis para configuração, draft, estado sanitizado da credencial e defaults: 5 s, 15 m, 0,5 e 5 FPS.
+- [x] 55.2 Implementar validadores de valores numéricos, campos obrigatórios/ausentes, URI e formato mínimo `prefixo.segredo`; assegurar que os erros não carreguem a chave completa.
+- [x] 55.3 Implementar regra de URI por variante: HTTPS em todas, `http://localhost:3000` apenas debug, sem sufixo de endpoint, query, fragmento, userinfo ou paths indevidos.
+- [x] 55.4 Escrever testes unitários e de propriedade para defaults, limites inclusivos/exclusivos, normalização de URL, ausência de configuração e sanitização da credencial.
 - **Depende de:** 54.
 - **Verificação:** nenhuma entrada inválida persiste e nenhum teste/arredondamento torna a chave observável.
 - **Requisitos:** RF-13.1–5,17, RF-19.4–8,14, RNF-02.1–6, RNF-03.6.
 
 ## 56. Implementar stores e fluxos de credencial
 
-- [ ] 56.1 Implementar repositório versionado de configuração não secreta com carregamento de defaults, save atômico por documento e recuperação controlada de dado ausente/corrompido.
-- [ ] 56.2 Implementar adaptador seguro Android para verificar, salvar e remover a API key; restringir leitura completa a uma porta futura de E4, sem acesso de widgets/controllers de tela.
-- [ ] 56.3 Implementar casos de uso separados para salvar parâmetros, salvar/substituir credencial e remover credencial com confirmação.
-- [ ] 56.4 Cobrir round-trip, falha de storage, configuração parcial/corrompida, substituição, remoção, status sem valor e ausência de logs com fakes, sem depender de keystore físico nos testes Dart.
+- [x] 56.1 Implementar repositório versionado de configuração não secreta com carregamento de defaults, save atômico por documento e recuperação controlada de dado ausente/corrompido.
+- [x] 56.2 Implementar adaptador seguro Android para verificar, salvar e remover a API key; restringir leitura completa a uma porta futura de E4, sem acesso de widgets/controllers de tela.
+- [x] 56.3 Implementar casos de uso separados para salvar parâmetros, salvar/substituir credencial e remover credencial com confirmação.
+- [x] 56.4 Cobrir round-trip, falha de storage, configuração parcial/corrompida, substituição, remoção, status sem valor e ausência de logs com fakes, sem depender de keystore físico nos testes Dart.
 - **Depende de:** 55.
 - **Verificação:** valores não secretos reabrem corretamente; a API key nunca reabre na UI e falhas não derrubam Operação/Fila.
 - **Requisitos:** RF-13.6–8,17,22–26, RF-19.9–18, RNF-02.4–14, RNF-03.6,10.
 
 ## 57. Implementar apresentação e permissões E3
 
-- [ ] 57.1 Criar `SettingsController`, estado e tela com carregamento, erros por campo, feedback sanitizado, defaults/unidades e ações independentes de parâmetros e credencial.
-- [ ] 57.2 Exibir somente “Chave configurada”/“Chave não configurada”; manter o campo de chave vazio ao reabrir, exigir valor completo para troca e confirmação explícita para remoção.
-- [ ] 57.3 Adicionar orientação de rotação da chave no Next.js e exemplos exclusivamente fictícios, sem URL/chave reais.
-- [ ] 57.4 Integrar painel de permissões: explicar estado e abrir detalhes do app Android quando negação for permanente, preservando o Diagnóstico.
-- [ ] 57.5 Criar testes de widget/controller para carregamento, salvar inválido/válido, troca/remoção, ausência de configuração, semântica/acessibilidade e falhas controladas.
+- [x] 57.1 Criar `SettingsController`, estado e tela com carregamento, erros por campo, feedback sanitizado, defaults/unidades e ações independentes de parâmetros e credencial.
+- [x] 57.2 Exibir somente “Chave configurada”/“Chave não configurada”; manter o campo de chave vazio ao reabrir, exigir valor completo para troca e confirmação explícita para remoção.
+- [x] 57.3 Adicionar orientação de rotação da chave no Next.js e exemplos exclusivamente fictícios, sem URL/chave reais.
+- [x] 57.4 Integrar painel de permissões: explicar estado e abrir detalhes do app Android quando negação for permanente, preservando o Diagnóstico.
+- [x] 57.5 Criar testes de widget/controller para carregamento, salvar inválido/válido, troca/remoção, ausência de configuração, semântica/acessibilidade e falhas controladas.
 - **Depende de:** 56.
 - **Verificação:** UI não contém nem reconstrói o segredo, e a ausência de URL/chave não desabilita registro manual ou fila.
 - **Requisitos:** RF-13.14–26, RF-19.1–18, RF-20.8, RNF-02.1–8,11–14, RNF-04.2.
 
 ## 58. Integrar Operação sem regressão E1/E2
 
-- [ ] 58.1 Adicionar entrada/retorno de Configurações na navegação, aplicando o protocolo de liberar/reconciliar câmera, GPS e wake lock antes/depois da rota.
-- [ ] 58.2 Exibir em Operação indicador sanitizado de configuração de envio pendente/pronta, sem bloquear captura, pendências ou chamar rede.
-- [ ] 58.3 Tornar cooldown e distância configuráveis em runtime, preservando a referência de último aceite restaurada da fila E2 em atualizações e reaberturas.
-- [ ] 58.4 Manter confiança/FPS apenas persistidos e visíveis como parâmetros futuros; proibir qualquer inferência/modelo/frame loop.
-- [ ] 58.5 Cobrir com testes controladores, widgets e integração: atualização sem reset de cooldown, reabertura com fila existente, rota Operação → Configurações → Operação, Diagnóstico preservado e permissões independentes.
+- [x] 58.1 Adicionar entrada/retorno de Configurações na navegação, aplicando o protocolo de liberar/reconciliar câmera, GPS e wake lock antes/depois da rota.
+- [x] 58.2 Exibir em Operação indicador sanitizado de configuração de envio pendente/pronta, sem bloquear captura, pendências ou chamar rede.
+- [x] 58.3 Tornar cooldown e distância configuráveis em runtime, preservando a referência de último aceite restaurada da fila E2 em atualizações e reaberturas.
+- [x] 58.4 Manter confiança/FPS apenas persistidos e visíveis como parâmetros futuros; proibir qualquer inferência/modelo/frame loop.
+- [x] 58.5 Cobrir com testes controladores, widgets e integração: atualização sem reset de cooldown, reabertura com fila existente, rota Operação → Configurações → Operação, Diagnóstico preservado e permissões independentes.
 - **Depende de:** 57.
 - **Verificação:** nenhum recurso duplica, nenhum toque precoce é liberado por salvar configuração e E0/E2 seguem íntegros.
 - **Requisitos:** RF-05.6, RF-09.5–6, RF-19.2–5,12, RF-20.8, RF-21.1–7, RNF-04.2–3, RNF-05.5.
 
 ## 59. Consolidar segurança, qualidade e artefato E3
 
-- [ ] 59.1 Executar formatação, análise, suíte completa e testes dirigidos de configuração, segurança Android, stores, controller e integração do cooldown; corrigir somente falhas E3.
-- [ ] 59.2 Inspecionar fontes, dependências, assets, manifesto, logs de teste e APK para confirmar segredo ausente, exceção HTTP restrita e ausência total de E4/E5.
-- [ ] 59.3 Gerar APK debug E3, registrar ferramentas, versões pinadas, identidade, tamanho e SHA-256; inspecionar manifesto debug e release/produção separadamente.
-- [ ] 59.4 Preparar evidências sanitizadas dos resultados, sem URL de produção, API key, UUID, coordenada, path, imagem ou conteúdo de storage seguro.
+- [x] 59.1 Executar formatação, análise, suíte completa e testes dirigidos de configuração, segurança Android, stores, controller e integração do cooldown; corrigir somente falhas E3.
+- [x] 59.2 Inspecionar fontes, dependências, assets, manifesto, logs de teste e APK para confirmar segredo ausente, exceção HTTP restrita e ausência total de E4/E5.
+- [x] 59.3 Gerar APK debug E3, registrar ferramentas, versões pinadas, identidade, tamanho e SHA-256; inspecionar manifesto debug e release/produção separadamente.
+- [x] 59.4 Preparar evidências sanitizadas dos resultados, sem URL de produção, API key, UUID, coordenada, path, imagem ou conteúdo de storage seguro.
 - **Depende de:** 58.
 - **Verificação:** qualidade e inspeções aprovadas, artefato rastreável e fronteiras E3 confirmadas.
 - **Requisitos:** RF-13, RF-19, RF-23.3–10, RNF-02, RNF-03.6, RNF-04.6, RNF-07.4,10.
 
 ## 60. Executar roteiro físico E3 no Samsung Galaxy S25+
 
-- [ ] 60.1 Instalar o APK E3 como atualização preservadora, registrar dispositivo/hash e confirmar preservação de pendências E2, preview, GPS e modo manual.
-- [ ] 60.2 Verificar defaults, editar/salvar/reabrir cooldown, distância, confiança, FPS e URL válida de teste fictícia/sanitizada; confirmar erros de URL/números inválidos e que o sufixo de ocorrências é recusado.
-- [ ] 60.3 Colar chave de teste do dispositivo somente quando fornecida fora do repositório, salvar, reabrir e confirmar apenas o status “configurada”; validar troca, remoção com confirmação e orientação de rotação sem registrar o segredo.
-- [ ] 60.4 Verificar ausência de URL/chave: Operação e fila continuam funcionando, indicador informa configuração pendente e não há tráfego/tentativa de ocorrência.
-- [ ] 60.5 Confirmar que alteração de cooldown/distância é observável sem perder a pendência/estado E2; force-stop/reabrir e confirmar recuperação de configuração e fila.
-- [ ] 60.6 Verificar permissão permanentemente negada em cenário controlado, ação de detalhes Android e retorno; regressar Operação → Diagnóstico → Operação sem câmera/GPS duplicados ou crash.
-- [ ] 60.7 Classificar cada cenário como aprovado, reprovado ou não executado; preservar limitações e nunca usar screenshot/log que exponha segredos ou dados sensíveis.
+- [x] 60.1 Instalar o APK E3 como atualização preservadora, registrar dispositivo/hash e confirmar preservação de pendências E2, preview, GPS e modo manual.
+- [x] 60.2 Verificar defaults, editar/salvar/reabrir cooldown, distância, confiança, FPS e URL válida de teste fictícia/sanitizada; confirmar erros de URL/números inválidos e que o sufixo de ocorrências é recusado.
+- [x] 60.3 Colar chave de teste do dispositivo somente quando fornecida fora do repositório, salvar, reabrir e confirmar apenas o status “configurada”; validar troca, remoção com confirmação e orientação de rotação sem registrar o segredo.
+- [x] 60.4 Verificar ausência de URL/chave: Operação e fila continuam funcionando, indicador informa configuração pendente e não há tráfego/tentativa de ocorrência.
+- [x] 60.5 Confirmar que alteração de cooldown/distância é observável sem perder a pendência/estado E2; force-stop/reabrir e confirmar recuperação de configuração e fila.
+- [x] 60.6 Verificar permissão permanentemente negada em cenário controlado, ação de detalhes Android e retorno; regressar Operação → Diagnóstico → Operação sem câmera/GPS duplicados ou crash.
+- [x] 60.7 Classificar cada cenário como aprovado, reprovado ou não executado; preservar limitações e nunca usar screenshot/log que exponha segredos ou dados sensíveis.
 - **Depende de:** 59.
 - **Verificação:** roteiro físico aplicável cobre configuração, segredo, permissões, ausência de configuração e regressões E0–E2 no S25+.
 - **Requisitos:** RF-13.1–26, RF-19.1–18, RF-20.8, RF-21, RF-23, RNF-04.6, RNF-07.4,10.
