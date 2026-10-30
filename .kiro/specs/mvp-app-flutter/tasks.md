@@ -1,4 +1,4 @@
-# Implementation Plan: E0 e E1
+﻿# Implementation Plan: E0 e E1
 
 ## Overview
 
@@ -1182,3 +1182,279 @@ A E2 adiciona persistência local de ocorrências e JPEGs, recuperação após r
 - Não adicionar modelo, asset, detector, stream de frames, inferência, FPS real, `ultralytics_yolo`, TFLite ou substituição da fonte manual; são E5.
 - Não gravar URL real, API key, header preenchido, body, multipart, imagem, UUID, coordenada, filename, path ou digest em código, testes, README, logs, screenshots ou evidências.
 - Não declarar o Validation Gate E4 aprovado usando apenas fakes/servidor simulado; o gate real exige URL acessível, chave válida de dispositivo de teste e evidência do back-end.
+
+
+---
+
+# Plano de tarefas — E5: Detecção YOLO local
+
+> **Pré-condição atendida:** E4 foi aprovada explicitamente no Gate 74. O modelo `buraco.tflite` (YOLO11n, SHA-256 `f6a69aa9…434463`) existe em `pothole_detection_model/pothole_model/`. As decisões D1–D7 e as emendas E5 dos requisitos foram aprovadas. Este plano implementa exclusivamente a E5, preservando E0–E4. A compatibilidade real do modelo só é aceita após o checkpoint 76; um no-go adia a E5 (RF-23.17).
+
+## 75. Preparar a baseline E5 e atualizar a toolchain
+
+- [x] 75.1 Registrar a aprovação do Gate E4 e executar a baseline de formatação, análise, suíte completa e build Android na toolchain atual, sem alterar código.
+- [x] 75.2 Confirmar com o usuário o método de instalação do SDK novo (atualizar a instalação existente ou manter SDK paralelo) antes de qualquer mudança global no ambiente.
+- [x] 75.3 Escolher e registrar a matriz exata: menor Flutter estável ≥ 3.32.1 compatível com o `ultralytics_yolo` candidato e com os pins atuais, Dart, JDK 17, AGP, Gradle wrapper e Kotlin ≥ 2.3.
+- [x] 75.4 Atualizar SDK, `settings.gradle`, wrapper e `android/app/build.gradle` com `compileSdk` 36, `minSdk` 24 e `targetSdk` 34 explícitos; manter `sdk: ^3.5.3` no `pubspec.yaml`.
+- [x] 75.5 Ajustar somente os pins exigidos pela resolução (`path_provider` para a versão exata ≥ 2.1.5), justificar cada mudança e atualizar o lockfile e o teste de pins E2; não adicionar `ultralytics_yolo` nesta tarefa.
+- [x] 75.6 Corrigir somente quebras de compilação e de análise causadas pela toolchain, sem mudar comportamento; executar suíte completa, gerar APK debug e comparar manifestos mesclados, permissões e regras de backup com o APK E4.
+- **Depende de:** Gate 74 aprovado.
+- **Ordem interna:** 75.1 → 75.2 → 75.3 → 75.4 → 75.5 → 75.6, em sequência.
+- **Arquivos (alterar):** `pubspec.yaml`, `pubspec.lock`, `android/settings.gradle`, `android/gradle/wrapper/gradle-wrapper.properties`, `android/app/build.gradle`, `test/architecture/e2_dependency_policy_test.dart`; código de produção somente para depreciações apontadas pelo analyzer.
+- **Design:** E5.3.
+- **Verificação:** a toolchain nova compila, analisa e passa a suíte E0–E4 sem mudança de comportamento, manifesto ou backup; nenhum código ou dependência E5 entrou.
+- **Requisitos:** RF-00.2, RF-00.20, RF-01, RF-23.1–6, RNF-07.1, RNF-07.10.
+
+## 76. Checkpoint físico: regressão E0–E4 e compatibilidade do modelo
+
+- [x] 76.1 Instalar o APK 75 no Galaxy S25+ como atualização preservadora e executar a regressão essencial: Diagnóstico E0, registro manual, fila e reabertura, Configurações e envio E4 (back-end de teste quando disponível; caso contrário, registrar como não executado).
+- [x] 76.2 Criar protótipo descartável fora do repositório principal (ou em branch descartada) com o `ultralytics_yolo` no pin candidato e o `buraco.tflite`; verificar carregamento pelo asset, metadados `detect`/640/`{0: buraco}` e detecções em imagens reais de buracos. Validar a paridade com o Colab: as imagens das células T1–T5, na resolução do stream da câmera e com `iouThreshold = 0.7`, devem produzir caixas e confianças praticamente iguais; registrar o método de redimensionamento do plugin, se as caixas chegam normalizadas e a diferença de confiança por imagem.
+- [x] 76.3 Medir a cadência de `onResult`, a entrega de frames vazios, o efeito de `inferenceFrequency`/`maxFPS` em 5 e 10 FPS, a latência por frame, as métricas de desempenho e o uso de GPU ou CPU.
+- [x] 76.4 Verificar `capturePhoto(withOverlays: false)` (sem overlay, dimensões, orientação no suporte, latência), o pedido de permissão de câmera e a liberação da câmera para o `camera` plugin após `stop()` e desmontagem do `YOLOView`.
+- [ ] 76.5 Registrar observação térmica preliminar de 10 minutos com `dumpsys thermalservice` e `dumpsys battery`, sem meta numérica.
+- [x] 76.6 Classificar cada item como aprovado, reprovado ou não executado; aplicar somente as alternativas pré-aprovadas em E5.16; registrar evidência sanitizada e apresentar o resultado go/no-go ao usuário.
+- [x] 76.7 Parar obrigatoriamente: no-go adia a E5; go com alternativa fora das pré-aprovadas exige atualizar o design E5 antes da tarefa 77; o protótipo não é mergeado.
+- **Depende de:** 75.
+- **Arquivos (alterar):** somente `evidence/task-76-e5-compatibility-checkpoint.md` no spec.
+- **Design:** E5.6, E5.7, E5.10, E5.16.
+- **Verificação:** E0–E4 continuam íntegros no aparelho com a toolchain nova e o comportamento real do plugin com o modelo está registrado antes de qualquer código E5.
+- **Requisitos:** RF-02.2, RF-04.13–14, RF-23.17, RNF-04.6–7, RNF-07.1, RNF-07.10.
+
+## 77. Adicionar dependência, asset do modelo e fronteiras E5
+
+- [x] 77.1 Fixar a versão exata do `ultralytics_yolo` aprovada em 76, resolver dependências e registrar as transitivas sem adicionar `tflite_flutter`, ML Kit, ONNX, isolate, worker ou conectividade.
+- [x] 77.2 Copiar o modelo sem alteração para `assets/models/buraco.tflite`, declarar somente esse asset e criar `PotholeModelDescriptor` com path, tamanho, SHA-256, tarefa e mapeamento `0/buraco → pothole`.
+- [x] 77.3 Testar tamanho e SHA-256 do asset contra o descritor e a existência de um único arquivo de modelo no projeto.
+- [x] 77.4 Inspecionar o manifesto mesclado: remover com `tools:node="remove"` toda permissão nova sem uso pelo app, justificar as mantidas e confirmar regras de backup e transferência inalteradas.
+- [x] 77.5 Converter os testes arquiteturais E2–E4 em fronteiras positivas E5 e criar `test/architecture/e5_detection_boundaries_test.dart` com as asserções de E5.15.
+- **Depende de:** 76 com resultado go.
+- **Ordem interna:** 77.1 → 77.2 → 77.3 → 77.4 → 77.5, em sequência (compartilham `pubspec.yaml` e testes arquiteturais).
+- **Arquivos (alterar):** `pubspec.yaml`, `pubspec.lock`, `assets/models/buraco.tflite` (novo), `lib/domain/detection/pothole_model_descriptor.dart` (novo), `android/app/src/main/AndroidManifest.xml` somente se 77.4 exigir, `test/domain/detection/pothole_model_descriptor_test.dart` (novo), `test/architecture/e2_dependency_policy_test.dart`, `test/architecture/e3_configuration_boundaries_test.dart`, `test/architecture/e4_delivery_boundaries_test.dart`, `test/architecture/e5_detection_boundaries_test.dart` (novo).
+- **Design:** E5.3, E5.4, E5.13, E5.15.
+- **Verificação:** o plugin e o modelo entram com versão e hash verificáveis, e as fronteiras automatizadas permitem a E5 somente nas zonas definidas.
+- **Requisitos:** RF-02.2, RF-02.6–7, RF-23.15, RNF-01.12, RNF-02.1, RNF-03.10.
+
+## 78. Implementar o domínio e o pipeline de detecção
+
+- [ ] 78.1 Criar `DetectionBox`, `DetectionFrame` (com `imageWidth`/`imageHeight`), `ConfirmedDetection`, `DetectionModelStatus` e `DetectionParameters` (limiar e FPS efetivos; FPS fora de 1–15 vira 5; janela 2 de 3 e área máxima lidas de `OperationalConfiguration`). Adicionar a `OperationalConfiguration` os campos `confirmationRequiredFrames = 2`, `confirmationWindowFrames = 3` e `maximumBoxAreaRatio = 0.20`, com padrão no código, sem persistência, sem tela e sem mudar a versão de armazenamento E3.
+- [ ] 78.2 Implementar `DetectionFilter` para índice 0, nome `buraco`, confiança finita ≥ limiar, coordenadas normalizadas válidas e área normalizada ≤ `maximumBoxAreaRatio` (20%).
+- [ ] 78.3 Implementar `InferenceRateGate` com tolerância `0,85 × (1 / FPS)` e `InferenceFpsMeter` com janela deslizante de 2 s.
+- [ ] 78.4 Implementar `TemporalConfirmationTracker`: compatibilidade quando a distância entre os centros (em pixels do frame) é menor que o maior lado entre as duas caixas, associação gulosa pela menor distância, confirmação 2 de 3, maior confiança da janela, supressão até 3 frames sem caixa e reinício.
+- [ ] 78.5 Definir `AutomaticDetectionPort` e `ModelPreflightPort` e implementar `DetectionPipeline`, que compõe gate, medidor, filtro e tracker e publica `ConfirmedDetection` e FPS medido.
+- [ ] 78.6 Cobrir filtro, gate, medidor, tracker e pipeline com testes de exemplo e de propriedade (`glados`), incluindo frames vazios, jitter, troca de parâmetros e reinício.
+- **Depende de:** 77.
+- **Ordem interna:** 78.1 → (78.2, 78.3 e 78.4 em paralelo, arquivos distintos) → 78.5 → 78.6.
+- **Arquivos (alterar):** novos em `lib/domain/detection/` (`detection_frame.dart`, `detection_parameters.dart`, `detection_filter.dart`, `inference_rate_gate.dart`, `inference_fps_meter.dart`, `temporal_confirmation_tracker.dart`) e `lib/application/detection/` (`automatic_detection_port.dart`, `model_preflight_port.dart`, `detection_pipeline.dart`); testes correspondentes em `test/domain/detection/` e `test/application/detection/`.
+- **Arquivos (alterar, existente):** `lib/domain/operational_configuration.dart` (somente os três campos novos com padrão no código) e seu teste.
+- **Arquivos (consultar):** `lib/domain/detection/pothole_model_descriptor.dart`, `lib/application/e1_ports.dart` (`Clock`).
+- **Design:** E5.2 (D4, D9), E5.6, E5.7, E5.11.
+- **Verificação:** regras de detecção são determinísticas, testadas sem plugin e não armazenam nem acumulam frames.
+- **Requisitos:** RF-04.2–6, RF-04.8–12, RNF-03.10, RNF-04.5, RNF-06.1.
+
+## 79. Admitir a confiança do modelo e migrar a fila para v3
+
+- [ ] 79.1 Guardar `confidence` em `InMemoryOccurrence`, validar `pothole` e confiança finita em [0, 1] na fábrica e em `_hasValidCandidateFields`; manter `createManual` e `ManualCandidateSource` com `1.0`.
+- [ ] 79.2 Implementar o migrador de pré-abertura v1/v2 → v3 com FKs desligadas, transação única, cópia com `queueSequence`, preservação de `sqlite_sequence`, `foreign_key_check`, `integrity_check` e `user_version = 3`; recusar versão futura.
+- [ ] 79.3 Integrar o migrador à abertura da fila, ajustar a versão esperada para 3 e garantir que o `onUpgrade` nunca execute reconstrução com FKs ligadas; falha mantém a versão anterior e a fila indisponível com retentativa E2.
+- [ ] 79.4 Ajustar mapper e reconstrução da fila para confiança em [0, 1], sem alterar mapper multipart, transporte ou coordenador E4.
+- [ ] 79.5 Cobrir bancos reais temporários v1 e v2 com pendências, estados de entrega, pausa, âncora, `sqlite_sequence` acima da maior linha e JPEGs; falha injetada antes do `COMMIT`; reabertura idempotente; manual enviado exatamente com `1.0` e confiança de modelo preservada no payload.
+- **Depende de:** 77.
+- **Ordem interna:** 79.1 e 79.2 em paralelo (arquivos distintos) → 79.3 → 79.4 → 79.5.
+- **Arquivos (alterar):** `lib/domain/in_memory_occurrence.dart`, `lib/application/post_candidate_processor.dart`, `lib/infrastructure/queue_database.dart`, `lib/infrastructure/queue_schema_v3_migration.dart` (novo), `lib/infrastructure/queue_record_mapper.dart` e `lib/infrastructure/persistent_occurrence_queue.dart` somente se a validação exigir; testes em `test/domain/`, `test/application/` e `test/infrastructure/` (incluindo `queue_schema_v3_migration_test.dart`, novo).
+- **Arquivos (consultar):** `lib/infrastructure/queue_delivery_schema.dart`, `lib/infrastructure/delivery/occurrence_multipart_mapper.dart`, `test/infrastructure/fault_injected_queue_mutation_driver_test.dart`.
+- **Design:** E5.9.
+- **Verificação:** a migração é não destrutiva e atômica, e a confiança do modelo atravessa fila e payload sem mudar cooldown, preparação, UUID, multipart ou envio.
+- **Requisitos:** RF-07.11, RF-08.4, RF-12.3–4, RF-14.6–7, RNF-01.10, RNF-01.14, RNF-03.5, RNF-05.
+
+## 80. Implementar o adaptador YOLOView e o preflight
+
+- [ ] 80.1 Implementar `YoloViewSession` com fachada injetável do plugin: `YOLOView` com asset do descritor, tarefa `detect`, câmera traseira, limiar, `iouThreshold = 0.7` e `YOLOStreamingConfig` derivados de `DetectionParameters`, sem desfoque ou pré-processamento próprio; mapear resultados (inclusive dimensões do frame) para `DetectionFrame` com o `Clock` e o estado do modelo para `DetectionModelStatus`.
+- [ ] 80.2 Adicionar `PrivateImageStore.adoptCaptureBytes` no mesmo namespace e com a mesma política de limpeza de `adoptCapture`.
+- [ ] 80.3 Implementar `YoloOperationalCamera` (`OperationalCameraPort<YoloPreviewHandle>`): montagem com espera por modelo e primeiro frame (15 s), permissões, `takePicture` por `capturePhoto(withOverlays: false)` e `release` só após `stop()` e desmontagem.
+- [ ] 80.4 Implementar `YoloModelPreflight` com `inspectModel`, `loadModel`, `dispose`, timeout de 15 s e categorias fixas de falha.
+- [ ] 80.5 Implementar `applyParameters` com `setConfidenceThreshold` e `setStreamingConfig`, aplicando as alternativas registradas em 76 quando houver.
+- [ ] 80.6 Cobrir mapeamento, estado do modelo, parâmetros, captura nula, release idempotente, timeout e metadados divergentes com fakes da fachada, sem platform view.
+- **Depende de:** 78, 79.
+- **Ordem interna:** 80.1 e 80.2 em paralelo → 80.3 → 80.4 → 80.5 → 80.6.
+- **Arquivos (alterar):** novos em `lib/infrastructure/detection/` (`yolo_view_session.dart`, `yolo_operational_camera.dart`, `yolo_model_preflight.dart`), `lib/infrastructure/private_image_store.dart`; testes em `test/infrastructure/detection/` e `test/infrastructure/private_image_pipeline_test.dart`.
+- **Arquivos (consultar):** `lib/infrastructure/operational_camera.dart`, `lib/application/e1_ports.dart`, `lib/infrastructure/image_artifacts.dart`, `evidence/task-76-e5-compatibility-checkpoint.md`.
+- **Design:** E5.4, E5.6, E5.10, E5.13.
+- **Verificação:** o plugin fica atrás das portas existentes e novas, com captura, release e falhas testáveis sem hardware.
+- **Requisitos:** RF-02.2–7, RF-04.1–2, RF-10.11–12, RNF-01.12, RNF-06.6–7, RNF-06.12.
+
+## 81. Integrar a fonte YOLO ao controller e à composição
+
+- [ ] 81.1 Criar `YoloCandidateSource` por detecção, conhecendo somente o contrato de candidato e `ConfirmedDetection`.
+- [ ] 81.2 Extrair o caminho privado de operação compartilhado e adicionar `registerAutomaticDetection` com `attemptedAt = detection.observedAt`, mesmo single-flight, descarte quando ocupado ou sem `canRegister` e contadores de detecção e de cooldown.
+- [ ] 81.3 Assinar o pipeline somente durante o Modo operacional ativo, reiniciá-lo em lifecycle, rotas e troca de parâmetros e publicar estado do modelo e FPS medido no `OperationState`.
+- [ ] 81.4 Manter o botão manual no modo YOLO com `ManualCandidateSource` inalterada e a câmera YOLO, e registrar a origem somente na projeção de apresentação.
+- [ ] 81.5 Compor no `main.dart`: preflight no bootstrap, composição YOLO quando disponível e composição E1–E4 inalterada quando indisponível; `previewBuilder` do `YOLOView`; tratar `onModelError` durante a sessão.
+- [ ] 81.6 Cobrir single-flight entre entradas, descarte por ocupação, supressão, contadores, fallback, erro de modelo na sessão e handoff com Diagnóstico e Configurações no modo YOLO.
+- **Depende de:** 80.
+- **Ordem interna:** 81.1 → 81.2 → 81.3 → 81.4 → 81.5 → 81.6, em sequência (compartilham controller, estado e composição).
+- **Arquivos (alterar):** `lib/candidate/yolo_candidate_source.dart` (novo), `lib/operation/operation_controller.dart`, `lib/operation/operation_state.dart`, `lib/operation/e1_composition.dart`, `lib/main.dart`; testes em `test/candidate/` e `test/operation/`.
+- **Arquivos (consultar):** `lib/candidate/occurrence_candidate_source.dart`, `lib/candidate/manual_candidate_source.dart`, `lib/application/detection/detection_pipeline.dart`, `lib/infrastructure/detection/yolo_operational_camera.dart`.
+- **Design:** E5.5, E5.8, E5.10.
+- **Verificação:** candidatos YOLO e manuais usam o mesmo pós-candidato e o mesmo controle de concorrência e recursos, e a falha do modelo devolve o app ao modo manual conhecido.
+- **Requisitos:** RF-02.3–6, RF-02.8, RF-03.12, RF-03.17, RF-04.1, RF-04.7, RF-04.10, RF-07.11, RF-21, RNF-01.3, RNF-01.5, RNF-04.4.
+
+## 82. Tornar efetivas as configurações de detecção
+
+- [ ] 82.1 Trocar os rótulos para “Limiar de confiança” e “FPS máximo de inferência”, validar FPS inteiro de 1 a 15 e mudar o padrão do limiar para 0.35 sem reescrever valores salvos nem a versão de armazenamento.
+- [ ] 82.2 Exibir com erro, ao abrir a tela, um FPS salvo fora do domínio E5, mantendo 5 FPS como valor efetivo até a correção.
+- [ ] 82.3 Implementar `refreshDetectionConfiguration` no retorno das Configurações, aplicando parâmetros ao adaptador e reiniciando o pipeline sem limpar pausas nem disparar envio E4.
+- [ ] 82.4 Cobrir validadores, valores legados, aplicação no retorno e preservação das regras E4.
+- **Depende de:** 81.
+- **Ordem interna:** 82.1 → 82.2 → 82.3 → 82.4, em sequência.
+- **Arquivos (alterar):** `lib/domain/operational_configuration.dart`, `lib/application/e3_configuration_use_cases.dart`, `lib/settings/settings_controller.dart`, `lib/settings/settings_state.dart`, `lib/settings/settings_screen.dart`, `lib/operation/operation_controller.dart`, `lib/main.dart`; testes em `test/settings/`, `test/domain/`, `test/operation/` e `test/architecture/e3_configuration_boundaries_test.dart`.
+- **Arquivos (consultar):** `lib/infrastructure/operational_configuration_store.dart`, `lib/domain/detection/detection_parameters.dart`, `lib/application/delivery/delivery_configuration_change_service.dart`.
+- **Design:** E5.11.
+- **Verificação:** limiar e FPS salvos passam a controlar a detecção, com domínio E5 e sem efeito sobre a entrega.
+- **Requisitos:** RF-04.2, RF-19.3, RF-19.5–7, RF-19.19–20, RNF-03.6.
+
+## 83. Atualizar a apresentação da Operação
+
+- [ ] 83.1 Implementar os banners por modo e estado do modelo de E5.12, mantendo o banner manual inequívoco na composição manual.
+- [ ] 83.2 Adicionar o painel “Detecção automática” com estado do modelo, FPS medido e limite, limiar vigente, detecções da sessão e ignoradas por cooldown.
+- [ ] 83.3 Implementar o feedback automático (sucesso, cooldown silencioso, falhas com prefixo) e o resumo da última ocorrência por origem.
+- [ ] 83.4 Garantir paleta, contraste, texto ou ícone junto às cores, semântica de acessibilidade e layout em retrato e paisagem com o `YOLOView` como preview.
+- [ ] 83.5 Cobrir widgets e semântica para todos os estados, incluindo ausência de texto automático na composição manual.
+- **Depende de:** 82.
+- **Ordem interna:** 83.1 → 83.2 → 83.3 → 83.4 → 83.5, em sequência (compartilham a tela).
+- **Arquivos (alterar):** `lib/operation/operation_screen.dart`, `lib/operation/operation_state.dart` somente para projeções de apresentação; testes em `test/operation/`.
+- **Arquivos (consultar):** `lib/operation/operation_controller.dart`, `lib/operation/operation_theme.dart`.
+- **Design:** E5.12.
+- **Verificação:** o operador distingue modo, estado do modelo e FPS sem ruído de cooldown e sem alegação automática no modo manual.
+- **Requisitos:** RF-02.3–5, RF-03.2, RF-04.5, RF-05.8–9, RNF-08.
+
+## 84. Consolidar integração, consistência e segurança E5
+
+- [ ] 84.1 Executar teste integrado detector fake → pipeline → controller → processador → fila v3 → encoder multipart com transporte fake, preservando a confiança do modelo.
+- [ ] 84.2 Cobrir lifecycle e rotas no modo YOLO, preflight indisponível, erro de modelo na sessão e migração v3 seguida de entrega de pendências antigas.
+- [ ] 84.3 Inspecionar fontes, testes e logs para ausência de download de modelo, isolate, worker, frames gravados sem ocorrência, caixas ou FPS em logs e segredos.
+- [ ] 84.4 Confirmar por testes que E0–E4 permanecem íntegros e que o diff de fila, multipart e envio se limita à validação de confiança e ao migrador.
+- **Depende de:** 83.
+- **Ordem interna:** 84.1 e 84.2 em paralelo (arquivos distintos) → 84.3 → 84.4.
+- **Arquivos (alterar):** novos testes `test/integration/e5_detection_to_delivery_test.dart` (84.1), `test/operation/e5_lifecycle_routes_test.dart` (84.2), `test/architecture/e5_sanitization_inspection_test.dart` (84.3); `test/architecture/e5_detection_boundaries_test.dart` (84.4). Código de produção só para corrigir falha encontrada.
+- **Design:** E5.13, E5.14, E5.15.
+- **Verificação:** cenários cruzados preservam fila, idempotência, privacidade e fronteiras E0–E5.
+- **Requisitos:** RF-04, RF-07.11, RF-23.16, RNF-01, RNF-02, RNF-03.10, RNF-05, RNF-06.1, RNF-07.8.
+
+## 85. Atualizar o README e executar o gate de desenvolvimento E5
+
+- [ ] 85.1 Documentar toolchain nova, modelo, hash, licença AGPL-3.0, modos, estados, configurações de limiar e FPS, limitações do protótipo e observação térmica por ADB.
+- [ ] 85.2 Executar formatação, análise, suíte completa e testes dirigidos de detecção, migração, adaptador, controller, configurações, widgets e arquitetura; corrigir somente falhas E5.
+- [ ] 85.3 Gerar APK debug E5, registrar ferramentas, pins, identidade, tamanho e SHA-256; inspecionar manifestos mesclados debug e release e regras de backup.
+- [ ] 85.4 Inspecionar fontes, dependências, assets e APK para modelo único com hash correto, ausência de URL de modelo, segredo, worker e isolate.
+- [ ] 85.5 Reunir evidências sanitizadas do gate de desenvolvimento.
+- **Depende de:** 84.
+- **Ordem interna:** 85.1 → 85.2 → 85.3 → 85.4 → 85.5.
+- **Arquivos (alterar):** `README.md`; corrigir somente o arquivo E5 que falhar.
+- **Design:** E5.13, E5.14, E5.16.
+- **Verificação:** a E5 é reproduzível a partir do README, com APK rastreável e inspeções sem pendências.
+- **Requisitos:** RF-22, RF-23.15, RF-23.19, RNF-02.1, RNF-07.7.
+
+## 86. Executar o roteiro físico E5 no Samsung Galaxy S25+
+
+- [ ] 86.1 Instalar o APK E5 como atualização preservadora sobre uma fila com pendências e confirmar a migração v3, pendências e âncora de cooldown preservadas.
+- [ ] 86.2 Observar estados do modelo (carregando e carregado), banner e painel; registrar o caminho de preflight indisponível como coberto apenas por teste automatizado se não puder ser provocado de forma controlada.
+- [ ] 86.3 Observar FPS exibido com limites 2, 5 e 10, latência por frame, FPS sustentado e efeito da mudança de limiar, sem meta numérica; registrar se 10 FPS é sustentável.
+- [ ] 86.4 Gerar candidato automático em trajeto real com o app no suporte (veículo com condutor dedicado, ou a pé/imagens quando não for possível), com a câmera inclinada para baixo enquadrando somente a pista (registrar o enquadramento), gravando o trajeto para revisão posterior das ocorrências e dos falsos positivos, confirmar supressão e cooldown, persistência e recebimento no back-end com a confiança do modelo, com evidência sanitizada.
+- [ ] 86.5 Registrar ocorrência pelo botão manual no modo YOLO e confirmar `confidence = 1.0` no back-end.
+- [ ] 86.6 Validar Operação → Diagnóstico → Operação, Operação → Configurações → Operação, segundo plano e retomada, sem câmera presa ou recursos duplicados.
+- [ ] 86.7 Observar desempenho, responsividade e temperatura por 15–20 minutos com `dumpsys thermalservice` e `dumpsys battery`.
+- [ ] 86.8 Classificar cada cenário como aprovado, reprovado ou não executado, sem presumir aprovação.
+- **Depende de:** 85.
+- **Arquivos (alterar):** somente evidências no spec (`evidence/task-86-e5-physical-validation.md`).
+- **Design:** E5.10, E5.12, E5.16.
+- **Verificação:** o S25+ demonstra modelo, inferência, FPS, confiança, substituição da fonte e temperatura observada, preservando E0–E4.
+- **Requisitos:** RF-02, RF-04, RF-05.8, RF-21, RF-23.18, RNF-04.4–7, RNF-07.7–10.
+
+## 87. Validation Gate E5 no Samsung Galaxy S25+
+
+- [ ] 87.1 Apresentar toolchain, checkpoint 76, análise, suíte, APK/hash e inspeções do gate de desenvolvimento.
+- [ ] 87.2 Apresentar migração v3, confiança do modelo na fila e no payload e a prova de que fila, multipart e envio não foram reescritos.
+- [ ] 87.3 Apresentar o roteiro físico, observações de FPS, desempenho e temperatura, e a regressão E0–E4.
+- [ ] 87.4 Apresentar limitações: modelo protótipo, falsos positivos por frame (faixas tracejadas, sonorizadores), região de interesse e linha de horizonte adiadas, resultado da paridade com o Colab, cenários não executados e licença AGPL-3.0.
+- [ ] 87.5 Registrar a decisão do usuário exatamente como `Aprovação explícita do Validation Gate E5` ou `Reprovação explícita do Validation Gate E5`.
+- [ ] 87.6 Parar obrigatoriamente: reprovação permite somente correções E5; aprovação encerra o MVP.
+- **Depende de:** 86.
+- **Verificação:** todos os critérios E5 possuem evidência ou classificação honesta, e há decisão explícita do usuário.
+- **Requisitos:** RF-23.1–6, RF-23.15–20, RNF-07.7–10.
+
+## Grafo de dependências — E5
+
+```json
+{
+  "waves": [
+    { "id": 0, "tasks": ["75.1"] },
+    { "id": 1, "tasks": ["75.2"] },
+    { "id": 2, "tasks": ["75.3"] },
+    { "id": 3, "tasks": ["75.4"] },
+    { "id": 4, "tasks": ["75.5"] },
+    { "id": 5, "tasks": ["75.6"] },
+    { "id": 6, "tasks": ["76.1", "76.2"] },
+    { "id": 7, "tasks": ["76.3", "76.4", "76.5"] },
+    { "id": 8, "tasks": ["76.6"] },
+    { "id": 9, "tasks": ["76.7"] },
+    { "id": 10, "tasks": ["77.1"] },
+    { "id": 11, "tasks": ["77.2"] },
+    { "id": 12, "tasks": ["77.3"] },
+    { "id": 13, "tasks": ["77.4"] },
+    { "id": 14, "tasks": ["77.5"] },
+    { "id": 15, "tasks": ["78.1", "79.1", "79.2"] },
+    { "id": 16, "tasks": ["78.2", "78.3", "78.4", "79.3"] },
+    { "id": 17, "tasks": ["78.5", "79.4"] },
+    { "id": 18, "tasks": ["78.6", "79.5"] },
+    { "id": 19, "tasks": ["80.1", "80.2"] },
+    { "id": 20, "tasks": ["80.3"] },
+    { "id": 21, "tasks": ["80.4"] },
+    { "id": 22, "tasks": ["80.5"] },
+    { "id": 23, "tasks": ["80.6"] },
+    { "id": 24, "tasks": ["81.1"] },
+    { "id": 25, "tasks": ["81.2"] },
+    { "id": 26, "tasks": ["81.3"] },
+    { "id": 27, "tasks": ["81.4"] },
+    { "id": 28, "tasks": ["81.5"] },
+    { "id": 29, "tasks": ["81.6"] },
+    { "id": 30, "tasks": ["82.1"] },
+    { "id": 31, "tasks": ["82.2"] },
+    { "id": 32, "tasks": ["82.3"] },
+    { "id": 33, "tasks": ["82.4"] },
+    { "id": 34, "tasks": ["83.1"] },
+    { "id": 35, "tasks": ["83.2"] },
+    { "id": 36, "tasks": ["83.3"] },
+    { "id": 37, "tasks": ["83.4"] },
+    { "id": 38, "tasks": ["83.5"] },
+    { "id": 39, "tasks": ["84.1", "84.2"] },
+    { "id": 40, "tasks": ["84.3"] },
+    { "id": 41, "tasks": ["84.4"] },
+    { "id": 42, "tasks": ["85.1"] },
+    { "id": 43, "tasks": ["85.2"] },
+    { "id": 44, "tasks": ["85.3"] },
+    { "id": 45, "tasks": ["85.4"] },
+    { "id": 46, "tasks": ["85.5"] },
+    { "id": 47, "tasks": ["86.1"] },
+    { "id": 48, "tasks": ["86.2", "86.3"] },
+    { "id": 49, "tasks": ["86.4", "86.5"] },
+    { "id": 50, "tasks": ["86.6", "86.7"] },
+    { "id": 51, "tasks": ["86.8"] },
+    { "id": 52, "tasks": ["87.1", "87.2", "87.3", "87.4"] },
+    { "id": 53, "tasks": ["87.5"] },
+    { "id": 54, "tasks": ["87.6"] }
+  ]
+}
+```
+
+**Ramo condicional do checkpoint:** se 76.7 registrar no-go, o plano para na wave 9 e as waves 10–54 permanecem bloqueadas até nova decisão do usuário. Um go com alternativa fora das pré-aprovadas exige atualizar o design E5 antes da wave 10.
+
+## Limites explícitos da E5
+
+- Não atualizar o ambiente global do desenvolvedor sem a confirmação de 75.2.
+- Não adicionar código E5 ao repositório antes do go do checkpoint 76.
+- Não carregar modelo por URL, modelos oficiais ou `switchModel`; não adicionar `tflite_flutter`, ML Kit, ONNX, QNN, isolate, worker ou conectividade.
+- Não gravar frames sem candidato aceito nem registrar caixas, FPS, imagens ou dados de ocorrência em logs.
+- Não mudar `ManualCandidateSource`, cooldown, preparação de imagem, UUID, multipart, transporte, coordenador de entrega ou Diagnóstico, exceto a validação de confiança e o migrador v3 definidos em E5.9.
+- Não elevar `targetSdk`, nem mudar a versão de linguagem do pacote, nem implementar região de interesse ou linha de horizonte.
+- Não aplicar desfoque, filtro ou redimensionamento próprio aos frames; o pré-processamento e o NMS (IoU 0.7) são do plugin.
+- Não avaliar o modelo contra metas numéricas não aprovadas; apresentar o modelo como protótipo.

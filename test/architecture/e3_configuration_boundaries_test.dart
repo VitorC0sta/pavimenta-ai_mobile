@@ -18,6 +18,8 @@ void main() {
       'lib/settings/settings_controller.dart',
       'lib/settings/settings_state.dart',
       'lib/settings/settings_screen.dart',
+      // E5.15: the only E5 reader of the operational parameters.
+      'lib/domain/detection/detection_parameters.dart',
     };
     const futureParameters = <String>{
       'confidenceThreshold',

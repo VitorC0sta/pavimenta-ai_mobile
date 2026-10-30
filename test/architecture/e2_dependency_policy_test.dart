@@ -8,13 +8,16 @@ const _approvedHostedPins = <String, String>{
   'image': '4.2.0',
   'uuid': '4.6.0',
   'wakelock_plus': '1.2.8',
-  'path_provider': '2.1.4',
+  // E5 toolchain (task 75.5): ultralytics_yolo requires path_provider ^2.1.5.
+  'path_provider': '2.1.5',
   'shared_preferences': '2.5.2',
   'flutter_secure_storage': '9.2.4',
   'sqflite': '2.4.1',
   'crypto': '3.0.7',
   // E4 transport dependency (task 62.4); the only direct addition over E3.
   'http': '1.6.0',
+  // E5 detection plugin (task 77.1), exact version approved in checkpoint 76.
+  'ultralytics_yolo': '0.6.16',
   'glados': '1.1.7',
   'sqflite_common_ffi': '2.3.4+4',
 };
@@ -32,6 +35,7 @@ const _approvedMainDependencies = <String>{
   'sqflite',
   'crypto',
   'http',
+  'ultralytics_yolo',
 };
 
 const _approvedDevDependencies = <String>{
@@ -59,7 +63,6 @@ const _laterStageDependencyFamilies = <String>{
   'mockito',
   'mocktail',
   'permission_handler',
-  'ultralytics_yolo',
   'tflite_flutter',
 };
 

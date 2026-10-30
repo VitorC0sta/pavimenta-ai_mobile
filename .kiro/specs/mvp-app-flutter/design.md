@@ -2667,3 +2667,388 @@ Este design encerra para a E4:
 Permanecem deliberadamente adiados: monitor de conectividade, jitter, paralelismo, fila com prioridade, botão de remoção, sincronização em background, WorkManager/foreground service, telemetria remota e qualquer E5. Versões de dependência não mudam por este design; se a implementação demonstrar necessidade concreta de pacote adicional, a decisão deve ser justificada e pinada na tarefa E4 correspondente.
 
 Esta seção conclui exclusivamente a fase de design da E4. `requirements.md`, `tasks.md`, código, dependências e evidências não são alterados por esta fase.
+
+---
+
+# Design adicional — E5: Detecção YOLO local
+
+> **Status e transição:** a E4 foi encerrada no Gate E4 com aprovação explícita (tarefas 74.7–74.8). Este bloco projeta exclusivamente a E5. Ele preserva o Diagnóstico E0, a captura manual E1, a fila E2, a configuração protegida E3, a entrega E4 e todas as evidências históricas. As emendas E5 dos requisitos (Decisões 19 e 27–30, RF-02.7–8, RF-03.17, RF-04.8–11, RF-19.5 e RF-19.19–20, RNF-01.14) foram aprovadas junto com as decisões D1–D7 deste bloco. Nenhuma implementação é iniciada por este documento.
+
+## E5.1 Objetivo, escopo e fronteiras
+
+A E5 adiciona uma segunda Fonte de candidato de ocorrência: o detector YOLO local, executado pelo plugin `ultralytics_yolo` sobre o modelo `buraco.tflite` incluído nos assets. Um candidato YOLO entra no mesmo `PostCandidateProcessor` da fonte manual e segue o mesmo caminho: cooldown, captura, JPEG, UUID, fila e envio.
+
+A E5 inclui:
+
+- atualização controlada da toolchain exigida pelo plugin;
+- checkpoint físico de compatibilidade do modelo antes de qualquer código E5 no repositório;
+- asset do modelo com hash verificado e carregamento somente local;
+- domínio puro de detecção: filtro de classe, limiar e área máxima, limite de FPS com descarte, confirmação temporal 2 de 3, supressão por detecção persistente e medição de FPS;
+- generalização da confiança para [0, 1] no pós-candidato e migração não destrutiva do schema para v3;
+- adaptador do `YOLOView` como câmera operacional e fonte de frames;
+- modo automático com botão manual complementar e fallback para o modo manual E1–E4;
+- configurações de limiar e FPS efetivas;
+- indicadores de modelo, FPS e modo na Operação;
+- testes, README, gate de desenvolvimento, roteiro físico com observação de FPS e temperatura, e Validation Gate E5.
+
+A E5 não inclui:
+
+- retreino do modelo, avaliação por vídeo, *hard-negative mining* ou metas numéricas de precisão;
+- região de interesse da pista, inclusive a linha de horizonte (descarte de caixas acima de uma fração da altura);
+- desfoque ou qualquer pré-processamento de frame feito pelo app;
+- download, troca ou atualização do modelo pela rede, modelos oficiais da Ultralytics ou `switchModel`;
+- aceleração QNN/NPU, isolates, worker, foreground service ou execução em segundo plano;
+- persistência de frames sem ocorrência válida;
+- campo `source` no contrato, mudança de endpoint, multipart ou classificação HTTP;
+- elevação do `targetSdk` ou mudança da linguagem Dart do pacote.
+
+## E5.2 Decisões aprovadas
+
+| # | Decisão | Definição E5 | Motivo |
+|---|---|---|---|
+| D1 | Toolchain | Flutter estável ≥ 3.32.1 (Dart ≥ 3.8.1), Kotlin Gradle plugin ≥ 2.3, `compileSdk` 36 e `minSdk` 24, com versões exatas escolhidas e registradas na tarefa 75. | Toda versão do plugin que lê a entrada NCHW do modelo (≥ 0.6.6) exige essa base. |
+| D2 | Modo | YOLO automático enquanto o modelo estiver carregado e o Modo operacional ativo vigorar. O botão “Registrar buraco” continua como confirmação manual com `confidence = 1.0`. Se o preflight do modelo falhar, a composição manual E1–E4 é usada sem alteração. | Mantém a ativação por visibilidade e `resumed` (RF-21.7), sem botão Iniciar/Parar, e preserva um caminho conhecido quando o modelo falha. |
+| D3 | Limiar padrão | `0.35`. Valores já salvos não são reescritos. | Próximo do melhor F1 medido para o TFLite (0,289–0,370); `0.5` perde buracos reais. |
+| D4 | Filtros | Confirmação 2 de 3 frames e filtro de área máxima (20% do frame) incluídos. Região de interesse, inclusive a linha de horizonte, adiada. | Confirmação e área são regras puras e baratas. Nos testes do modelo, um buraco real ocupou no máximo cerca de 1–3,5% do frame. A linha de horizonte depende do enquadramento e cortou buracos distantes num dos vídeos; em vez dela, a câmera é posicionada no suporte enquadrando somente a pista. |
+| D5 | FPS | Inteiro de 1 a 15, padrão 5. Valor salvo fora do domínio é aplicado como 5 e indicado na tela de Configurações. | O plugin recebe inteiros; o teto limita aquecimento sem meta numérica. |
+| D6 | Escopo da mudança no pós-candidato | Somente a validação de `confidence` passa de `== 1.0` para o intervalo [0, 1], mais a migração v3 do schema. | Cooldown, preparação, UUID, payload e envio permanecem os mesmos (RNF-01.14). |
+| D7 | Modelo e licença | `assets/models/buraco.tflite` versionado diretamente, com teste de SHA-256. A licença AGPL-3.0 do plugin e do modelo é registrada no README. | 10,7 MB não justificam Git LFS; o hash impede troca silenciosa do modelo. |
+| D8 | Divisão plugin/Dart | O plugin faz letterbox, normalização, decodificação, NMS (`iouThreshold = 0.7`) e conversão para o frame original. O Dart aplica limiar, área máxima, confirmação 2 de 3, supressão e cooldown. O app não acrescenta desfoque nem outro pré-processamento. A paridade com a validação do modelo é verificada no checkpoint 76. | O pipeline nativo do plugin não é controlável pelo app; as regras validadas fora do app ficam no domínio Dart, testáveis. O desfoque foi descartado nos testes por gerar falsos positivos em massa. |
+| D9 | Parâmetros de detecção | Janela da confirmação (`confirmationRequiredFrames = 2`, `confirmationWindowFrames = 3`) e `maximumBoxAreaRatio = 0.20` são campos de `OperationalConfiguration` com valores padrão no código, sem persistência e sem campo na tela. Limiar, FPS, cooldown e distância continuam como na E3. | Concentra os parâmetros de operação num só lugar sem alterar o armazenamento E3 nem a tela. |
+
+## E5.3 Toolchain e dependências
+
+A tarefa 75 escolhe a menor versão estável do Flutter que satisfaça ao mesmo tempo o `ultralytics_yolo` pinado, os plugins já pinados e a matriz AGP/Gradle/Kotlin/JDK 17. A atualização segue estas regras:
+
+- o `pubspec.yaml` mantém `sdk: ^3.5.3`. O SDK novo satisfaz essa restrição, e a versão da linguagem do pacote continua 3.5, o que evita reformatar todo o código pelo novo estilo do `dart format`;
+- `compileSdk` passa a 36 e `minSdk` a 24, declarados explicitamente em `android/app/build.gradle`;
+- `targetSdk` permanece 34, declarado explicitamente. Elevar o alvo mudaria comportamento de runtime (por exemplo, edge-to-edge obrigatório no alvo 35) e fica fora da E5;
+- `path_provider` passa de 2.1.4 para a versão exata ≥ 2.1.5 exigida pelo plugin. Outro pin só muda se a resolução falhar sem a mudança, com justificativa registrada;
+- correções de análise causadas pelo SDK novo (depreciações) são mínimas e não mudam comportamento;
+- a instalação do SDK novo (atualizar a instalação existente ou manter um SDK paralelo) é confirmada com o usuário antes de qualquer mudança global no ambiente.
+
+A toolchain é atualizada e validada antes de o plugin entrar no projeto. Assim, uma regressão E0–E4 tem uma única causa possível.
+
+Dependência nova da E5: somente `ultralytics_yolo`, com versão exata. Suas dependências transitivas (`plugin_platform_interface`, `url_launcher`, `shared_preferences`, `wakelock_plus`, `path_provider`) são inspecionadas. Continuam proibidos `tflite_flutter`, ML Kit, ONNX, isolates, worker, conectividade e biblioteca de estado ou DI.
+
+## E5.4 Modelo e asset
+
+O descritor `PotholeModelDescriptor` concentra as constantes do modelo:
+
+| Campo | Valor |
+|---|---|
+| Asset | `assets/models/buraco.tflite` |
+| SHA-256 | `f6a69aa9595d54006ca2ddb7b1ed316bdee1852b79c5f68651c1af5d96434463` |
+| Tamanho | 10.685.246 bytes |
+| Tarefa | `detect` |
+| Entrada | 640×640, batch 1, NCHW float32 |
+| Classe de origem | índice `0`, nome `buraco` |
+| Classe do contrato | `pothole` |
+
+O arquivo é copiado de `pothole_detection_model/pothole_model/buraco.tflite` sem alteração. Um teste lê o asset e compara tamanho e SHA-256 com o descritor. O hash não é recalculado no app a cada inicialização; a integridade em runtime é verificada pelo preflight (E5.6).
+
+O `modelPath` passado ao plugin é sempre a constante do asset. URL, modelo oficial, `YOLO.officialModels()`, `YOLO.defaultOfficialModel()` e `switchModel` são proibidos por teste arquitetural (RF-02.7).
+
+## E5.5 Componentes e dependências
+
+```text
+main.dart (composition root)
+  -> YoloModelPreflight ---------------------------> ultralytics_yolo (YOLO.inspectModel / loadModel)
+  -> [modelo disponível] OperationController<YoloPreviewHandle>
+        camera:    YoloOperationalCamera ----+
+        detection: DetectionPipeline         +--> YoloViewSession --> ultralytics_yolo (YOLOView)
+                     <- AutomaticDetectionPort-+
+        candidateSource (manual): ManualCandidateSource (inalterada)
+        automático: YoloCandidateSource(ConfirmedDetection), uma por operação
+        postCandidateProcessor: E1PostCandidateProcessor (validação de confiança em [0, 1])
+  -> [modelo indisponível] OperationController<CameraController> (composição E1–E4 inalterada)
+```
+
+Estrutura proposta:
+
+```text
+lib/domain/detection/
+  pothole_model_descriptor.dart
+  detection_frame.dart              DetectionBox, DetectionFrame, ConfirmedDetection
+  detection_parameters.dart         limiar e FPS efetivos a partir de OperationalConfiguration
+  detection_filter.dart
+  inference_rate_gate.dart
+  inference_fps_meter.dart
+  temporal_confirmation_tracker.dart
+lib/application/detection/
+  automatic_detection_port.dart     frames, estado do modelo, aplicação de parâmetros
+  model_preflight_port.dart
+  detection_pipeline.dart
+lib/candidate/
+  yolo_candidate_source.dart
+lib/infrastructure/detection/
+  yolo_view_session.dart            único ponto que conhece YOLOView/YOLOViewController
+  yolo_operational_camera.dart      OperationalCameraPort<YoloPreviewHandle>
+  yolo_model_preflight.dart
+```
+
+Somente `lib/infrastructure/detection/` e `lib/main.dart` importam `package:ultralytics_yolo`. Domínio e aplicação de detecção não importam Flutter, plugin, SQLite, HTTP ou filesystem. A fonte YOLO conhece apenas o contrato de candidato e `ConfirmedDetection`.
+
+## E5.6 Contratos
+
+```dart
+enum DetectionModelStatus { loading, loaded, failed }
+
+final class DetectionBox {
+  // Coordenadas normalizadas [0, 1] no frame completo.
+  final int classIndex;
+  final String className;
+  final double confidence;
+  final double left, top, right, bottom;
+}
+
+final class DetectionFrame {
+  final DateTime observedAt; // Clock lido na chegada do resultado
+  final int imageWidth, imageHeight; // dimensões do frame original, em pixels
+  final List<DetectionBox> boxes; // vazio quando o frame não tem detecção
+}
+
+final class ConfirmedDetection {
+  final DateTime observedAt; // instante do frame confirmador
+  final double confidence;   // maior confiança da detecção na janela
+}
+
+abstract interface class AutomaticDetectionPort {
+  Stream<DetectionFrame> get frames;
+  Stream<DetectionModelStatus> get modelStatus;
+  Future<void> applyParameters(DetectionParameters parameters);
+}
+
+sealed class ModelPreflightResult {} // Available | Unavailable(reason sanitizada)
+
+abstract interface class ModelPreflightPort {
+  Future<ModelPreflightResult> check();
+}
+```
+
+O preflight roda uma vez no bootstrap, com timeout de 15 s:
+
+1. `YOLO.inspectModel(asset)` confirma tarefa `detect`, `imgsz` 640 e `names` igual a `{0: buraco}`;
+2. uma instância `YOLO` carrega o modelo com `loadModel()`;
+3. a instância é liberada com `dispose()` antes da composição.
+
+Qualquer falha, metadado divergente ou timeout produz `Unavailable`, e a composição manual E1–E4 é usada. O motivo é registrado como categoria fixa (`model_metadata_mismatch`, `model_load_failed`, `model_load_timeout`), sem path nem exceção bruta.
+
+## E5.7 Pipeline de detecção
+
+O `DetectionPipeline` recebe `DetectionFrame` do adaptador e publica `ConfirmedDetection`. A ordem é:
+
+1. **Limite de FPS.** O plugin recebe `inferenceFrequency` e `maxFPS` iguais ao FPS vigente. Como defesa, o `InferenceRateGate` descarta um frame que chega antes de `0,85 × (1 / FPS)` desde o último frame aceito. Frames descartados não entram em fila nem em buffer (RF-04.3, RNF-04.5).
+2. **Medição.** O `InferenceFpsMeter` conta os frames aceitos numa janela deslizante de 2 s. Esse valor é o FPS de inferência exibido. As métricas do plugin (`onPerformanceMetrics`) servem somente como evidência do gate.
+3. **Filtro.** O `DetectionFilter` mantém somente caixas com `classIndex == 0`, `className == "buraco"`, confiança finita ≥ limiar vigente, coordenadas válidas e área normalizada `(right − left) × (bottom − top)` ≤ `maximumBoxAreaRatio` (padrão `0.20`, RF-04.12). O limiar também é passado ao plugin (`confidenceThreshold`), junto com `iouThreshold = 0.7` para o NMS nativo; o filtro Dart garante a regra mesmo se o plugin mudar (RF-04.6, RF-04.13).
+4. **Confirmação temporal.** O `TemporalConfirmationTracker` mantém trilhas com o histórico dos últimos 3 frames processados:
+   - uma caixa é compatível com uma trilha quando a distância euclidiana entre o centro da caixa e o centro da última caixa da trilha é menor que o maior lado entre as duas caixas. Centros e lados são medidos em pixels do frame original (coordenadas normalizadas multiplicadas por `imageWidth`/`imageHeight`). A associação é gulosa pela menor distância;
+   - a trilha é confirmada quando tem caixa compatível em pelo menos `confirmationRequiredFrames` (2) dos últimos `confirmationWindowFrames` (3) frames (RF-04.8);
+   - a confiança da `ConfirmedDetection` é a maior confiança da trilha na janela (RF-04.9);
+   - uma trilha confirmada não emite de novo; ela é encerrada quando fica 3 frames seguidos sem caixa compatível (RF-04.11);
+   - frames vazios contam na janela. Se o checkpoint 76 mostrar que o plugin não entrega resultados vazios, o adaptador sintetiza frames vazios pela contagem de frames das métricas do plugin, e o design é atualizado antes da tarefa 80.
+5. **Descarte por ocupação.** Se o controller estiver processando outro candidato, ou se `canRegister` for falso, a `ConfirmedDetection` é descartada sem fila (RF-04.10) e a trilha continua suprimida.
+
+O pipeline é reiniciado (trilhas, gate e medidor) a cada perda do Modo operacional ativo, troca de parâmetros e retorno de rota. A janela da confirmação e a área máxima vêm de `OperationalConfiguration` via `DetectionParameters` (D9). A tolerância `0,85`, a janela de FPS de 2 s e o IoU de NMS `0.7` são constantes técnicas, testadas e não expostas nas Configurações.
+
+Com o cooldown padrão (5 s **ou** 15 m), a confirmação 2 de 3 e o filtro de área, os testes do modelo fora do app não registraram ocorrências falsas nos vídeos usados. Sem a confirmação, faixas tracejadas geraram de 2 a 5 ocorrências falsas por vídeo. Esses números orientam os padrões; não são metas de aceite do app.
+
+Nenhum frame é gravado em disco pelo pipeline. Só a captura disparada por um candidato que passou no cooldown gera arquivo, e o arquivo segue a política E1/E2 (RNF-06.1).
+
+## E5.8 Fonte YOLO e integração com o pós-candidato
+
+O `OperationController` ganha uma segunda entrada, `registerAutomaticDetection(ConfirmedDetection)`. As duas entradas usam o mesmo caminho privado de operação, com o mesmo token single-flight, geração, guarda de processamento e barreira de lifecycle:
+
+- `attemptedAt` = `detection.observedAt`, lido pelo mesmo `Clock` no callback síncrono do frame confirmador, antes de qualquer `await` (RF-08.6);
+- a localização é o último snapshot válido no instante da entrada, congelado como no fluxo manual;
+- a fonte é `YoloCandidateSource(detection)`, criada por operação. Ela devolve `CandidateInput` com `defectClass = pothole`, `confidence = detection.confidence` e a aquisição deferida recebida no seed, sem invocá-la;
+- a aquisição chama a câmera operacional vigente. No modo YOLO, é `YoloOperationalCamera.takePicture()`, que usa `capturePhoto(withOverlays: false)` e grava os bytes no `PrivateImageStore`. A imagem é o frame capturado logo após a confirmação; RF-08.9 não exige coincidência de milissegundo com o frame inferido.
+
+O `E1PostCandidateProcessor` não ganha ramificação por fonte. Cooldown continua antes da captura, então detecções bloqueadas não geram arquivo, UUID nem ocorrência. O botão manual, no modo YOLO, usa `ManualCandidateSource` inalterada e a mesma câmera YOLO; o resultado continua com `confidence = 1.0` (RF-03.17).
+
+A identidade da fonte existe somente na apresentação (`OperationOccurrenceSummary.origin`: manual ou automática). Ela não entra em `CandidateInput`, `InMemoryOccurrence`, fila nem multipart.
+
+## E5.9 Confiança do modelo e schema v3
+
+### Domínio e pós-candidato
+
+- `InMemoryOccurrence` passa a guardar `confidence` como campo, em vez de getter constante.
+- `InMemoryOccurrenceFactory.create` aceita `defectClass == pothole` e confiança finita em [0, 1]. `createManual` continua produzindo `1.0`.
+- `_hasValidCandidateFields` do processador aplica a mesma regra.
+- `ManualCandidateSource`, cooldown, preparador, gerador de UUID, mapper multipart e transporte não mudam.
+
+### Migração v3
+
+O `CHECK (confidence = 1.0)` da tabela `pendingOccurrences` passa a ser `CHECK (typeof(confidence) = 'real' AND confidence BETWEEN 0.0 AND 1.0)`. Os demais CHECKs, inclusive `defectClass = 'pothole'`, permanecem.
+
+O SQLite não altera CHECKs, e `pendingOccurrences` é a tabela pai da FK com `ON DELETE CASCADE` da tabela de estado de entrega E4. Com FKs ativas, `DROP TABLE` executa um `DELETE` implícito que apagaria os estados de entrega em cascata. Por isso a migração não roda no `onUpgrade` do sqflite, que abre a transação com FKs ligadas. Ela roda num migrador de pré-abertura, seguindo o procedimento de 12 passos da documentação do SQLite:
+
+1. abrir uma conexão dedicada sem `version` e sem `onConfigure`, e executar `PRAGMA foreign_keys = OFF` fora de transação;
+2. ler `PRAGMA user_version`. Se for 3, fechar e seguir. Se for maior que 3, recusar como hoje (`UnsupportedQueueSchemaVersion`), sem downgrade;
+3. `BEGIN IMMEDIATE`;
+4. se a versão for 1, criar as estruturas E4 e semear a âncora (mesmas funções da migração v1→v2);
+5. criar `pendingOccurrences_v3` com o schema v3;
+6. copiar todas as linhas com as mesmas colunas e o mesmo `queueSequence`;
+7. ler o `seq` de `sqlite_sequence` da tabela antiga;
+8. `DROP TABLE pendingOccurrences` e `ALTER TABLE pendingOccurrences_v3 RENAME TO pendingOccurrences`;
+9. recriar índices existentes e gravar em `sqlite_sequence` o maior valor entre o `seq` antigo e o maior `queueSequence`, para nunca reutilizar uma sequência já emitida (a âncora de cooldown pode apontar para uma sequência removida);
+10. exigir `PRAGMA foreign_key_check` vazio e `PRAGMA integrity_check = ok`;
+11. `PRAGMA user_version = 3` e `COMMIT`;
+12. fechar a conexão e abrir normalmente com versão 3, FKs ligadas e verificadas.
+
+Qualquer falha antes do `COMMIT` desfaz a transação e mantém o banco na versão anterior, que continua legível pelo app. O controller apresenta a fila como indisponível, com a retentativa E2. JPEGs não são tocados. A migração é registrada só por categorias fixas (`queue_migration_v3_completed`, `queue_migration_v3_failed`).
+
+## E5.10 Modo operacional, lifecycle e recursos
+
+### Câmera YOLO
+
+`YoloOperationalCamera` implementa a porta de câmera existente, e o protocolo de recursos do controller continua o mesmo:
+
+- `acquirePreview()` publica um `YoloPreviewHandle`, que faz a tela montar o `YOLOView`. A operação termina quando o plugin informa `onModelLoad` e o primeiro frame, ou falha após 15 s;
+- `previewHandle` é nulo enquanto o `YOLOView` não estiver pronto;
+- `takePicture()` captura como descrito em E5.8 e falha de forma controlada se `capturePhoto` devolver `null`;
+- `release()` chama `stop()`, retira o handle (desmontando a platform view) e só termina depois da desmontagem.
+
+Diagnóstico e Configurações continuam usando `suspendForDiagnostic`/`suspendForSettings`. A câmera YOLO é liberada antes do push, e o Diagnóstico abre o `camera` plugin numa câmera livre. O checkpoint 76 precisa comprovar essa liberação no S25+.
+
+Se o `YOLOView` não pedir a permissão de câmera (verificado em 76), `acquirePreview()` pede a permissão por uma inicialização curta do `camera` plugin, libera o controlador e só então monta o `YOLOView`. Os estados de permissão negada e negada permanentemente são os mesmos da E1.
+
+### Estado do modelo durante a sessão
+
+- `loading`: automático indisponível; o botão manual funciona assim que houver preview.
+- `loaded`: o pipeline recebe frames enquanto o Modo operacional ativo vigorar.
+- `failed` (`onModelError` depois do preflight): o pipeline para e o banner orienta o uso do registro manual. Se a câmera continuar disponível, o botão manual segue ativo. Na próxima abertura do app, o preflight decide o modo de novo.
+
+O wake lock, a localização e a fila seguem a E1–E4. A entrega E4 continua independente da câmera e do modo.
+
+## E5.11 Configurações
+
+- Rótulos: “Limiar de confiança” e “FPS máximo de inferência”, sem “futuro”.
+- Validação do FPS: inteiro de 1 a 15. Validação do limiar: [0, 1], como na E3.
+- `defaultConfidenceThreshold` passa a `0.35`. O documento salvo e a versão de armazenamento (`e3_operational_configuration_v1`) não mudam; valores salvos são preservados.
+- `DetectionParameters` converte a configuração em valores efetivos: um FPS salvo fora do domínio E5 vira 5. Ao abrir a tela, o valor salvo aparece com o erro do validador, para correção (RF-19.20).
+- `OperationalConfiguration` ganha `confirmationRequiredFrames` (2), `confirmationWindowFrames` (3) e `maximumBoxAreaRatio` (0.20) como valores padrão no código (D9). Eles não são gravados nem lidos do armazenamento E3 e não aparecem na tela; mudá-los exige novo build.
+- Ao voltar das Configurações, o controller chama `refreshDetectionConfiguration()`. Ele recalcula os parâmetros, aplica `setConfidenceThreshold` e `setStreamingConfig` no plugin e reinicia o pipeline. A regra E4 continua: mudar limiar ou FPS não limpa pausa de envio nem dispara envio.
+
+## E5.12 Apresentação na Operação
+
+| Situação | Banner | Botão “Registrar buraco” |
+|---|---|---|
+| Composição manual (preflight falhou) | “Modo manual — modelo YOLO indisponível” | como E1–E4 |
+| Modelo carregando | “Carregando modelo YOLO — detecção automática ainda indisponível” | ativo quando houver preview |
+| Modelo carregado e Modo operacional ativo | “Detecção automática YOLO ativa” | confirmação manual complementar |
+| Erro do modelo durante a sessão | “Detecção automática indisponível — use o registro manual” | ativo se a câmera estiver pronta |
+
+Um painel “Detecção automática” mostra o estado do modelo, o FPS de inferência medido com o limite vigente, o limiar vigente, os buracos detectados automaticamente na sessão e as detecções ignoradas por cooldown. O FPS mostra “—” fora do Modo operacional ativo.
+
+Feedback:
+
+- ocorrência automática criada: “Buraco detectado automaticamente e salvo na fila local.”;
+- detecção bloqueada por cooldown: não mostra mensagem, só incrementa o contador do painel;
+- falha de captura, imagem ou persistência numa operação automática: a mesma mensagem E1–E4, com o prefixo “Detecção automática:”;
+- o resumo da última ocorrência mostra “Confirmação manual” ou “Confiança do modelo: 0,73”, a partir da origem de apresentação.
+
+A paleta, os contrastes, os textos significativos junto às cores e a semântica de acessibilidade seguem RNF-08. Nenhum texto de detecção automática aparece na composição manual (RNF-08.9).
+
+## E5.13 Segurança, privacidade e licença
+
+- O modelo é carregado somente do asset; nenhuma chamada de rede é feita pelo plugin a pedido do app.
+- Detecções, caixas, FPS e frames não entram em logs técnicos. Logs da E5 usam categorias fixas de modelo, migração e falha de captura.
+- O manifesto mesclado é inspecionado após adicionar o plugin. Permissão nova sem uso pelo app é removida com `tools:node="remove"`, com justificativa registrada; regras de backup e de transferência não mudam.
+- O README registra que o plugin `ultralytics_yolo` e o modelo treinado com Ultralytics usam AGPL-3.0, e que distribuir o app implica disponibilizar o código-fonte sob essa licença. A escolha do arquivo de licença do repositório fica com o usuário.
+
+## E5.14 Estratégia de testes
+
+- **Domínio:** filtro (inclusive área no limite de 20%), gate de FPS, medidor, confirmação 2 de 3 com a regra de distância entre centros (frames não quadrados, caixas de tamanhos diferentes, limite exato), supressão e reinício, com testes de propriedade (`glados`) para janelas, sequências de frames e limites geométricos.
+- **Pós-candidato:** confiança em [0, 1] aceita, valores fora do intervalo ou não finitos rejeitados, manual continua exatamente `1.0`.
+- **Migração:** bancos temporários reais v1 e v2 com pendências, estados de entrega, pausa, âncora, `sqlite_sequence` maior que a maior linha e JPEGs; falha injetada antes do `COMMIT`; reabertura idempotente; versão futura recusada.
+- **Adaptador:** fachada injetável do plugin (sem platform view) para mapeamento de resultados, estado do modelo, parâmetros, captura, `null` em `capturePhoto`, release e timeout do preflight.
+- **Controller e widgets:** entrada automática com single-flight compartilhado, descarte por ocupação, contadores, fallback, handoff com Diagnóstico e Configurações, banners e painel.
+- **Integração:** detector fake → pipeline → controller → processador → fila v3 → encoder multipart, com a confiança do modelo preservada no payload.
+- **Arquitetura:** testes E2–E4 convertidos em fronteiras positivas E5 (E5.15).
+
+Testes não carregam o modelo real nem dependem de câmera ou GPU. O carregamento real é validado no checkpoint 76 e no roteiro físico 86.
+
+## E5.15 Fronteiras arquiteturais
+
+Os testes arquiteturais passam a afirmar:
+
+- `package:ultralytics_yolo` aparece somente em `lib/infrastructure/detection/` e `lib/main.dart`;
+- `tflite_flutter`, ML Kit, ONNX, isolates (`Isolate.spawn`, `compute`), worker e conectividade continuam proibidos;
+- `startImageStream`, `CameraImage` e afins do `camera` plugin continuam proibidos;
+- `assets:` contém somente `assets/models/buraco.tflite`, e esse é o único arquivo de modelo no projeto, com hash igual ao descritor;
+- `modelPath` usa somente a constante do descritor; URLs, modelos oficiais e `switchModel` são proibidos;
+- `ManualCandidateSource` continua byte a byte com as asserções E4; o contrato de candidato continua sem palavras YOLO;
+- texto “YOLO” só aparece nos arquivos de detecção, apresentação da Operação e composição;
+- `confidenceThreshold`, `maximumInferenceFps`, `confirmationRequiredFrames`, `confirmationWindowFrames` e `maximumBoxAreaRatio` são lidos somente pelos donos E3 e por `detection_parameters.dart`;
+- nenhum código de detecção aplica desfoque, filtro ou redimensionamento próprio aos frames;
+- o manifesto principal continua sem `<service>`, `<receiver>`, `WAKE_LOCK` próprio, `FOREGROUND_SERVICE` e com uma única permissão `INTERNET`.
+
+## E5.16 Checkpoint de compatibilidade, roteiro físico e gate
+
+### Checkpoint 76 (go/no-go)
+
+Antes de qualquer código E5 no repositório, um protótipo descartável (fora do repositório principal ou em branch descartada, nunca mergeado) com o plugin no pin candidato verifica no S25+:
+
+1. carregamento do `buraco.tflite` pelo asset, metadados lidos e detecções da classe `buraco` em imagens reais de buracos (por exemplo, `pothole_model/exemplos` exibidos num monitor);
+2. cadência de `onResult`, entrega de frames vazios e efeito de `inferenceFrequency`/`maxFPS` em 5 FPS; verificação de se 10 FPS é sustentável no S25+, já que em rodovia (~113 km/h) o buraco foi detectado só ~0,5 s antes da passagem;
+3. `capturePhoto(withOverlays: false)`: imagem sem overlay, dimensões, orientação com o aparelho no suporte e latência;
+4. `stop()` e desmontagem do `YOLOView` liberando a câmera para o `camera` plugin, e o comportamento do pedido de permissão;
+5. uso de GPU ou CPU e uma observação térmica preliminar de 10 minutos;
+6. paridade com a validação do modelo: as mesmas imagens das células T1–T5 do Colab, na resolução do stream da câmera, devem produzir caixas e confianças praticamente iguais com `iouThreshold = 0.7`. Registrar o método de redimensionamento do plugin (letterbox com cinza 114 ou esticamento), se as caixas chegam normalizadas e a diferença de confiança por imagem. A confiança muda com a resolução de entrada e o método de redimensionamento.
+
+Cada item é classificado como aprovado, reprovado ou não executado. Alternativas pré-aprovadas para itens reprovados: frames vazios sintetizados pelas métricas (E5.7), pedido de permissão pelo `camera` plugin (E5.10), reexport do modelo em NHWC com `format=tflite` (layout também aceito pelo plugin) e, para o item 6, recalibração do limiar padrão quando a divergência de confiança for sistemática, com o novo valor registrado. Uma divergência de caixas ou que exija outro motor de inferência não é alternativa pré-aprovada. Qualquer outra alternativa exige atualizar este design antes da tarefa 77. Se o modelo não carregar nem com as alternativas, a E5 fica adiada (RF-23.17) e o trabalho para.
+
+### Roteiro físico 86
+
+O roteiro cobre atualização preservadora com migração v3 de uma fila real, estados do modelo, FPS exibido com limites 2, 5 e 10 (com registro de latência por frame, FPS sustentado, bateria e temperatura), mudança de limiar, candidato automático aceito e enviado ao back-end com a confiança do modelo, supressão e cooldown, botão manual com `1.0`, Diagnóstico e Configurações, segundo plano e retomada, e observação de desempenho e temperatura por 15–20 minutos.
+
+A temperatura é observada com `adb shell dumpsys thermalservice` e `adb shell dumpsys battery` antes, durante e depois da sessão, sem código nativo no app e sem meta numérica (RNF-04.7, RNF-07.9). O teste em veículo exige um condutor dedicado; outra pessoa observa o aparelho. Quando o teste em veículo não for possível, a detecção é exercitada a pé ou com imagens, e o cenário veicular é registrado como não executado.
+
+### Gate
+
+O Validation Gate E5 apresenta resultados automatizados, checkpoint 76, migração, roteiro físico, observações de FPS e temperatura, evidência de que fila, multipart e envio não foram reescritos (diff limitado à validação de confiança e ao migrador, e testes E2–E4 inalterados passando) e registra a decisão exatamente como `Aprovação explícita do Validation Gate E5` ou `Reprovação explícita do Validation Gate E5`.
+
+## E5.17 Riscos
+
+| Risco | Mitigação |
+|---|---|
+| A atualização da toolchain quebra E0–E4 | Atualização isolada (75) e regressão física (76.1) antes do plugin. |
+| O plugin não aceita o modelo ou se comporta diferente da documentação | Checkpoint 76 com alternativas pré-aprovadas e parada explícita. |
+| A câmera do `YOLOView` não é liberada para o Diagnóstico | Verificação em 76; o release só termina após `stop()` e desmontagem. |
+| A migração v3 perde dados ou estados de entrega | Migrador de pré-abertura com FKs desligadas, transação única, `foreign_key_check`, `integrity_check` e testes com bancos reais. |
+| Falsos positivos persistentes (remendos, sombras) | Confirmação 2 de 3, supressão, limiar configurável e cooldown; o modelo é apresentado como protótipo. |
+| Aquecimento ou queda de FPS no S25+ | Teto de 15 FPS, padrão 5, observação térmica no gate sem meta inventada. |
+| APK maior (modelo e LiteRT) | Tamanho registrado; filtro de ABI só se houver problema concreto. |
+| Pré-processamento do plugin diferente do usado na validação do modelo | Item 6 do checkpoint 76; recalibração do limiar como única alternativa pré-aprovada. |
+| Buraco detectado tarde em alta velocidade | FPS parametrizável (padrão 5) e medição de 10 FPS no checkpoint 76 e no roteiro 86. |
+
+### Limitações conhecidas do modelo v1
+
+- Falsos positivos por frame em faixas tracejadas e sonorizadores, controlados pela confirmação 2 de 3 e pelo cooldown, mas não eliminados no nível do frame.
+- Sem linha de horizonte, caixas em regiões distantes ou fora da pista (por exemplo, relevo ao fundo) não são descartadas pelo app. A mitigação é operacional: a câmera é posicionada no suporte inclinada para baixo, enquadrando somente a pista; o enquadramento usado é registrado no roteiro físico.
+- Em rodovia, a janela entre a primeira detecção e a passagem pelo buraco é curta (~0,5 s a ~113 km/h).
+- O limiar 0,35 e a área máxima de 20% foram definidos com poucos vídeos e devem ser revistos após o teste de campo.
+
+## E5.18 Rastreabilidade
+
+| Requisito | Cobertura E5 |
+|---|---|
+| RF-02.1–8 | descritor, asset local, preflight, estados `loading`/`loaded`/`failed`, fallback manual e adaptador isolado. |
+| RF-03.2, 12, 17 | banners por modo, pós-candidato sem ramificação por fonte, botão manual complementar. |
+| RF-04.1–14 | pipeline: FPS com descarte, filtro de classe, limiar e área, medição, 2 de 3, confiança do modelo, descarte por ocupação, supressão, NMS 0.7 sem pré-processamento extra e paridade no checkpoint 76. |
+| RF-05.8–9 | painel de detecção e ausência de alegação automática na composição manual. |
+| RF-07.11, RNF-01.3, 5, 10, 14 | `YoloCandidateSource` no mesmo pós-candidato; mudança limitada à validação de confiança e à migração v3. |
+| RF-19.3, 5, 7, 19–20 | rótulos, padrão 0.35, domínio do FPS e indicação de valor salvo fora do domínio. |
+| RF-21 | mesma ativação por visibilidade/`resumed` e protocolo de recursos. |
+| RF-23.15–18 | escopo E5, checkpoint, parada se o modelo for incompatível, observação de desempenho, FPS e temperatura. |
+| RNF-04.4–5, 7 | inferência nativa sem bloquear a UI, descarte de frames excedentes, observação no S25+. |
+| RNF-06.1 | frames sem candidato aceito nunca são gravados. |
+| RNF-07.7–9 | roteiro e gate E5, prova de que fila, multipart e envio não foram reescritos, ausência de metas não aprovadas. |
+| RNF-08.7, 9 | banners inequívocos por modo. |
+
+## E5.19 Decisões encerradas e adiamentos
+
+Este design encerra para a E5: toolchain mínima compatível com `targetSdk` 34 e linguagem 3.5 preservados; modelo versionado com hash; preflight no bootstrap com fallback para a composição manual; `YOLOView` como câmera operacional no modo YOLO; captura por `capturePhoto(withOverlays: false)`; pipeline com limite de FPS, filtro, 2 de 3 e supressão; confiança em [0, 1] com migração v3 de pré-abertura; limiar padrão 0.35; FPS inteiro de 1 a 15; e observação térmica via ADB.
+
+Permanecem adiados: região de interesse (inclusive a linha de horizonte, substituída pelo enquadramento da câmera no suporte), retreino e avaliação por vídeo, QNN/NPU, troca de modelo em runtime, elevação do `targetSdk`, filtro de ABI e arquivo de licença do repositório. Mudanças decorrentes do checkpoint 76 fora das alternativas pré-aprovadas exigem atualizar este bloco antes da tarefa 77.

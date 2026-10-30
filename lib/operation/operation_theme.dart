@@ -41,7 +41,7 @@ ThemeData buildOperationTheme() {
       foregroundColor: OperationPalette.foreground,
       elevation: 0,
     ),
-    cardTheme: const CardTheme(
+    cardTheme: const CardThemeData(
       color: OperationPalette.panel,
       elevation: 0,
       margin: EdgeInsets.zero,
