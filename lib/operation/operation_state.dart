@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../domain/delivery/delivery_presentation_state.dart';
 import '../domain/in_memory_occurrence.dart';
 import '../domain/location_snapshot.dart';
 import '../domain/persistent_occurrence.dart';
@@ -121,6 +122,7 @@ final class OperationState {
     required this.pendingCount,
     required this.queueMessage,
     required this.sendingConfigurationStatus,
+    required this.deliveryPresentation,
     required this.isPersisting,
     required this.isWakeLockEnabled,
     required this.isDisposed,
@@ -150,6 +152,7 @@ final class OperationState {
       pendingCount: snapshot.pendingCount,
       queueMessage: _queueMessageFor(snapshot.health),
       sendingConfigurationStatus: OperationSendingConfigurationStatus.pending,
+      deliveryPresentation: null,
       isPersisting: false,
       isWakeLockEnabled: false,
       isDisposed: false,
@@ -184,6 +187,16 @@ final class OperationState {
 
   /// Sanitized readiness for a future occurrence delivery.
   final OperationSendingConfigurationStatus sendingConfigurationStatus;
+
+  /// Aggregate, sanitized projection of the occurrence delivery, or `null`
+  /// when no delivery is composed. It carries only a phase, whether a manual
+  /// retry may be requested and the closed message of the phase.
+  final DeliveryPresentationState? deliveryPresentation;
+
+  /// A manual delivery retry is offered only when the projection allows it.
+  /// It never depends on, nor changes, camera, GPS, cooldown or the queue.
+  bool get canRetryDelivery =>
+      !isDisposed && (deliveryPresentation?.canRetry ?? false);
 
   /// True only while the current single-flight has entered persistence.
   final bool isPersisting;
@@ -282,6 +295,7 @@ final class OperationState {
     int? pendingCount,
     String? queueMessage,
     OperationSendingConfigurationStatus? sendingConfigurationStatus,
+    Object? deliveryPresentation = _notProvided,
     bool? isPersisting,
     bool? isWakeLockEnabled,
     bool? isDisposed,
@@ -319,6 +333,9 @@ final class OperationState {
       queueMessage: queueMessage ?? this.queueMessage,
       sendingConfigurationStatus:
           sendingConfigurationStatus ?? this.sendingConfigurationStatus,
+      deliveryPresentation: identical(deliveryPresentation, _notProvided)
+          ? this.deliveryPresentation
+          : deliveryPresentation as DeliveryPresentationState?,
       isPersisting: isPersisting ?? this.isPersisting,
       isWakeLockEnabled: isWakeLockEnabled ?? this.isWakeLockEnabled,
       isDisposed: isDisposed ?? this.isDisposed,

@@ -2170,3 +2170,500 @@ A validação registra APK, hash, versão, estado das permissões e resultados s
 | RNF-04.2,6 e RNF-07.4,10 | UI responsiva, roteiro no S25+ e regressão do Diagnóstico. |
 
 As decisões de contrato HTTP, `Authorization: ApiKey`, multipart, resposta, remoção remota, retry/backoff e worker pertencem exclusivamente à E4. Confiança e FPS persistem nesta etapa apenas como configuração futura; nenhum modelo ou pipeline de inferência é introduzido até E5.
+
+
+---
+
+# Design adicional — E4: Entrega autenticada e confiável de ocorrências
+
+> **Status e transição:** a E3 foi encerrada no Gate E3 com aprovação explícita. Este bloco projeta exclusivamente a E4. Ele preserva captura manual, fila persistente, configuração protegida, Diagnóstico e evidências E0–E3; não inicia implementação, não altera requisitos e não introduz YOLO/TFLite/inferência da E5.
+
+## E4.1 Objetivo, escopo e fronteiras
+
+A E4 consome somente ocorrências já confirmadas pela fila E2 e as entrega à API configurada em E3. Cada tentativa envia o JPEG e os dados canônicos persistidos para `POST {BASE_URL}/api/v1/occurrences`, usando `multipart/form-data` e o header exato `Authorization: ApiKey {DEVICE_API_KEY}`. O processamento reconhece sucesso e rejeições definitivas, preserva itens diante de falhas recuperáveis, aplica backoff durável, pausa diante de problemas de autenticação/acesso ou respostas inesperadas e oferece retomada manual.
+
+A aceitação local continua terminando no commit E2. Captura, cooldown, persistência e feedback de registro não aguardam a rede. O envio é um pós-fluxo independente, serial e oportunista: pode observar uma nova pendência, mas não participa da criação da ocorrência e nunca recebe uma imagem ainda temporária.
+
+A E4 inclui:
+
+- leitura restrita da configuração e da credencial segura;
+- seleção FIFO de pendências confirmadas;
+- leitura privada e streaming do JPEG durável;
+- encoder multipart e cliente autenticado;
+- classificação completa de transporte e status HTTP;
+- remoção consistente após decisões definitivas;
+- retry exponencial com teto, pausa persistida e retomada;
+- estado agregado de entrega na tela Operação;
+- testes automatizados, README operacional, gate simulado e gate real separado.
+
+A E4 não inclui:
+
+- envio de ocorrência não persistida;
+- lista de ocorrências, remoção manual ou exposição de dados individuais;
+- sincronização paralela, conectividade monitorada por plugin ou entrega garantida com o app fechado;
+- `WorkManager`, foreground service ou execução contínua em background;
+- alteração da fonte manual, stream de frames, modelo, TFLite, `ultralytics_yolo` ou inferência;
+- URL real, chave real, imagem, coordenada, UUID ou corpo remoto em logs/evidências.
+
+## E4.2 Decisões arquiteturais
+
+| Decisão | Definição E4 | Motivo |
+|---|---|---|
+| Momento do envio | Somente uma ocorrência já confirmada pela fila pode ser selecionada. Persistir e enviar permanecem operações separadas. | Preserva RNF-05 e permite operação offline sem transformar indisponibilidade remota em falha de registro. |
+| Ordenação | Um coordenador single-flight processa estritamente o menor `queueSequence`. Enquanto o item da cabeça estiver em backoff, pausado ou aguardando limpeza local, itens posteriores não o ultrapassam. | Mantém comportamento determinístico, limita carga e simplifica recuperação/crash consistency. |
+| Transporte | Um adaptador exclusivo E4 usa o pacote `http`, atrás de porta testável, com `StreamedRequest`, redirects desabilitados e `IOClient` configurado na composição Android. O cliente E0 não é reutilizado nem alterado. | Entre as opções normativas, `http` é suficiente para uma única operação serial, permite cliente fake/injetável e streaming, e adiciona menos superfície que `dio`. A versão exata será pinada após verificação de compatibilidade na implementação. |
+| Multipart | Encoder próprio, pequeno e testável, calcula `Content-Length` e transmite o JPEG por stream; não carrega o arquivo inteiro em memória. | O JPEG pode chegar a 2 MiB e a UI deve permanecer responsiva. |
+| Estado de entrega | SQLite evolui de v1 para v2 com tabela E4 separada para tentativa/backoff e tabela singleton para pausa global. Os campos canônicos E2 permanecem imutáveis. | Retry e pausa sobrevivem a force-stop sem contaminar o contrato da ocorrência ou preferences E3. |
+| Backoff | Progressão determinística `5 s × 3^(n-1)`, limitada a `15 min`, sem jitter no MVP. | É exponencial, testável, possui teto e evita loop; um único dispositivo/fluxo serial não exige jitter nesta etapa. |
+| Background | Sem worker na E4. O coordenador atua apenas enquanto o processo está ativo e o app está `resumed`; cancela timers e transporte ao perder primeiro plano e reconcilia ao retornar. | RF-17 aceita limitações Android desde que a fila seja preservada. Evita ampliar permissões, lifecycle e concorrência no MVP. |
+| Sucesso remoto | O status HTTP é autoritativo: `200` e `201` removem; não se exige corpo JSON para confirmar sucesso. | RF-15 manda remover por esses códigos. Exigir formato adicional criaria uma condição não prevista nos requisitos. |
+| Resposta | Redirect não é seguido. O corpo é descartado sob limite, nunca registrado nem exibido. | Impede desvio da credencial para outra origem e reduz exposição de dados remotos. |
+| Falha local | Imagem inválida, falha de leitura ou falha de limpeza não descarta silenciosamente e não gera loop de rede. O fluxo pausa com mensagem sanitizada ou mantém uma limpeza local pendente. | Preserva ownership E2 e evita perda após uma falha de infraestrutura local. |
+| Retomada | Retorno a `resumed`, nova pendência, vencimento de timer, correção confirmada de configuração e ação manual são oportunidades explícitas. | Atende RF-16–18 sem depender de plugin de conectividade ou serviço Android. |
+
+## E4.3 Componentes e dependências
+
+A organização mantém domínio, aplicação, infraestrutura e apresentação separados:
+
+```text
+OperationScreen
+  -> OperationController (projeção agregada e ações)
+      -> OccurrenceDeliveryCoordinator
+          -> OccurrenceDeliveryQueuePort
+          -> OccurrenceTransportPort
+          -> DeliveryConfigurationSnapshotPort
+          -> Clock
+          -> DeliveryTimerPort
+
+DeliveryConfigurationSnapshotPort
+  -> OperationalConfigurationRepository
+  -> DeviceCredentialReadPort
+
+OccurrenceDeliveryQueuePort
+  -> CoordinatedPersistentOccurrenceQueue
+      -> QueueDatabase v2
+      -> DurableImageStore
+
+OccurrenceTransportPort
+  -> HttpOccurrenceTransport
+      -> StreamingMultipartEncoder
+      -> package:http Client/StreamedRequest
+```
+
+A camada de domínio contém somente políticas puras:
+
+- `DeliveryBackoffPolicy`: calcula atraso a partir do número de falhas recuperáveis consecutivas;
+- `HttpDeliveryDecisionPolicy`: classifica status sem conhecer Flutter, SQLite, arquivo ou `HttpClient`;
+- modelos/resultados imutáveis que não carregam segredo nem conteúdo de resposta.
+
+A camada de aplicação contém:
+
+- `OccurrenceDeliveryCoordinator`: máquina de estados single-flight;
+- portas da fila E4, transporte, relógio e timer;
+- comandos de reconciliação, retry manual, mudança de configuração e lifecycle;
+- projeção sanitizada observável pela apresentação.
+
+A infraestrutura contém:
+
+- evolução/migração SQLite e implementação E4 sobre a coordenação serial existente;
+- stream privado do JPEG e verificação de integridade;
+- encoder multipart;
+- cliente `package:http` com `IOClient` restrito à infraestrutura, timeouts, TLS e redirects bloqueados;
+- timer de processo e logger técnico sanitizado.
+
+Widgets não importam `dart:io`, `package:http`, SQLite, secure storage, encoder multipart nem tipos concretos de request/response. O cliente E4 não importa câmera, localização, fonte de candidato, cooldown ou componentes E0.
+
+## E4.4 Contratos de aplicação
+
+Os contratos conceituais são:
+
+```text
+OccurrenceDeliveryQueuePort
+  nextHead(now) -> DeliveryHeadResult
+  openImage(head) -> Stream<List<int>>
+  recordRecoverableFailure(key, calculatedAt, nextAttemptAt) -> DeliveryMutationResult
+  recordDefinitiveDecision(key, disposition) -> DeliveryMutationResult
+  completePendingLocalRemoval(key) -> QueueRemovalResult
+  recordCleanupFailure(key, calculatedAt, nextCleanupAt) -> DeliveryMutationResult
+  readControl() -> DeliveryControl
+  pause(controlReason) -> DeliveryMutationResult
+  resume() -> DeliveryMutationResult
+  watchSummary() -> Stream<DeliveryQueueSummary>
+
+DeliveryConfigurationSnapshotPort
+  readForAttempt() -> DeliveryConfigurationResult
+  runConfigurationMutation(action) -> mutation result
+  isCurrent(revision) -> bool
+
+DeviceCredentialReadPort
+  readForDelivery() -> CredentialReadResult
+
+OccurrenceTransportPort
+  send(OccurrenceUploadRequest) -> OccurrenceTransportResult
+  cancelActive() -> Future<void>
+
+OccurrenceDeliveryCoordinator
+  start()
+  onQueueChanged()
+  onConfigurationChanged()
+  onLifecycleChanged(state)
+  retryNow()
+  watchState() -> Stream<DeliveryPresentationState>
+  dispose()
+```
+
+`DeliveryHeadResult` distingue: fila indisponível, vazia, cabeça elegível, cabeça em backoff, limpeza local pendente e falha local de integridade. O item elegível contém somente os valores canônicos necessários ao multipart e uma projeção opaca da imagem. Caminho absoluto, digest e bytes não sobem para estado de tela.
+
+`DeliveryConfigurationSnapshotPort` serializa, no processo, o início de uma tentativa com as mutações de `BASE_URL` e credencial. Cada snapshot recebe uma revisão monotônica local. Imediatamente antes de abrir o socket, o coordenador confirma que a revisão ainda é atual. Uma alteração de destino ou credencial cancela/suspende a tentativa antiga antes da escrita, executa a mutação sob a mesma exclusão e só então libera nova avaliação. Assim, uma tentativa usa integralmente a combinação antiga ou a nova, nunca URL de uma revisão com chave de outra. A revisão não precisa sobreviver ao processo: após reabertura não existe request anterior e um novo snapshot lê os dois stores novamente.
+
+`CredentialReadResult` é tipado como `available(NonPrintableSecret)`, `missing`, `invalidFormat` ou `secureStorageUnavailable`. Somente `available` alcança o transporte. `missing` e `invalidFormat` publicam configuração/autenticação requerida sem socket; indisponibilidade do keystore pausa como `localFailure`. Nenhum resultado contém exceção bruta, e o wrapper do segredo não implementa representação que revele o valor.
+
+`OccurrenceUploadRequest` recebe a URI final e a credencial pertencentes ao mesmo snapshot/revisão, os valores persistidos, metadados necessários para `Content-Length` e o stream do JPEG. Seu `toString` e qualquer resultado público omitem o segredo. Após concluir/cancelar, coordenador e adaptador liberam suas referências ao valor e não o retêm em estado persistente ou observável; não se alega zeroização da memória gerenciada nem de buffers internos do cliente HTTP.
+
+`OccurrenceTransportResult` diferencia:
+
+- resposta HTTP com apenas `statusCode`;
+- falha de rede/DNS/socket/TLS;
+- timeout;
+- cancelamento por lifecycle/dispose;
+- falha local de montagem ou leitura.
+
+O resultado não carrega header, URL completa, corpo, imagem ou exceção bruta para apresentação.
+
+## E4.5 Persistência, migração e recuperação
+
+O banco E2 evolui de schema v1 para v2 por migração aditiva, sem recriar nem apagar `occurrence_queue`. As novas estruturas conceituais são:
+
+```text
+occurrence_delivery_state
+  idempotency_key TEXT PRIMARY KEY
+    REFERENCES occurrence_queue(idempotency_key) ON DELETE CASCADE
+  attempt_count INTEGER NOT NULL CHECK attempt_count >= 0
+  backoff_calculated_at TEXT NULL
+  next_attempt_at TEXT NULL
+  pending_local_disposition TEXT NULL
+  cleanup_attempt_count INTEGER NOT NULL DEFAULT 0 CHECK cleanup_attempt_count >= 0
+  next_cleanup_at TEXT NULL
+
+occurrence_delivery_control
+  singleton_id INTEGER PRIMARY KEY CHECK singleton_id = 1
+  pause_reason TEXT NOT NULL
+  unexpected_status INTEGER NULL
+  updated_at TEXT NOT NULL
+
+accepted_occurrence_anchor
+  singleton_id INTEGER PRIMARY KEY CHECK singleton_id = 1
+  queue_sequence INTEGER NOT NULL
+  detected_at TEXT NOT NULL
+  latitude REAL NOT NULL
+  longitude REAL NOT NULL
+```
+
+`pause_reason` aceita somente `none`, `authentication`, `access`, `unexpectedResponse` e `localFailure`. A UI recebe apenas a categoria e uma mensagem conhecida; `unexpected_status` pode apoiar mensagem/log técnico, mas não autoriza exibir resposta ou request.
+
+Uma ocorrência nova não precisa de linha em `occurrence_delivery_state`: ausência equivale a `attempt_count = 0`, elegível agora e sem decisão definitiva. A primeira falha recuperável cria a linha. A seleção combina a cabeça de `occurrence_queue` com esse estado dentro da região serial da fila. Foreign keys permanecem habilitadas e verificadas em toda abertura. A mesma transação que remove a linha principal remove o estado E4 por cascade; o bootstrap também elimina idempotentemente qualquer estado órfão encontrado em banco legado/inconsistente.
+
+`accepted_occurrence_anchor` preserva a última referência necessária ao cooldown mesmo depois de a última pendência ser removida. A migração a semeia com a linha de maior `queueSequence`, quando existir. Cada novo aceite atualiza a âncora na mesma transação SQLite que insere a ocorrência; remoções nunca a apagam. O bootstrap restaura `detectedAt`, latitude e longitude da âncora mesmo com fila vazia. Ela contém somente dados operacionais canônicos já necessários à regra, permanece no banco privado excluído de backup/transferência e nunca integra UI, log ou multipart.
+
+A migração:
+
+1. preserva todas as linhas e JPEGs E2;
+2. cria tabelas/índices E4, habilita/valida foreign keys e semeia a âncora numa transação;
+3. mantém versão futura desconhecida como fila indisponível, sem downgrade destrutivo;
+4. mantém banco, sidecars e JPEGs nas exclusões Android de backup/transferência já aprovadas;
+5. é coberta com banco v1 real temporário contendo pendências antes da abertura v2, inclusive restauração do cooldown depois da remoção da última pendência.
+
+Retry, pausa, decisão definitiva, âncora e remoção usam a mesma coordenação assíncrona da fila. O HTTP nunca mantém a região serial bloqueada: o coordenador obtém uma projeção imutável, sai do lock e transmite. Não existe remoção manual nem outro consumidor E4; portanto, somente esse coordenador possui autoridade para concluir o item selecionado.
+
+Ao receber uma decisão remota definitiva, a fila grava primeiro `pending_local_disposition`. Em seguida executa o protocolo E2 de remoção de linha e JPEG. Se o processo cair antes dessa marca, a mesma ocorrência pode ser reenviada com a mesma chave, e o back-end resolve a repetição por idempotência. Se cair depois da marca, a recuperação conclui somente a remoção local e não faz nova chamada HTTP.
+
+Se a remoção local falhar, o item permanece com `pending_local_disposition`, incrementa `cleanup_attempt_count` e recebe `next_cleanup_at` com a mesma progressão limitada da E4. Até esse instante, o coordenador arma no máximo um timer; no vencimento, tenta apenas a limpeza local. Falhas repetidas nunca abrem socket, nunca removem a disposição definitiva e nunca executam em loop. A ação manual não antecipa esse prazo. O estado de apresentação informa falha/limpeza local sem dados da ocorrência.
+
+## E4.6 Seleção, concorrência e fluxo principal
+
+Há no máximo uma tentativa ou limpeza ativa. O ciclo é:
+
+1. aguardar bootstrap confirmado da fila e app em `resumed`;
+2. obter a cabeça FIFO antes de consultar destino, credencial, pausa ou backoff;
+3. se vazia, publicar `idle`; se houver `pending_local_disposition`, concluir somente a limpeza local quando `next_cleanup_at` estiver vencido ou armar um único timer para esse instante, independentemente de configuração/pausa e sem abrir socket;
+4. para uma pendência ainda não decidida, ler o controle persistido; se houver pausa automática, publicar o motivo e parar;
+5. se a cabeça estiver em backoff, armar um único timer para `nextAttemptAt`;
+6. adquirir pelo `DeliveryConfigurationSnapshotPort` uma revisão consistente de `BASE_URL` e credencial;
+7. se qualquer configuração faltar ou a credencial estiver inválida, publicar `configurationRequired`/`pausedAuthentication` e não abrir imagem nem socket; se o secure storage estiver indisponível, pausar como `localFailure`;
+8. para item elegível, inspecionar a imagem e abrir o stream privado;
+9. imediatamente antes do socket, confirmar que a revisão de configuração ainda é atual; mudança/remoção cancela esta preparação sem chamada HTTP;
+10. montar e enviar o multipart com URL e chave do mesmo snapshot;
+11. persistir a decisão antes de iniciar outro ciclo;
+12. em remoção confirmada, deixar o snapshot E2 atualizar a contagem e prosseguir para a próxima cabeça.
+
+A limpeza local pendente precede configuração, pausa e backoff porque a decisão remota já foi confirmada. Ela é idempotente, não exige `BASE_URL`/credencial e continua possível mesmo que o operador remova a configuração após um crash.
+
+Notificações simultâneas são coalescidas. `start`, snapshot da fila, timer, lifecycle, configuração e retry manual apenas solicitam nova avaliação; nunca criam loops concorrentes. Se uma ocorrência for persistida durante um upload, ela aguarda o ciclo atual e conserva sua ordem. Mutações de destino/credencial e início de tentativa usam a exclusão do `DeliveryConfigurationSnapshotPort`; uma mudança cancela a tentativa antiga antes de gravar qualquer valor novo. A tentativa pode terminar com a combinação antiga ou reiniciar com a nova, mas nunca envia uma chave nova à URL antiga nem o inverso.
+
+O coordenador não liga/desliga câmera, GPS ou wake lock. Ao perder `resumed`, cancela timer e request ativo. Cancelamento ou resposta não confirmada conserva a ocorrência. Como o servidor pode ter recebido a requisição antes do cancelamento, a retomada reutiliza obrigatoriamente a mesma `idempotencyKey`.
+
+## E4.7 Contrato HTTP e multipart
+
+A URI final é construída somente a partir de uma `BASE_URL` já validada pela regra E3 e recebe exatamente o caminho `/api/v1/occurrences`. Não há query, fragmento, userinfo, host alternativo ou redirect. HTTPS é obrigatório; `http://localhost:3000` continua permitido exclusivamente em debug pela validação e política Android E3.
+
+A requisição usa:
+
+```text
+POST {BASE_URL}/api/v1/occurrences
+Authorization: ApiKey {DEVICE_API_KEY}
+Content-Type: multipart/form-data; boundary=<boundary-da-tentativa>
+Content-Length: <bytes-calculados>
+```
+
+Não envia `Bearer`, `X-API-Key`, cookies ou header alternativo de credencial. Redirect automático fica desabilitado, inclusive para mesma origem; qualquer `3xx` segue a política conservadora de código inesperado.
+
+Partes textuais obrigatórias:
+
+- `idempotencyKey`: UUID persistido;
+- `latitude`: valor persistido entre -90 e 90;
+- `longitude`: valor persistido entre -180 e 180;
+- `confidence`: valor persistido, exatamente `1.0` para ocorrência manual;
+- `defectClass`: exatamente `pothole` no MVP;
+- `detectedAt`: ISO 8601 persistido com fuso.
+
+`speedKmh` é incluído somente quando persistido como valor válido, inclusive quando for `0`; ausência permanece omissão. `highway`, `km`, `source`, `accuracyMeters`, digest, sequência local e qualquer estado de retry são proibidos no multipart.
+
+A imagem usa nome de campo `image`, filename genérico `occurrence.jpg` e `Content-Type: image/jpeg`. O encoder escreve cabeçalhos ASCII controlados, CRLF, textos UTF-8 e bytes do stream sem interpolar path. A cada retry o boundary pode mudar, mas os campos, valores lógicos, bytes da imagem e `idempotencyKey` permanecem os mesmos.
+
+Antes de abrir o socket, a implementação revalida invariantes do item e metadados da imagem. Falha local impede a chamada remota, conserva o item e pausa como `localFailure`.
+
+## E4.8 Timeouts, limites e cancelamento
+
+A configuração técnica inicial da E4 é:
+
+- conexão: 10 segundos;
+- tentativa total, incluindo upload e recebimento dos headers: 45 segundos;
+- descarte do corpo: no máximo 64 KiB e 5 segundos;
+- redirects: zero;
+- uploads concorrentes: um;
+- tamanho máximo aceito da imagem: 2 MiB, já garantido pela fila e revalidado antes da tentativa.
+
+Timeout de conexão, escrita/upload ou espera pelos headers completos é falha recuperável. Depois de recebidos os headers completos, o status HTTP torna-se definitivo para a política E4. O limite de 64 KiB/5 segundos é somente um prazo para drenar ou cancelar o corpo e não rebaixa nem substitui a decisão do status. Cancelamento solicitado depois da confirmação dos headers também não converte uma resposta HTTP conhecida em `cancelled`. Nenhum byte do corpo aparece em log, mensagem ou evidência.
+
+`cancelActive` fecha a request/cliente de forma controlada. Antes dos headers completos, cancelamento por lifecycle não incrementa automaticamente o contador de backoff, pois representa indisponibilidade de execução do app, não falha do servidor. Ao retornar a `resumed`, o item volta a ser avaliado com a mesma chave.
+
+## E4.9 Matriz de decisão e consistência
+
+| Evento | Decisão persistida | Ocorrência/JPEG | Automação |
+|---|---|---|---|
+| `200` | definitiva: já existente por idempotência | remover consistentemente | continuar |
+| `201` | definitiva: criada | remover consistentemente | continuar |
+| `400` | definitiva: contrato/campo/MIME inválido | descartar consistentemente | continuar |
+| `409` | definitiva: conflito protegido | descartar consistentemente | continuar |
+| `413` | definitiva: imagem acima do limite | descartar consistentemente | continuar |
+| `415` | definitiva: formato não suportado | descartar consistentemente | continuar |
+| `401` | pausa `authentication` | preservar | parar até retomada explícita |
+| `403` | pausa `access` | preservar | parar até retomada explícita |
+| `5xx` | falha recuperável + próximo instante | preservar | aguardar backoff |
+| rede/DNS/socket/TLS | falha recuperável + próximo instante | preservar | aguardar backoff |
+| timeout | falha recuperável + próximo instante | preservar | aguardar backoff |
+| cancelamento por lifecycle | nenhuma falha remota confirmada | preservar | reavaliar em `resumed` |
+| demais HTTP, inclusive `3xx` | pausa `unexpectedResponse` | preservar | parar até retomada explícita |
+| imagem ausente/inválida ou montagem impossível | pausa `localFailure` | preservar | parar; não abrir socket |
+| remoção local falha após decisão definitiva | manter `pending_local_disposition` | preservar o que não foi confirmado como removido | tentar somente limpeza local |
+
+A classificação usa apenas o status, nunca texto de resposta. `400` é a expectativa atual para MIME inválido; `415` permanece proteção futura. `409` é descarte definitivo conforme RF-15, embora repetição idempotente normal deva retornar `200`.
+
+Logs usam eventos/categorias fixos, por exemplo `delivery_timeout`, `delivery_http_401` e `delivery_local_cleanup_failed`. São proibidos: API key, header, URL completa, body, multipart, imagem, UUID, coordenadas, timestamps da ocorrência, filename interno, path e digest.
+
+## E4.10 Backoff, pausa e retomada
+
+Após a falha recuperável número `n`, o atraso é:
+
+```text
+min(5 segundos × 3^(n - 1), 15 minutos)
+```
+
+A sequência inicial é `5 s`, `15 s`, `45 s`, `2 min 15 s`, `6 min 45 s`, `15 min`; as demais permanecem em `15 min`. O cálculo usa aritmética protegida contra overflow e grava `attempt_count`, `backoff_calculated_at` e `next_attempt_at` em UTC ISO 8601. O relógio é injetável. Instante vencido torna a cabeça elegível; timestamp inválido pausa como `localFailure`. Se o relógio corrente anteceder `backoff_calculated_at`, a fila reconcilia uma única vez o vencimento a partir do instante corrente, usando o atraso já calculado e nunca excedendo 15 minutos, e persiste atomicamente os novos `backoff_calculated_at`/`next_attempt_at` antes de liberar a coordenação. Uma reabertura posterior observa os valores reconciliados e não adia novamente o mesmo período. Não há busy loop nem timer quando o app não está `resumed`.
+
+Sucesso/descarte remove o estado com a ocorrência na mesma transação SQLite, por foreign key/cascade validada. Pausas `401`, `403` e código inesperado não incrementam backoff, pois exigem ação explícita. `localFailure` também não repete automaticamente.
+
+Retomadas permitidas:
+
+- **configuração corrigida:** salvamento confirmado de nova `BASE_URL`, substituição/salvamento de credencial ou restauração de credencial ausente limpa pausa de autenticação/acesso/resposta inesperada e solicita avaliação imediata;
+- **tentativa manual:** ação “Tentar envio novamente” limpa somente pausas que admitem retomada explícita (`authentication`, `access`, `unexpectedResponse` e `localFailure`) e agenda uma única avaliação; não apaga tentativa/backoff recuperável;
+- **backoff vencido:** timer em primeiro plano ou retorno posterior a `resumed` torna a cabeça elegível;
+- **nova oportunidade:** bootstrap, recuperação e snapshot de nova pendência solicitam avaliação, respeitando pausa/backoff existentes.
+
+Enquanto `waitingBackoff`, `canRetry` é falso e a ação manual não altera `attempt_count` nem `next_attempt_at`. Uma nova falha preserva a progressão acumulada. Remover credencial ou apagar URL nunca dispara rede; publica `configurationRequired`. Alterar apenas cooldown, distância, confiança ou FPS não limpa pausa de envio.
+
+## E4.11 Estado e experiência na tela Operação
+
+O painel “Envio futuro” passa a se chamar “Envio”. A apresentação recebe somente uma projeção agregada:
+
+```text
+DeliveryPresentationState
+  phase
+  message
+  canRetry
+  nextRetryAt?  // somente para exibição relativa/sanitizada
+```
+
+Fases previstas:
+
+- `configurationRequired`: “Configure o destino e a chave para enviar pendências.”;
+- `idle`: “Nenhuma pendência para envio.”;
+- `ready`: pendências aguardando o próximo ciclo;
+- `sending`: “Enviando uma ocorrência…”;
+- `waitingBackoff`: “Falha temporária. Nova tentativa em breve.”;
+- `pausedAuthentication`: “Chave ausente, malformada ou inválida.”;
+- `pausedAccess`: “Dispositivo inativo.”;
+- `pausedUnexpected`: “Resposta inesperada da API. Revise a configuração ou tente novamente.”;
+- `pausedLocalFailure`: “Não foi possível preparar uma pendência para envio.”;
+- `cleaning`: “Concluindo remoção local…”;
+- `queueUnavailable`: estado de atenção E2 já existente.
+
+A tela mantém “Pendências: N” derivado do snapshot confirmado da fila e oferece “Tentar envio novamente” somente quando a ação pode produzir nova avaliação. O botão não cria ocorrência, não troca chave e não remove item. Configuração ausente, pausa ou backoff não desabilitam câmera, GPS, registro manual ou persistência; apenas fila indisponível continua afetando o aceite conforme E2.
+
+Nenhum estado/semântica contém URL, chave, status body, UUID, coordenada, horário da ocorrência, sequência, filename, path ou digest. O contador pode permanecer visível durante envio e só diminui após remoção local confirmada.
+
+## E4.12 Segurança e privacidade
+
+A credencial completa é lida do secure storage como parte do snapshot consistente imediatamente antes da tentativa, validada no limite mínimo E3 e usada para montar um único header. Após conclusão ou cancelamento, coordenador e adaptador liberam suas referências à credencial e não a retêm em estado persistente ou observável; não se alega zeroização da memória gerenciada nem de buffers internos do cliente HTTP. Ela não é cacheada em singleton de estado, preferences, SQLite ou widget. Fakes de teste usam valores explicitamente fictícios e os relatórios não os imprimem.
+
+O transporte aceita apenas a URI produzida pelo validador/configuração E3. Redirects são bloqueados para impedir encaminhamento do header. O cliente não desabilita validação de certificado, não instala callback permissivo e não aceita HTTP fora da exceção localhost/debug já controlada pelo app e pelo Android.
+
+O JPEG permanece no namespace privado E2, é lido por stream opaco e só é removido pelo protocolo da fila. A E4 não copia imagem para cache, galeria ou arquivo multipart temporário. Resposta e falha de API não mudam a política de backup/transferência.
+
+## E4.13 Lifecycle e ausência de worker
+
+O coordenador pertence ao composition root, separado do `OperationController`, mas publica estado para ele. Ele pode continuar seu ciclo enquanto outra rota do app estiver visível e o app permanecer `resumed`; não depende de a câmera operacional estar ativa. Abrir Configurações ou Diagnóstico não cria outro coordenador nem outro cliente.
+
+Ao receber `inactive`, `paused`, `detached` ou `hidden`:
+
+1. impede novas tentativas;
+2. cancela o timer;
+3. solicita cancelamento do transporte ativo;
+4. conserva qualquer item sem remoção confirmada;
+5. não altera câmera/GPS/wake lock além do protocolo já pertencente à Operação.
+
+Ao retornar a `resumed`, uma avaliação coalescida lê novamente fila, controle e configuração. Nenhuma garantia de execução em background é apresentada no README ou na UI. Um worker fica adiado para etapa futura somente se houver requisito aprovado específico; não é scaffolding da E4.
+
+## E4.14 Estratégia de testes
+
+### Políticas puras e propriedades
+
+- matriz exata para `200`, `201`, `400`, `401`, `403`, `409`, `413`, `415`, todo `5xx`, demais códigos e `3xx`;
+- progressão do backoff, teto de 15 minutos, ausência de overflow, monotonicidade, timestamp inválido e regressão do relógio persistida através de reabertura;
+- retry manual não antecipa backoff recuperável nem zera sua progressão;
+- estabilidade de campos, imagem e `idempotencyKey` em retries;
+- `speedKmh`: ausente é omitido e zero é enviado;
+- nenhum campo proibido aparece no multipart.
+
+### Multipart e transporte
+
+- bytes e delimitadores multipart válidos, `Content-Length`, CRLF, nome `image`, filename genérico e MIME JPEG;
+- header exatamente `Authorization: ApiKey <valor-fictício>`, sem `Bearer` ou `X-API-Key`;
+- endpoint e método exatos, redirect bloqueado e HTTPS/localhost debug preservados;
+- streaming segmentado sem carregar JPEG inteiro;
+- timeout antes dos headers é recuperável; corpo lento/grande ou cancelamento posterior aos headers não substitui o status confirmado;
+- trocas/remoções intercaladas de URL e chave nunca combinam revisões diferentes nem abrem socket após invalidação;
+- servidor HTTP local controlado para provar `200/201` e toda a matriz sem API real.
+
+### Fila e recuperação
+
+- migração v1→v2 com pendências/JPEGs intactos;
+- seleção FIFO e single-flight sob notificações concorrentes;
+- estado de backoff/pausa após fechar e reabrir;
+- configuração ausente resulta em zero chamadas ao transporte;
+- remoção somente após decisões definitivas;
+- crash antes/depois de gravar `pending_local_disposition`;
+- decisão definitiva, crash e remoção posterior de URL/chave ainda concluem limpeza sem HTTP;
+- falha de remoção não repete HTTP, agenda limpeza local com teto, não entra em loop e recuperação conclui limpeza;
+- foreign key/cascade e recovery não deixam estado E4 órfão;
+- remoção da última pendência, force-stop e reabertura preservam a âncora de cooldown;
+- imagem ausente/corrompida conserva registro e pausa sem socket;
+- contagem diminui somente após remoção confirmada.
+
+### Controller, widgets e regressão
+
+- todas as fases, mensagens, ação manual, acessibilidade e ausência de dados individuais;
+- registro manual continua durante envio, backoff, pausa e ausência de configuração;
+- lifecycle cancela/reconcilia sem concorrência;
+- retorno de Configurações retoma somente quando relevante;
+- Operação → Configurações → Operação e Operação → Diagnóstico → Operação preservam recursos;
+- suíte completa E0–E3, análise, formatação e build Android.
+
+Um teste arquitetural substitui a proibição global E3 por fronteira positiva: HTTP de ocorrência, multipart, leitura completa da credencial e backoff são permitidos apenas nos componentes E4 definidos. Continuam proibidos em widgets, domínio de ocorrência, fonte manual, pós-candidato E1 e Diagnóstico E0.
+
+## E4.15 README, validação simulada e Gate real
+
+O README E4 documenta:
+
+- pré-requisitos e instalação do Flutter usado pelo projeto;
+- obtenção de dependências, análise, testes e build Android;
+- instalação/execução no aparelho;
+- configuração de `BASE_URL` sem o sufixo e colagem manual da chave;
+- header exato `Authorization: ApiKey {DEVICE_API_KEY}`;
+- contrato multipart e campos omitidos no MVP;
+- `adb reverse tcp:3000 tcp:3000` e `http://localhost:3000` somente em debug;
+- comportamento offline, backoff, pausas, retry manual e ausência de garantia em background;
+- exemplos inteiramente fictícios, sem URL/chave real.
+
+O **gate de desenvolvimento** pode usar fakes e servidor local/simulado. Ele comprova contrato, classificação, persistência, lifecycle, segurança e regressões, mas não autoriza declarar integração real aprovada.
+
+O **Validation Gate real E4** exige, além da suíte e do gate de desenvolvimento:
+
+1. APK/hash/ferramentas registrados;
+2. instalação preservadora e roteiro no Samsung Galaxy S25+;
+3. URL de teste acessível, fornecida fora do repositório;
+4. API key válida de dispositivo de teste, preferencialmente `mobile`, fornecida fora do repositório;
+5. ocorrência manual persistida antes da tentativa;
+6. recebimento comprovado no back-end com evidência sanitizada;
+7. repetição idempotente controlada sem duplicação indevida;
+8. cenários aplicáveis de ausência de configuração, falha recuperável, pausa e retomada;
+9. contagem/imagem local consistentes após conclusão;
+10. regressões E0–E3 e inspeção negativa E5;
+11. decisão explícita do usuário.
+
+Se URL/chave de teste ou evidência do back-end não estiverem disponíveis, o gate real fica **não executado**, mesmo que todos os testes simulados passem. A apresentação do gate interrompe obrigatoriamente o trabalho. Reprovação permite somente correções E4; aprovação encerra E4 e não inicia E5 automaticamente.
+
+## E4.16 Rastreabilidade
+
+| Requisito | Cobertura E4 |
+|---|---|
+| RF-05.5–7 | contagem persistente e presença de configuração preservadas; estado e pausas de envio adicionados na Operação. |
+| RF-08 e RF-12.9–11 | mesma chave/dados/imagem em retries e remoção crash-consistent sob ownership da fila. |
+| RF-09 / E2.11 | âncora de cooldown preservada após remoção da última pendência e restaurada no bootstrap. |
+| RF-13.9–17 | endpoint exato, autenticação `ApiKey`, nenhuma chamada sem URL/chave e revalidação do formato mínimo da credencial. |
+| RF-14 | multipart por streaming com campos obrigatórios/opcionais e omissões fixas. |
+| RF-15 | `200/201` como sucesso; `400/409/413/415` como descarte; limpeza e contagem consistentes. |
+| RF-16 | pausa persistida e mensagens sanitizadas para `401/403`, com retomada explícita. |
+| RF-17 | rede/timeout/`5xx`, backoff exponencial limitado e retomada oportunista sem perda em background. |
+| RF-18 | preservação e pausa conservadora para códigos não especificados. |
+| RF-21 | lifecycle previsível, sem interferência no controle de recursos da Operação/Diagnóstico. |
+| RF-22 | README reproduzível, placeholders fictícios, autenticação e fluxo USB debug. |
+| RF-23.1–6,11–14,19–20 | sequência, escopo E4, gates simulado/real, evidências e parada; RF-23.7–10 são preservados por regressão E1–E3. |
+| RNF-01.6–13 | envio no pós-fluxo, fonte independente, portas e payload fora de widgets. |
+| RNF-02 | secure storage, TLS, localhost/debug e logs/estado sem segredo. |
+| RNF-03.7–10 | multipart, matriz, idempotência, backoff e fakes de rede/relógio. |
+| RNF-04.2–3,6 | upload assíncrono/serial sem bloquear preview, registro, indicadores ou navegação. |
+| RNF-05 | envio somente após persistência, retenção até decisão e contagem consistente. |
+| RNF-06.2–5,9–12 | streaming privado, ownership do JPEG e limpeza sem exposição. |
+| RNF-07.5–6,10 | gate de desenvolvimento, validação real no S25+ e regressão do Diagnóstico. |
+
+## E4.17 Decisões encerradas e adiamentos
+
+Este design encerra para a E4:
+
+- coordenador único, serial e FIFO;
+- pacote `http` isolado atrás de porta testável, com `IOClient` restrito à composição Android e sem reutilizar o cliente E0;
+- multipart com `Content-Length` e JPEG em streaming;
+- status HTTP como autoridade sem exigir JSON de sucesso;
+- redirects bloqueados e limites/timeouts explícitos;
+- schema SQLite v2 aditivo para retry, pausa, limpeza pendente e âncora de cooldown, com foreign key/cascade validada;
+- snapshot consistente e revisão local para impedir mistura de URL e credencial durante alterações;
+- backoff de base 5 segundos, fator 3 e teto 15 minutos;
+- pausa global durável e retry manual;
+- execução apenas com app ativo/`resumed`, sem worker;
+- projeção de UI agregada e sanitizada;
+- gate simulado separado do gate real.
+
+Permanecem deliberadamente adiados: monitor de conectividade, jitter, paralelismo, fila com prioridade, botão de remoção, sincronização em background, WorkManager/foreground service, telemetria remota e qualquer E5. Versões de dependência não mudam por este design; se a implementação demonstrar necessidade concreta de pacote adicional, a decisão deve ser justificada e pinada na tarefa E4 correspondente.
+
+Esta seção conclui exclusivamente a fase de design da E4. `requirements.md`, `tasks.md`, código, dependências e evidências não são alterados por esta fase.

@@ -3242,6 +3242,713 @@
         "executionId": "a5b85cf4-0c33-4cd0-bd44-97835510ec12",
         "chatSessionId": "sess_46f3723b-61c9-48cb-b309-e7142b59d6f9",
         "timestamp": 1793163765724
+      },
+      {
+        "executionId": "d7b3a79b-2b07-431f-b182-ea3c0caebfef",
+        "chatSessionId": "sess_19c45923-f722-4e5a-b429-ce68eb21f044",
+        "timestamp": 1793238860128
+      },
+      {
+        "executionId": "d7b3a79b-2b07-431f-b182-ea3c0caebfef",
+        "chatSessionId": "sess_19c45923-f722-4e5a-b429-ce68eb21f044",
+        "timestamp": 1793239152511
+      }
+    ],
+    "61.2 Apresentar evidência de validação/persistência de parâmetros, secure storage, status sanitizado, troca/remoção e ausência de configuração sem bloqueio E1/E2.": [
+      {
+        "executionId": "54c5db9e-6e76-4140-938c-ce01b22031e6",
+        "chatSessionId": "sess_ebe939e0-7d4a-43f5-8ad3-16b64b242619",
+        "timestamp": 1793239163972
+      },
+      {
+        "executionId": "54c5db9e-6e76-4140-938c-ce01b22031e6",
+        "chatSessionId": "sess_ebe939e0-7d4a-43f5-8ad3-16b64b242619",
+        "timestamp": 1793239310262
+      }
+    ],
+    "61.3 Apresentar atualização segura de cooldown/distância, permissões e regressões E0/E1/E2, incluindo Diagnóstico.": [
+      {
+        "executionId": "a1c5a955-0b70-4d4d-9ba7-4989640352dc",
+        "chatSessionId": "sess_491cf5f2-a38a-4634-b402-97e06858da74",
+        "timestamp": 1793239320206
+      },
+      {
+        "executionId": "a1c5a955-0b70-4d4d-9ba7-4989640352dc",
+        "chatSessionId": "sess_491cf5f2-a38a-4634-b402-97e06858da74",
+        "timestamp": 1793239442160
+      }
+    ],
+    "61.4 Apresentar inspeção negativa comprovando ausência de HTTP de ocorrência, autenticação, multipart, worker, backoff, YOLO/TFLite/modelo/inferência.": [
+      {
+        "executionId": "a5914f56-c6c6-4d6e-80f5-5ade3fa6ae27",
+        "chatSessionId": "sess_86e8c5b6-540a-46e5-8216-866d351526e1",
+        "timestamp": 1793239451795
+      },
+      {
+        "executionId": "a5914f56-c6c6-4d6e-80f5-5ade3fa6ae27",
+        "chatSessionId": "sess_86e8c5b6-540a-46e5-8216-866d351526e1",
+        "timestamp": 1793239555047
+      }
+    ],
+    "61.5 Reunir o roteiro e registrar decisão do usuário exatamente como `Aprovação explícita do Validation Gate E3` ou `Reprovação explícita do Validation Gate E3`.": [
+      {
+        "executionId": "49203277-4318-4681-bb43-0a3e92e8e346",
+        "chatSessionId": "sess_25a6757b-4aae-4b6f-bb69-663d1dc72a32",
+        "timestamp": 1793239566737
+      },
+      {
+        "executionId": "f3cd3f79-391b-4bec-a6dd-40f64db2cf6e",
+        "chatSessionId": "sess_25a6757b-4aae-4b6f-bb69-663d1dc72a32",
+        "timestamp": 1793240340155
+      }
+    ],
+    "61.6 Parar obrigatoriamente após a decisão: reprovação permite somente correções E3; aprovação encerra E3 e aguarda solicitação posterior para novo ciclo E4.": [
+      {
+        "executionId": "d73aea2b-ad66-4bc9-8c0e-2cef4e77d51d",
+        "chatSessionId": "sess_3bcc1383-25ab-4e67-816f-5ca90fd05bef",
+        "timestamp": 1793240284903
+      },
+      {
+        "executionId": "2a6dbe63-d9d0-40d3-8856-40d0c265cfd5",
+        "chatSessionId": "sess_03a34247-501d-40ae-a95d-bd711845755d",
+        "timestamp": 1793240417102
+      },
+      {
+        "executionId": "2a6dbe63-d9d0-40d3-8856-40d0c265cfd5",
+        "chatSessionId": "sess_03a34247-501d-40ae-a95d-bd711845755d",
+        "timestamp": 1793240481237
+      }
+    ],
+    "63.1 Criar modelos imutáveis de cabeça da fila, configuração de entrega, segredo não imprimível, request, resultado de transporte, decisão definitiva/recuperável e estado sanitizado de apresentação.": [
+      {
+        "executionId": "a0e9b6e8-62d7-4480-a7b5-e98679468eb6",
+        "chatSessionId": "sess_b6c7ef1f-ae31-4e42-b54e-125e7313b8a0",
+        "timestamp": 1793242324557
+      },
+      {
+        "executionId": "f1657e54-dd28-4477-97db-e4d08d755115",
+        "chatSessionId": "sess_06ae5e23-9d67-43d8-8413-3b168df8efa4",
+        "timestamp": 1793242371336
+      },
+      {
+        "executionId": "6eca4785-5a0d-43cd-b7eb-84e6c2eeac36",
+        "chatSessionId": "sess_55d90c54-ea3e-47a8-b5e4-65ff5ee2bd67",
+        "timestamp": 1793277229040
+      },
+      {
+        "executionId": "6eca4785-5a0d-43cd-b7eb-84e6c2eeac36",
+        "chatSessionId": "sess_55d90c54-ea3e-47a8-b5e4-65ff5ee2bd67",
+        "timestamp": 1793277519156
+      }
+    ],
+    "62.1 Registrar a aprovação do Gate E3 e executar a baseline de formatação, análise, suíte completa e build Android sem alterar comportamento E0–E3.": [
+      {
+        "executionId": "1bc5ee18-f762-4d4c-83f8-373d042dfc65",
+        "chatSessionId": "sess_9817f9dd-1f1c-496a-b35e-356dfd1b2391",
+        "timestamp": 1793242439549
+      },
+      {
+        "executionId": "1bc5ee18-f762-4d4c-83f8-373d042dfc65",
+        "chatSessionId": "sess_9817f9dd-1f1c-496a-b35e-356dfd1b2391",
+        "timestamp": 1793242573072
+      }
+    ],
+    "62.2 Inventariar composition root, fila/SQLite/filesystem E2, restauração do cooldown, configuração E3, secure storage, lifecycle, painel de Operação e cliente HTTP exclusivo do Diagnóstico.": [
+      {
+        "executionId": "b2f03a3e-6a48-442a-b580-08b4febb5738",
+        "chatSessionId": "sess_effb1876-9376-4d3e-b9ff-a517d591b0fe",
+        "timestamp": 1793242596238
+      },
+      {
+        "executionId": "b2f03a3e-6a48-442a-b580-08b4febb5738",
+        "chatSessionId": "sess_effb1876-9376-4d3e-b9ff-a517d591b0fe",
+        "timestamp": 1793242776884
+      }
+    ],
+    "62.3 Substituir a inspeção negativa global E3 por teste arquitetural positivo E4: permitir transporte, multipart, leitura completa da credencial e backoff somente nas fronteiras E4; continuar proibindo-os em widgets, domínio da ocorrência, fonte manual, pós-candidato e Diagnóstico.": [
+      {
+        "executionId": "bad12098-9012-47e8-b3a1-dbcf085a00e0",
+        "chatSessionId": "sess_c0b96ad5-cc37-40bc-aa48-a6a43fd82bbe",
+        "timestamp": 1793242802498
+      },
+      {
+        "executionId": "bad12098-9012-47e8-b3a1-dbcf085a00e0",
+        "chatSessionId": "sess_c0b96ad5-cc37-40bc-aa48-a6a43fd82bbe",
+        "timestamp": 1793243151616
+      }
+    ],
+    "62.4 Verificar compatibilidade e fixar uma versão exata do pacote `http`; atualizar `pubspec.yaml`/lockfile sem adicionar `dio`, conectividade, worker ou biblioteca de estado.": [
+      {
+        "executionId": "85cefd7a-5e0f-4a9f-a022-d57ed8d532b6",
+        "chatSessionId": "sess_d22f110f-46cf-4a4f-8ef5-4e8735524436",
+        "timestamp": 1793243177672
+      }
+    ],
+    "62.5 Definir fakes mínimos de transporte, timer, snapshot de configuração e fila E4, preservando o `Clock` já existente e sem depender de hardware/API real nos testes.": [
+      {
+        "executionId": "63cefb15-dd08-4a6a-8abf-11e91361a21b",
+        "chatSessionId": "sess_447bfd60-5d7b-4821-b129-9391306d65f3",
+        "timestamp": 1793243407101
+      },
+      {
+        "executionId": "63cefb15-dd08-4a6a-8abf-11e91361a21b",
+        "chatSessionId": "sess_447bfd60-5d7b-4821-b129-9391306d65f3",
+        "timestamp": 1793243659355
+      }
+    ],
+    "63.2 Implementar `HttpDeliveryDecisionPolicy` para `200`, `201`, `400`, `401`, `403`, `409`, `413`, `415`, todo `5xx`, demais códigos e redirects `3xx`, sem depender do corpo da resposta.": [
+      {
+        "executionId": "d7f849f7-d634-49b5-a5d6-a9d329c19b36",
+        "chatSessionId": "sess_1c9817a1-f753-4af1-bca1-1bb596ef0946",
+        "timestamp": 1793277666734
+      },
+      {
+        "executionId": "d7f849f7-d634-49b5-a5d6-a9d329c19b36",
+        "chatSessionId": "sess_1c9817a1-f753-4af1-bca1-1bb596ef0946",
+        "timestamp": 1793278219293
+      }
+    ],
+    "63.3 Implementar `DeliveryBackoffPolicy` como `min(5 s × 3^(n-1), 15 min)`, com proteção de overflow e cálculo reutilizável para retry remoto e limpeza local.": [
+      {
+        "executionId": "5a4adac9-4c6d-4821-ac7f-a5af7a5e65e4",
+        "chatSessionId": "sess_15140475-a854-4744-888b-6f299f150042",
+        "timestamp": 1793278246427
+      },
+      {
+        "executionId": "5a4adac9-4c6d-4821-ac7f-a5af7a5e65e4",
+        "chatSessionId": "sess_15140475-a854-4744-888b-6f299f150042",
+        "timestamp": 1793278305756
+      }
+    ],
+    "63.4 Definir `OccurrenceDeliveryQueuePort`, `DeliveryConfigurationSnapshotPort`, `OccurrenceTransportPort`, `DeliveryTimerPort` e `DeliveryTechnicalLogger` sem importar Flutter, SQLite, filesystem, secure storage ou cliente HTTP concreto.": [
+      {
+        "executionId": "6d2e5591-a614-4907-adc0-b5016b5b7468",
+        "chatSessionId": "sess_a347a7aa-3320-415c-bdc4-707055d04870",
+        "timestamp": 1793278382358
+      },
+      {
+        "executionId": "6d2e5591-a614-4907-adc0-b5016b5b7468",
+        "chatSessionId": "sess_a347a7aa-3320-415c-bdc4-707055d04870",
+        "timestamp": 1793278522589
+      }
+    ],
+    "63.5 Implementar logger/sink sanitizado com categorias fixas para rejeições definitivas, resposta inesperada, falha recuperável e falha de limpeza; proibir API key, header, URL completa, body, multipart, imagem, UUID, coordenadas, horário da ocorrência, filename, path, digest e exceção bruta.": [
+      {
+        "executionId": "90fe399e-e73c-4b3c-b77b-ec7a17058228",
+        "chatSessionId": "sess_6475f9a9-b704-4baa-91ea-c876c26b539a",
+        "timestamp": 1793278569089
+      },
+      {
+        "executionId": "90fe399e-e73c-4b3c-b77b-ec7a17058228",
+        "chatSessionId": "sess_6475f9a9-b704-4baa-91ea-c876c26b539a",
+        "timestamp": 1793278635112
+      }
+    ],
+    "63.6 Cobrir matriz HTTP, monotonicidade/teto do backoff, overflow, emissão das categorias obrigatórias, serialização sanitizada e ausência de segredo/exceção bruta nos resultados/logs.": [
+      {
+        "executionId": "66987329-71bc-4269-8f47-15ddbdf34fa4",
+        "chatSessionId": "sess_208e1c3f-043c-40ab-a70a-d95b865ca72b",
+        "timestamp": 1793278662045
+      },
+      {
+        "executionId": "66987329-71bc-4269-8f47-15ddbdf34fa4",
+        "chatSessionId": "sess_208e1c3f-043c-40ab-a70a-d95b865ca72b",
+        "timestamp": 1793278804755
+      }
+    ],
+    "64.1 Implementar migração aditiva v1→v2 para estado por ocorrência, controle global de pausa e âncora singleton de último aceite, sem recriar/apagar `occurrence_queue` nem JPEGs.": [
+      {
+        "executionId": "049ecf06-e8e0-4e44-91ac-08576b79237e",
+        "chatSessionId": "sess_35822ab1-dca3-448b-9a9b-966aa798b83c",
+        "timestamp": 1793278907940
+      },
+      {
+        "executionId": "049ecf06-e8e0-4e44-91ac-08576b79237e",
+        "chatSessionId": "sess_35822ab1-dca3-448b-9a9b-966aa798b83c",
+        "timestamp": 1793279414975
+      }
+    ],
+    "64.2 Habilitar e validar foreign key/cascade entre estado de entrega e ocorrência; remover estados órfãos de forma idempotente na recuperação e recusar versão futura sem downgrade destrutivo.": [
+      {
+        "executionId": "55dbc0b5-b5b2-49ef-81ad-1d886d49e207",
+        "chatSessionId": "sess_0b3882fd-2656-4a10-a559-39395cf8ec9e",
+        "timestamp": 1793279442339
+      },
+      {
+        "executionId": "55dbc0b5-b5b2-49ef-81ad-1d886d49e207",
+        "chatSessionId": "sess_0b3882fd-2656-4a10-a559-39395cf8ec9e",
+        "timestamp": 1793279643841
+      }
+    ],
+    "64.3 Semear a âncora pela maior `queueSequence` existente na migração e atualizá-la na mesma transação de cada novo aceite; restaurar cooldown pela âncora mesmo após remover a última pendência.": [
+      {
+        "executionId": "3c04408b-49fa-4afa-bb21-480d331fcd03",
+        "chatSessionId": "sess_cb1c9671-9dad-4a39-8b66-de541bd5ea8e",
+        "timestamp": 1793279667308
+      },
+      {
+        "executionId": "3c04408b-49fa-4afa-bb21-480d331fcd03",
+        "chatSessionId": "sess_cb1c9671-9dad-4a39-8b66-de541bd5ea8e",
+        "timestamp": 1793279883637
+      }
+    ],
+    "64.4 Implementar seleção FIFO da cabeça, elegibilidade por backoff, leitura privada do JPEG e snapshots agregados usando a mesma região serial de bootstrap, persistência, recuperação, leitura e remoção.": [
+      {
+        "executionId": "71cdaecd-5e26-4039-b58c-74d3cd0497a5",
+        "chatSessionId": "sess_0b4ecf1c-ad1e-4df3-95fe-204318446b17",
+        "timestamp": 1793279913376
+      },
+      {
+        "executionId": "71cdaecd-5e26-4039-b58c-74d3cd0497a5",
+        "chatSessionId": "sess_0b4ecf1c-ad1e-4df3-95fe-204318446b17",
+        "timestamp": 1793280626893
+      }
+    ],
+    "64.5 Persistir atomicamente `attemptCount`, instantes de cálculo/vencimento, pausa global e resposta inesperada sanitizada; reconciliar timestamp inválido, vencido e regressão do relógio sem adiamento indefinido.": [
+      {
+        "executionId": "d9291dcd-6cee-42f3-b41f-2d2c4f909caa",
+        "chatSessionId": "sess_0c7dbeaa-f8b1-41d9-840f-26c49c40216a",
+        "timestamp": 1793280655718
+      },
+      {
+        "executionId": "d9291dcd-6cee-42f3-b41f-2d2c4f909caa",
+        "chatSessionId": "sess_0c7dbeaa-f8b1-41d9-840f-26c49c40216a",
+        "timestamp": 1793280936360
+      }
+    ],
+    "64.6 Implementar marca durável de decisão definitiva antes da remoção; após crash, concluir somente limpeza local sem exigir URL/chave nem repetir HTTP.": [
+      {
+        "executionId": "746287a7-7230-4ca9-8956-f1668874f0f7",
+        "chatSessionId": "sess_8b126047-8308-4461-817f-b82152dd005c",
+        "timestamp": 1793280961761
+      },
+      {
+        "executionId": "746287a7-7230-4ca9-8956-f1668874f0f7",
+        "chatSessionId": "sess_8b126047-8308-4461-817f-b82152dd005c",
+        "timestamp": 1793281117263
+      }
+    ],
+    "64.7 Em falha de remoção, persistir tentativa/próximo instante de limpeza com backoff limitado; impedir loop, novo HTTP e antecipação pelo retry manual.": [
+      {
+        "executionId": "e3013494-f81d-4a2e-a5a1-979ff86aafc9",
+        "chatSessionId": "sess_650effca-4dc0-417f-93e5-7a7a8fdc17a8",
+        "timestamp": 1793281144727
+      },
+      {
+        "executionId": "e3013494-f81d-4a2e-a5a1-979ff86aafc9",
+        "chatSessionId": "sess_650effca-4dc0-417f-93e5-7a7a8fdc17a8",
+        "timestamp": 1793281343522
+      }
+    ],
+    "64.8 Cobrir banco v1 real temporário, migração, pendências/JPEGs preservados, cascade, recovery, crash antes/depois da decisão, limpeza sem configuração, relógio regressivo com reabertura e cooldown após fila vazia.": [
+      {
+        "executionId": "ab40e3f7-d907-433c-a16d-52bcf20583d8",
+        "chatSessionId": "sess_035aa882-c21f-4e43-a5a3-73bc3cc2d621",
+        "timestamp": 1793281382823
+      },
+      {
+        "executionId": "ab40e3f7-d907-433c-a16d-52bcf20583d8",
+        "chatSessionId": "sess_035aa882-c21f-4e43-a5a3-73bc3cc2d621",
+        "timestamp": 1793282092818
+      }
+    ],
+    "65.1 Ampliar a leitura restrita E4 da credencial para resultado tipado: disponível, ausente, formato inválido ou secure storage indisponível, sem devolver segredo em mensagens/estado.": [
+      {
+        "executionId": "ba46a484-8478-49d4-bcab-08d57d0033c3",
+        "chatSessionId": "sess_236986f7-9fa8-4776-ad2d-a27e93d92dc8",
+        "timestamp": 1793285039435
+      },
+      {
+        "executionId": "ba46a484-8478-49d4-bcab-08d57d0033c3",
+        "chatSessionId": "sess_236986f7-9fa8-4776-ad2d-a27e93d92dc8",
+        "timestamp": 1793285205295
+      }
+    ],
+    "65.4 Integrar remoção de URL/credencial para publicar `configurationRequired` sem rede; mudanças apenas em cooldown, distância, confiança ou FPS não limpam pausa nem disparam envio.": [
+      {
+        "executionId": "6d381c07-92ce-4948-9576-0f80db5547d6",
+        "chatSessionId": "sess_b6275aef-4f33-48c9-bef4-941092769441",
+        "timestamp": 1793285232543
+      },
+      {
+        "executionId": "cb10e907-f68a-4757-a46f-1130bf726092",
+        "chatSessionId": "sess_991dfd2d-5f0f-4475-99c6-3b77ff6a24e7",
+        "timestamp": 1793285912150
+      },
+      {
+        "executionId": "cb10e907-f68a-4757-a46f-1130bf726092",
+        "chatSessionId": "sess_991dfd2d-5f0f-4475-99c6-3b77ff6a24e7",
+        "timestamp": 1793286041170
+      }
+    ],
+    "65.2 Implementar `DeliveryConfigurationSnapshotPort` com revisão local monotônica e exclusão entre início da tentativa e mutações de `BASE_URL`/credencial.": [
+      {
+        "executionId": "ea73e23f-be4c-42d2-bfea-fe5423ee12ff",
+        "chatSessionId": "sess_6c532955-2b09-4443-b188-bf0d2af2b184",
+        "timestamp": 1793285428739
+      },
+      {
+        "executionId": "ea73e23f-be4c-42d2-bfea-fe5423ee12ff",
+        "chatSessionId": "sess_6c532955-2b09-4443-b188-bf0d2af2b184",
+        "timestamp": 1793285553655
+      }
+    ],
+    "65.3 Integrar salvamento/substituição de `BASE_URL` ou credencial para cancelar/suspender tentativa antiga antes da escrita; após confirmação, limpar de forma persistente somente pausas `authentication`, `access` e `unexpectedResponse` e solicitar uma única avaliação imediata.": [
+      {
+        "executionId": "608a7ac2-1bb9-4414-8b39-68784d444444",
+        "chatSessionId": "sess_74adf52c-14a2-4a37-962d-b286dba31b35",
+        "timestamp": 1793285579866
+      },
+      {
+        "executionId": "608a7ac2-1bb9-4414-8b39-68784d444444",
+        "chatSessionId": "sess_74adf52c-14a2-4a37-962d-b286dba31b35",
+        "timestamp": 1793285838476
+      }
+    ],
+    "65.5 Revalidar URI e formato `prefixo.segredo` imediatamente antes do transporte; ausência/invalidez impede imagem/socket, e falha de keystore produz estado local controlado.": [
+      {
+        "executionId": "e3133f4d-571e-4b4d-ac0a-af89a4a968ab",
+        "chatSessionId": "sess_e8e4486b-598f-4955-b184-ab24c85527bf",
+        "timestamp": 1793286073944
+      },
+      {
+        "executionId": "e3133f4d-571e-4b4d-ac0a-af89a4a968ab",
+        "chatSessionId": "sess_e8e4486b-598f-4955-b184-ab24c85527bf",
+        "timestamp": 1793286276279
+      }
+    ],
+    "65.6 Cobrir trocas/remoções intercaladas entre leitura, preparação e socket, retomada de cada pausa aplicável após correção inclusive após reabertura, remoção sem rede e mudanças operacionais que preservam pausa.": [
+      {
+        "executionId": "63bbcce0-0ca1-4837-83d7-6666cd8dfbf7",
+        "chatSessionId": "sess_8b074fe2-43ec-4aff-b7e3-224651266099",
+        "timestamp": 1793286308744
+      },
+      {
+        "executionId": "63bbcce0-0ca1-4837-83d7-6666cd8dfbf7",
+        "chatSessionId": "sess_8b074fe2-43ec-4aff-b7e3-224651266099",
+        "timestamp": 1793286911185
+      },
+      {
+        "executionId": "7c1a2999-1994-49b8-8645-c1dabaddd5fb",
+        "chatSessionId": "sess_8b074fe2-43ec-4aff-b7e3-224651266099",
+        "timestamp": 1793287228470
+      },
+      {
+        "executionId": "7c1a2999-1994-49b8-8645-c1dabaddd5fb",
+        "chatSessionId": "sess_8b074fe2-43ec-4aff-b7e3-224651266099",
+        "timestamp": 1793287384378
+      }
+    ],
+    "66.1 Implementar encoder multipart determinístico/testável com boundary seguro, CRLF, textos UTF-8 e `Content-Length` calculado sem carregar o JPEG inteiro em memória.": [
+      {
+        "executionId": "6f71ad16-4bfc-4903-a514-ce81f69680ec",
+        "chatSessionId": "sess_27906f37-a0d3-4443-a52b-329dbfa7523f",
+        "timestamp": 1793287668005
+      },
+      {
+        "executionId": "6f71ad16-4bfc-4903-a514-ce81f69680ec",
+        "chatSessionId": "sess_27906f37-a0d3-4443-a52b-329dbfa7523f",
+        "timestamp": 1793287889421
+      }
+    ],
+    "66.2 Mapear somente `idempotencyKey`, latitude, longitude, confidence, defectClass, detectedAt, speedKmh opcional e arquivo `image` com filename genérico e `Content-Type: image/jpeg`.": [
+      {
+        "executionId": "9be91608-351e-4160-8c5a-eae66f8eb0af",
+        "chatSessionId": "sess_0bed787e-8182-41e4-88d1-94e50cae0029",
+        "timestamp": 1793288002688
+      },
+      {
+        "executionId": "9be91608-351e-4160-8c5a-eae66f8eb0af",
+        "chatSessionId": "sess_0bed787e-8182-41e4-88d1-94e50cae0029",
+        "timestamp": 1793288176976
+      }
+    ],
+    "66.3 Preservar representação persistida em retries: mesma chave, dados e bytes; incluir velocidade zero, omitir velocidade nula e proibir `highway`, `km`, `source`, `accuracyMeters`, digest, sequência e estado de retry.": [
+      {
+        "executionId": "c3a4f1f8-c38a-48e6-9ef5-6ace4d01699b",
+        "chatSessionId": "sess_378f8a64-362b-4b6b-a56c-8729266a6734",
+        "timestamp": 1793288210259
+      },
+      {
+        "executionId": "c3a4f1f8-c38a-48e6-9ef5-6ace4d01699b",
+        "chatSessionId": "sess_378f8a64-362b-4b6b-a56c-8729266a6734",
+        "timestamp": 1793288407375
+      }
+    ],
+    "66.4 Revalidar tamanho máximo de 2 MiB, MIME e metadados antes do socket; falha de imagem/montagem conserva a ocorrência e retorna erro local sanitizado.": [
+      {
+        "executionId": "48616688-3142-4004-a5c6-0ad44d133e1a",
+        "chatSessionId": "sess_91fd31c2-a40c-41f0-b01d-a50a981304b1",
+        "timestamp": 1793288436305
+      },
+      {
+        "executionId": "48616688-3142-4004-a5c6-0ad44d133e1a",
+        "chatSessionId": "sess_91fd31c2-a40c-41f0-b01d-a50a981304b1",
+        "timestamp": 1793288864931
+      }
+    ],
+    "66.5 Cobrir bytes/delimitadores, nomes das partes, tipos, campos obrigatórios/opcionais, omissões, `Content-Length`, chunks de imagem e estabilidade lógica entre tentativas.": [
+      {
+        "executionId": "f7915d93-595b-4db3-856d-8cda37a40b4b",
+        "chatSessionId": "sess_9510d0cf-f225-4da8-9d7e-31a9bdd4eec2",
+        "timestamp": 1793288919112
+      },
+      {
+        "executionId": "f7915d93-595b-4db3-856d-8cda37a40b4b",
+        "chatSessionId": "sess_9510d0cf-f225-4da8-9d7e-31a9bdd4eec2",
+        "timestamp": 1793289047762
+      }
+    ],
+    "67.1 Implementar adaptador `package:http` com `StreamedRequest`/`IOClient` restrito à infraestrutura E4 e injeção de cliente para testes; manter `DiagnosticHttpClient` E0 intacto.": [
+      {
+        "executionId": "3b4bd17f-c072-4bd5-a45c-a2efeb0c40d4",
+        "chatSessionId": "sess_8a3634da-c269-450d-949a-0e9b1f5802ad",
+        "timestamp": 1793289709066
+      },
+      {
+        "executionId": "3b4bd17f-c072-4bd5-a45c-a2efeb0c40d4",
+        "chatSessionId": "sess_8a3634da-c269-450d-949a-0e9b1f5802ad",
+        "timestamp": 1793289960880
+      }
+    ],
+    "67.2 Construir exatamente `POST {BASE_URL}/api/v1/occurrences` e `Authorization: ApiKey {DEVICE_API_KEY}`; proibir `Bearer`, `X-API-Key`, cookies e redirects.": [
+      {
+        "executionId": "9b813662-71f8-4697-a766-bcab07f0c899",
+        "chatSessionId": "sess_4c5bdcb0-67d3-44b5-ae40-b72e6f1a0f1f",
+        "timestamp": 1793290027966
+      },
+      {
+        "executionId": "9b813662-71f8-4697-a766-bcab07f0c899",
+        "chatSessionId": "sess_4c5bdcb0-67d3-44b5-ae40-b72e6f1a0f1f",
+        "timestamp": 1793290268387
+      }
+    ],
+    "67.3 Aplicar conexão de 10 s, tentativa até headers de 45 s, corpo descartado até 64 KiB/5 s, um upload por vez, TLS padrão e exceção HTTP somente `localhost:3000`/debug já protegida por E3.": [
+      {
+        "executionId": "31df9977-a09e-43db-8b89-6ced66033827",
+        "chatSessionId": "sess_f8236cf9-e311-4298-8f2b-f68f1658db8d",
+        "timestamp": 1793290300631
+      },
+      {
+        "executionId": "31df9977-a09e-43db-8b89-6ced66033827",
+        "chatSessionId": "sess_f8236cf9-e311-4298-8f2b-f68f1658db8d",
+        "timestamp": 1793290490361
+      }
+    ],
+    "67.4 Diferenciar resposta com status, rede/DNS/socket/TLS, timeout antes dos headers, cancelamento e falha local; depois dos headers, preservar o status mesmo se corpo/cancelamento falhar.": [
+      {
+        "executionId": "96597eba-c7c7-4d46-b080-2e44e91e0ce9",
+        "chatSessionId": "sess_50b06f7c-66db-4ebe-b9aa-725deb975cdb",
+        "timestamp": 1793290797827
+      },
+      {
+        "executionId": "96597eba-c7c7-4d46-b080-2e44e91e0ce9",
+        "chatSessionId": "sess_50b06f7c-66db-4ebe-b9aa-725deb975cdb",
+        "timestamp": 1793291061480
+      }
+    ],
+    "67.5 Implementar cancelamento idempotente e liberação de referências da credencial sem alegar zeroização da memória gerenciada; impedir header/URL/body/request em logs e erros.": [
+      {
+        "executionId": "4a9ca422-64fd-42a0-8459-57f2e09faa2c",
+        "chatSessionId": "sess_71f3ed5a-83bb-443e-8bad-45a5b1f2f2ae",
+        "timestamp": 1793291085704
+      },
+      {
+        "executionId": "4a9ca422-64fd-42a0-8459-57f2e09faa2c",
+        "chatSessionId": "sess_71f3ed5a-83bb-443e-8bad-45a5b1f2f2ae",
+        "timestamp": 1793291341251
+      }
+    ],
+    "67.6 Cobrir cliente fake e servidor HTTP local controlado para endpoint, método, auth exata, multipart transmitido, matriz de status, redirect, timeout, corpo lento/grande, rede e cancelamento.": [
+      {
+        "executionId": "0b0c4cf4-70c2-417e-85c7-a2c871835adb",
+        "chatSessionId": "sess_114cf06f-c761-4e23-a62f-4215c4996d88",
+        "timestamp": 1793291372277
+      },
+      {
+        "executionId": "5a8faa88-e8be-4577-ac86-f55081868e01",
+        "chatSessionId": "sess_c0d8b9d4-466d-446c-9c27-db38408272d3",
+        "timestamp": 1793310766687
+      },
+      {
+        "executionId": "5a8faa88-e8be-4577-ac86-f55081868e01",
+        "chatSessionId": "sess_c0d8b9d4-466d-446c-9c27-db38408272d3",
+        "timestamp": 1793311113509
+      }
+    ],
+    "68.1 Implementar `OccurrenceDeliveryCoordinator` single-flight com notificações coalescidas e seleção estritamente FIFO, sem manter a região serial do banco durante HTTP.": [
+      {
+        "executionId": "187077e3-5637-4dac-bbce-ba834d842fbd",
+        "chatSessionId": "sess_b3fb2a89-bd9d-426b-a211-b119616d5f12",
+        "timestamp": 1793312689169
+      },
+      {
+        "executionId": "187077e3-5637-4dac-bbce-ba834d842fbd",
+        "chatSessionId": "sess_b3fb2a89-bd9d-426b-a211-b119616d5f12",
+        "timestamp": 1793312911399
+      }
+    ],
+    "68.2 Priorizar limpeza definitiva pendente antes de configuração, pausa ou backoff; fila vazia fica ociosa e configuração ausente não abre imagem/socket.": [
+      {
+        "executionId": "4bbfbc2c-6a82-4b54-aec2-8204658f9c5c",
+        "chatSessionId": "sess_021191de-deaa-43ba-9b38-6fb20b0ea786",
+        "timestamp": 1793313120241
+      },
+      {
+        "executionId": "4bbfbc2c-6a82-4b54-aec2-8204658f9c5c",
+        "chatSessionId": "sess_021191de-deaa-43ba-9b38-6fb20b0ea786",
+        "timestamp": 1793313168471
+      }
+    ],
+    "68.3 Orquestrar snapshot coerente, integridade/stream do JPEG, envio e persistência da decisão; revalidar revisão imediatamente antes do socket.": [
+      {
+        "executionId": "3cccf86c-e2eb-4330-bcd8-2b5ec036eee4",
+        "chatSessionId": "sess_ba223a5d-000e-4f4c-8a2b-d0fb2c60bed2",
+        "timestamp": 1793313206051
+      },
+      {
+        "executionId": "3cccf86c-e2eb-4330-bcd8-2b5ec036eee4",
+        "chatSessionId": "sess_ba223a5d-000e-4f4c-8a2b-d0fb2c60bed2",
+        "timestamp": 1793313417427
+      }
+    ],
+    "68.4 Aplicar a matriz e emitir categorias técnicas fixas/sanitizadas: `200/201` sucesso, `400/409/413/415` descarte, `401/403` pausa, rede/timeout/`5xx` backoff, demais status pausa conservadora e falha de limpeza sem novo HTTP.": [
+      {
+        "executionId": "b2be03be-2f37-44b8-b543-eac42c962e73",
+        "chatSessionId": "sess_05400187-73e5-46ba-890a-a7f366190dd7",
+        "timestamp": 1793314143841
+      },
+      {
+        "executionId": "b2be03be-2f37-44b8-b543-eac42c962e73",
+        "chatSessionId": "sess_05400187-73e5-46ba-890a-a7f366190dd7",
+        "timestamp": 1793314362170
+      }
+    ],
+    "68.5 Impedir retry automático durante pausa/backoff; correção confirmada de URL/chave limpa persistentemente apenas pausas aplicáveis, e retry manual limpa somente pausas explícitas sem antecipar backoff remoto ou de limpeza.": [
+      {
+        "executionId": "c70d7ee6-7c90-455e-bfe4-e3964598a6e0",
+        "chatSessionId": "sess_2854558c-a069-4213-832d-f475dd8bdac4",
+        "timestamp": 1793314594215
+      },
+      {
+        "executionId": "c70d7ee6-7c90-455e-bfe4-e3964598a6e0",
+        "chatSessionId": "sess_2854558c-a069-4213-832d-f475dd8bdac4",
+        "timestamp": 1793314734607
+      }
+    ],
+    "68.6 Reagir a bootstrap, snapshot de nova pendência, timer vencido, mudança relevante de configuração e `resumed`; remoção de configuração publica `configurationRequired`, mudança operacional irrelevante preserva pausa, e saída do primeiro plano cancela timer/transporte sem perder item.": [
+      {
+        "executionId": "5a0c2767-956f-48d8-9dde-3dc8e5ad7b62",
+        "chatSessionId": "sess_d390b30c-6ce7-43fa-bdec-7c01f0bc4b60",
+        "timestamp": 1793314802551
+      },
+      {
+        "executionId": "5a0c2767-956f-48d8-9dde-3dc8e5ad7b62",
+        "chatSessionId": "sess_d390b30c-6ce7-43fa-bdec-7c01f0bc4b60",
+        "timestamp": 1793315133057
+      }
+    ],
+    "68.7 Cobrir concorrência de eventos, uma tentativa ativa, persistência durante upload, FIFO, idempotência após cancelamento/crash, categorias de log sem dados proibidos, pausas/restarts, retomada por correção/manual, progressão até teto e ausência de busy loop.": [
+      {
+        "executionId": "484ff708-0106-4e5c-8920-8b6e30f8f166",
+        "chatSessionId": "sess_867aca99-b228-473a-9ecf-439128d9869f",
+        "timestamp": 1793315477005
+      },
+      {
+        "executionId": "484ff708-0106-4e5c-8920-8b6e30f8f166",
+        "chatSessionId": "sess_867aca99-b228-473a-9ecf-439128d9869f",
+        "timestamp": 1793315662884
+      }
+    ],
+    "69.1 Compor uma única instância do coordenador, fila E4, image store, snapshot de configuração, transporte, logger/sink técnico, relógio e timer; disponibilizar somente projeção/ações mínimas ao `OperationController`.": [
+      {
+        "executionId": "30286d74-b3af-4dd8-af56-8fa3ec6de772",
+        "chatSessionId": "sess_4fe2bebc-0fe2-4040-aa9d-71d8841b1077",
+        "timestamp": 1793315763993
+      },
+      {
+        "executionId": "30286d74-b3af-4dd8-af56-8fa3ec6de772",
+        "chatSessionId": "sess_4fe2bebc-0fe2-4040-aa9d-71d8841b1077",
+        "timestamp": 1793316392211
+      }
+    ],
+    "70.1 Executar testes integrados de fila v2 + configuração + encoder + transporte fake + coordenador + UI, incluindo múltiplas pendências e todos os estados definitivos/recuperáveis.": [
+      {
+        "executionId": "ea7b026f-a07e-41e0-a29f-5c6b34272ebc",
+        "chatSessionId": "sess_e5455023-86ae-4260-8fea-e5c366c4e050",
+        "timestamp": 1793317138324
+      },
+      {
+        "executionId": "ea7b026f-a07e-41e0-a29f-5c6b34272ebc",
+        "chatSessionId": "sess_e5455023-86ae-4260-8fea-e5c366c4e050",
+        "timestamp": 1793317697090
+      }
+    ],
+    "73.1 Confirmar a disponibilidade de URL de teste acessível, API key válida de dispositivo de teste e meio de verificar recebimento no back-end. Se qualquer insumo faltar, registrar exatamente `Validation Gate E4 não executado`, preservar o gate de desenvolvimento e parar neste ramo sem executar 73.2–74.8.": [
+      {
+        "executionId": "fcebac71-ca8f-4b9c-802c-99903cb6888d",
+        "chatSessionId": "sess_677809a9-600c-4783-a092-7b0d15c42a25",
+        "timestamp": 1793327475985
+      },
+      {
+        "executionId": "fcebac71-ca8f-4b9c-802c-99903cb6888d",
+        "chatSessionId": "sess_677809a9-600c-4783-a092-7b0d15c42a25",
+        "timestamp": 1793327500751
+      }
+    ],
+    "73.4 Validar ausência de URL/chave: ocorrência permanece na fila, painel orienta configuração, captura continua e nenhum request é aberto.": [
+      {
+        "executionId": "7d48a650-ef54-4c89-aa82-55097b99062b",
+        "chatSessionId": "sess_f3d885c4-53df-4972-8f9d-a0ce0ac31a16",
+        "timestamp": 1793328036156
+      },
+      {
+        "executionId": "7d48a650-ef54-4c89-aa82-55097b99062b",
+        "chatSessionId": "sess_f3d885c4-53df-4972-8f9d-a0ce0ac31a16",
+        "timestamp": 1793328191778
+      }
+    ],
+    "73.6 Executar repetição idempotente controlada com a mesma chave e comprovar ausência de duplicação indevida, sem expor UUID, chave, coordenada, imagem, URL completa ou body na evidência.": [
+      {
+        "executionId": "51fdc441-4f9c-42e1-b3a5-71b627b87faf",
+        "chatSessionId": "sess_bab9567c-d33b-4d48-a941-386fdfec163d",
+        "timestamp": 1793329014482
+      },
+      {
+        "executionId": "3a92cf2d-5db7-487a-8005-2d95c81bc811",
+        "chatSessionId": "sess_bab9567c-d33b-4d48-a941-386fdfec163d",
+        "timestamp": 1793329202301
+      },
+      {
+        "executionId": "3a92cf2d-5db7-487a-8005-2d95c81bc811",
+        "chatSessionId": "sess_bab9567c-d33b-4d48-a941-386fdfec163d",
+        "timestamp": 1793329235329
+      }
+    ],
+    "73.7 Verificar, quando controlavelmente disponível, falha temporária/backoff, pausa por autenticação/acesso ou resposta inesperada e retomada; classificar cenário indisponível como não executado, nunca como aprovado presumido.": [
+      {
+        "executionId": "2a37860d-6a49-42bf-a47d-1d382b2d6835",
+        "chatSessionId": "sess_bab9567c-d33b-4d48-a941-386fdfec163d",
+        "timestamp": 1793329259494
+      },
+      {
+        "executionId": "2a37860d-6a49-42bf-a47d-1d382b2d6835",
+        "chatSessionId": "sess_bab9567c-d33b-4d48-a941-386fdfec163d",
+        "timestamp": 1793329316534
+      }
+    ],
+    "73.8 Confirmar redução da contagem e remoção do JPEG somente após decisão definitiva, force-stop/reabertura sem perda e responsividade durante upload.": [
+      {
+        "executionId": "7d384ce1-5f8a-4cda-8f2b-ecb8a52ec145",
+        "chatSessionId": "sess_71ed28ae-2ac4-4ff1-a681-49b07f2c8661",
+        "timestamp": 1793329367582
+      }
+    ],
+    "73.9 Regressar Operação → Configurações → Operação e Operação → Diagnóstico → Operação, confirmando ausência de recursos/coordenadores duplicados e preservação E0–E3.": [
+      {
+        "executionId": "63b86bcd-c2f4-4c34-b7e3-14f43a30710c",
+        "chatSessionId": "sess_71ed28ae-2ac4-4ff1-a681-49b07f2c8661",
+        "timestamp": 1793330045276
       }
     ]
   }

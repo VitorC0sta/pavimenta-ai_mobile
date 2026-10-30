@@ -97,6 +97,11 @@ abstract interface class PersistentOccurrenceQueue {
 
   Future<List<ReconstructedPendingOccurrence>> listPending();
 
+  /// Returns the durable last-accepted reference used to restore the cooldown,
+  /// or `null` when nothing was ever accepted. It remains available after the
+  /// last pending occurrence has been removed.
+  Future<AcceptedOccurrenceAnchor?> readAcceptedAnchor();
+
   Future<int> countPending();
 
   Future<QueueRemovalResult> removeInternal(String idempotencyKey);

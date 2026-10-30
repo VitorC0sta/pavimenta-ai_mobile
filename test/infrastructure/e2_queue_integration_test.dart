@@ -11,6 +11,7 @@ import 'package:pavimenta_ai_mobile/infrastructure/durable_image_store.dart';
 import 'package:pavimenta_ai_mobile/infrastructure/image_artifacts.dart';
 import 'package:pavimenta_ai_mobile/infrastructure/persistent_occurrence_queue.dart';
 import 'package:pavimenta_ai_mobile/infrastructure/queue_database.dart';
+import 'package:pavimenta_ai_mobile/infrastructure/queue_delivery_schema.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
@@ -171,6 +172,111 @@ BEGIN SELECT RAISE(ABORT, 'injected insert failure'); END
       expect(record.image.sha256, sha256.convert(bytes).toString());
       expect(
           await _queueArtifacts(sandbox), <String>[record.image.relativeName]);
+    });
+  });
+
+  // **Validates: Requirements RF-09.1–4, RF-12.9–11, RNF-05, RNF-06.9–11**
+  group('task 64.3 last-accept anchor', () {
+    test(
+        'moves with each new accept, survives removing the last pending '
+        'occurrence, and is restored after reopening an empty queue', () async {
+      final queue = openQueue();
+      addTearDown(queue.close);
+      await queue.bootstrap();
+      expect(await queue.readAcceptedAnchor(), isNull);
+
+      const firstKey = '123e4567-e89b-42d3-a456-426614174000';
+      const secondKey = '223e4567-e89b-42d3-a456-426614174000';
+      await queue.persist(
+        _occurrence(
+          key: firstKey,
+          detectedAt: DateTime.utc(2025, 1, 2, 3, 4, 5),
+          bytes: _jpeg(width: 5, height: 5, red: 1),
+          width: 5,
+          height: 5,
+        ),
+      );
+      final first = await queue.readAcceptedAnchor();
+      expect(first?.queueSequence, 1);
+      expect(first?.detectedAtIso8601, '2025-01-02T03:04:05.000Z');
+      expect(first?.latitude, -23.5505);
+      expect(first?.longitude, -46.6333);
+
+      // An equivalent repeat is not a new accept and must not move the anchor.
+      await queue.persist(
+        _occurrence(
+          key: firstKey,
+          detectedAt: DateTime.utc(2025, 1, 2, 3, 4, 5),
+          bytes: _jpeg(width: 5, height: 5, red: 1),
+          width: 5,
+          height: 5,
+        ),
+      );
+      expect((await queue.readAcceptedAnchor())?.queueSequence, 1);
+
+      await queue.persist(
+        _occurrence(
+          key: secondKey,
+          detectedAt: DateTime.utc(2025, 1, 2, 3, 9, 5),
+          bytes: _jpeg(width: 6, height: 6, red: 2),
+          width: 6,
+          height: 6,
+        ),
+      );
+      final second = await queue.readAcceptedAnchor();
+      expect(second?.queueSequence, 2);
+      expect(second?.detectedAtIso8601, '2025-01-02T03:09:05.000Z');
+
+      expect(
+          await queue.removeInternal(firstKey), isA<QueueOccurrenceRemoved>());
+      expect(
+        await queue.removeInternal(secondKey),
+        isA<QueueOccurrenceRemoved>(),
+      );
+      expect(await queue.countPending(), 0);
+      expect((await queue.readAcceptedAnchor())?.queueSequence, 2);
+
+      await queue.close();
+      final reopened = openQueue();
+      addTearDown(reopened.close);
+      final snapshot = await reopened.bootstrap();
+      final restored = await reopened.readAcceptedAnchor();
+
+      expect(snapshot.health, QueueHealth.ready);
+      expect(snapshot.pendingCount, 0);
+      expect(restored?.queueSequence, 2);
+      expect(restored?.detectedAtIso8601, '2025-01-02T03:09:05.000Z');
+      expect(restored?.latitude, -23.5505);
+      expect(restored?.longitude, -46.6333);
+    });
+
+    test('rolls back the accepted row when the anchor update fails', () async {
+      final database = await openDatabase();
+      await database.database.execute('''
+CREATE TRIGGER reject_anchor_write
+BEFORE INSERT ON $e4AcceptedAnchorTable
+BEGIN SELECT RAISE(ABORT, 'injected anchor failure'); END
+''');
+      await database.close();
+
+      final queue = openQueue();
+      addTearDown(queue.close);
+      await queue.bootstrap();
+
+      final result = await queue.persist(
+        _occurrence(
+          key: '423e4567-e89b-42d3-a456-426614174000',
+          detectedAt: DateTime.utc(2025, 1, 2, 3, 4, 5),
+          bytes: _jpeg(width: 7, height: 7, red: 3),
+          width: 7,
+          height: 7,
+        ),
+      );
+
+      expect(result, isA<OccurrenceTransactionalFailure>());
+      expect(await queue.countPending(), 0);
+      expect(await queue.readAcceptedAnchor(), isNull);
+      expect(await _queueArtifacts(sandbox), isEmpty);
     });
   });
 }

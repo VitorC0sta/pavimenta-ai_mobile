@@ -1,14 +1,18 @@
 import 'dart:async';
 
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 
+import 'application/delivery/operation_delivery_port.dart'
+    show DeliveryLifecyclePort;
 import 'application/e1_ports.dart';
 import 'application/e2_persistence_ports.dart';
 import 'application/e3_storage_ports.dart';
 import 'application/post_candidate_processor.dart';
 import 'candidate/manual_candidate_source.dart';
 import 'candidate/occurrence_candidate_source.dart';
+import 'domain/configuration_validators.dart';
 import 'domain/cooldown_policy.dart';
 import 'domain/distance_calculator.dart';
 import 'domain/operational_configuration.dart';
@@ -79,6 +83,21 @@ Future<void> main() async {
   final camera = OperationalCamera(imageStore: imageStore);
   final location = OperationalLocation();
   const clock = SystemClock();
+  // One delivery graph for the whole process, built over the one E2 queue. It
+  // does not exist when the local queue could not be created.
+  final coordinatedQueue = queueRuntime.coordinatedQueue;
+  final delivery = coordinatedQueue == null
+      ? null
+      : DeliveryComposition.create(
+          queue: coordinatedQueue,
+          configurationRepository: configurationRepository,
+          credentialStore: credentialStore,
+          buildVariant: kDebugMode
+              ? ConfigurationBuildVariant.debug
+              : ConfigurationBuildVariant.release,
+          clock: clock,
+          logSink: kDebugMode ? debugPrint : null,
+        );
   const uuidGenerator = UuidV4Generator();
   const distanceCalculator = HaversineDistanceCalculator();
   const screenAwake = WakelockPlusScreenAwake();
@@ -107,6 +126,7 @@ Future<void> main() async {
     appSettings: const OperationalAppSettings(),
     configurationRepository: configurationRepository,
     credentialStore: credentialStore,
+    delivery: delivery?.operationDelivery,
   );
 
   runApp(
@@ -116,7 +136,10 @@ Future<void> main() async {
       settingsPageBuilder: (context) => _SettingsSession(
         configurationRepository: configurationRepository,
         credentialStore: credentialStore,
+        deliveryChange: delivery?.configurationChangeGuard,
       ),
+      deliveryLifecycle: delivery?.lifecycle,
+      disposeResources: delivery?.dispose,
     ),
   );
 }
@@ -135,7 +158,11 @@ Future<_QueueRuntime> _createQueueRuntime() async {
   try {
     final imageStore = await PrivateDurableImageStore.create();
     final queue = CoordinatedPersistentOccurrenceQueue(imageStore: imageStore);
-    return _QueueRuntime(queue: queue, acceptancePort: queue);
+    return _QueueRuntime(
+      queue: queue,
+      acceptancePort: queue,
+      coordinatedQueue: queue,
+    );
   } catch (_) {
     const queue = UnavailablePersistentOccurrenceQueue();
     return const _QueueRuntime(queue: queue, acceptancePort: queue);
@@ -143,10 +170,17 @@ Future<_QueueRuntime> _createQueueRuntime() async {
 }
 
 final class _QueueRuntime {
-  const _QueueRuntime({required this.queue, required this.acceptancePort});
+  const _QueueRuntime({
+    required this.queue,
+    required this.acceptancePort,
+    this.coordinatedQueue,
+  });
 
   final PersistentOccurrenceQueue queue;
   final OccurrenceAcceptancePort acceptancePort;
+
+  /// The one durable queue, or `null` when only the unavailable stand-in exists.
+  final CoordinatedPersistentOccurrenceQueue? coordinatedQueue;
 }
 
 typedef DiagnosticPageBuilder = Widget Function(
@@ -162,6 +196,8 @@ class PavimentaAiMobileApp<TPreview extends Object> extends StatefulWidget {
     required this.previewBuilder,
     this.diagnosticPageBuilder,
     this.settingsPageBuilder,
+    this.deliveryLifecycle,
+    this.disposeResources,
     super.key,
   });
 
@@ -170,15 +206,54 @@ class PavimentaAiMobileApp<TPreview extends Object> extends StatefulWidget {
   final DiagnosticPageBuilder? diagnosticPageBuilder;
   final SettingsPageBuilder? settingsPageBuilder;
 
+  /// Global lifecycle entry of the one delivery, or `null` when none is
+  /// composed. The shell forwards `resumed` and every other state to it
+  /// regardless of the visible route.
+  final DeliveryLifecyclePort? deliveryLifecycle;
+
+  /// Releases process-wide resources owned by the composition root (the
+  /// delivery graph) when the application shell is disposed. Idempotent.
+  final Future<void> Function()? disposeResources;
+
   @override
   State<PavimentaAiMobileApp<TPreview>> createState() =>
       _PavimentaAiMobileAppState<TPreview>();
 }
 
 class _PavimentaAiMobileAppState<TPreview extends Object>
-    extends State<PavimentaAiMobileApp<TPreview>> {
+    extends State<PavimentaAiMobileApp<TPreview>> with WidgetsBindingObserver {
   bool _diagnosticNavigationInProgress = false;
   bool _settingsNavigationInProgress = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // The delivery starts allowed to run; a start outside `resumed` stops it.
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    if (lifecycle != null && lifecycle != AppLifecycleState.resumed) {
+      _forwardLifecycleToDelivery(lifecycle);
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _forwardLifecycleToDelivery(state);
+  }
+
+  /// Delivery follows only the global `resumed` state. It does not wait for
+  /// the camera, GPS, wake lock or Diagnostic transitions of the controller.
+  void _forwardLifecycleToDelivery(AppLifecycleState state) {
+    final delivery = widget.deliveryLifecycle;
+    if (delivery == null) {
+      return;
+    }
+    if (state == AppLifecycleState.resumed) {
+      delivery.onAppResumed();
+    } else {
+      unawaited(delivery.onAppLeftForeground());
+    }
+  }
 
   Future<void> _openDiagnostic(BuildContext context) async {
     if (_diagnosticNavigationInProgress || !mounted) {
@@ -275,7 +350,12 @@ class _PavimentaAiMobileAppState<TPreview extends Object>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     widget.operationController.dispose();
+    final disposeResources = widget.disposeResources;
+    if (disposeResources != null) {
+      unawaited(disposeResources());
+    }
     super.dispose();
   }
 
@@ -300,10 +380,12 @@ class _SettingsSession extends StatefulWidget {
   const _SettingsSession({
     required this.configurationRepository,
     required this.credentialStore,
+    this.deliveryChange,
   });
 
   final OperationalConfigurationRepository configurationRepository;
   final DeviceCredentialStatusPort credentialStore;
+  final ConfigurationChangeGuard? deliveryChange;
 
   @override
   State<_SettingsSession> createState() => _SettingsSessionState();
@@ -313,6 +395,7 @@ class _SettingsSessionState extends State<_SettingsSession> {
   late final SettingsController _controller = SettingsController(
     configurationRepository: widget.configurationRepository,
     credentialStore: widget.credentialStore,
+    deliveryChange: widget.deliveryChange,
   );
 
   @override

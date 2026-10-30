@@ -143,9 +143,28 @@ void main() {
 
   // **Validates: Requirements RF-12.9, RF-12.11, RNF-03.5, RNF-05.4,
   // RNF-06.2, RNF-06.10–11**
-  test('E2 removal remains internal with no functional production caller', () {
+  test('E2 removal remains internal with E4 as its single production caller',
+      () {
     const contractPath = 'lib/application/e2_persistence_ports.dart';
     const queuePath = 'lib/infrastructure/persistent_occurrence_queue.dart';
+    // The E4 delivery port (design E4.4) is the single declared application
+    // contract through which the delivery coordinator completes local
+    // removal of an item whose definitive decision was recorded.
+    const deliveryQueuePortPath =
+        'lib/application/delivery/occurrence_delivery_queue_port.dart';
+    // The E4 persistent delivery queue (design E4.5) is the only production
+    // caller of E2 removal: once a definitive decision is recorded, it runs
+    // the E2 removal protocol (row and JPEG) for that item.
+    const deliveryQueuePath =
+        'lib/infrastructure/delivery/persistent_delivery_queue.dart';
+    const deliveryCoordinatorPath =
+        'lib/application/delivery/occurrence_delivery_coordinator.dart';
+    const deliveryResultSymbols = <String>{
+      'QueueRemovalResult',
+      'QueueOccurrenceRemoved',
+      'QueueOccurrenceNotFound',
+      'QueueOccurrenceRemovalFailed',
+    };
     const removalSymbols = <String>{
       'removeInternal',
       'QueueRemovalResult',
@@ -162,22 +181,36 @@ void main() {
 
     expect(
       sources.keys.where((path) => sources[path]!.contains('removeInternal')),
-      unorderedEquals(<String>[contractPath, queuePath]),
-      reason:
-          'Only the E2 contract and queue implementation may know the removal API.',
+      unorderedEquals(<String>[contractPath, queuePath, deliveryQueuePath]),
+      reason: 'Only the E2 contract, the E2 queue implementation, and the E4 '
+          'persistent delivery queue (design E4.5) may know the removal API.',
     );
+    final removalCall = RegExp(r'\.\s*removeInternal\s*\(');
     expect(
-      RegExp(r'\.\s*removeInternal\s*\(').allMatches(sources.values.join('\n')),
-      isEmpty,
+      sources.keys.where((path) => removalCall.hasMatch(sources[path]!)),
+      unorderedEquals(<String>[deliveryQueuePath]),
       reason:
-          'No widget, button, route, controller, timer, worker, or service may call E2 removal.',
+          'The E4 persistent delivery queue (design E4.5) is the only allowed '
+          'caller of E2 removal; no widget, button, route, controller, timer, '
+          'worker, or service may call it.',
     );
 
     for (final entry in sources.entries) {
-      if (entry.key == contractPath || entry.key == queuePath) {
+      if (entry.key == contractPath ||
+          entry.key == queuePath ||
+          entry.key == deliveryQueuePortPath ||
+          entry.key == deliveryQueuePath) {
         continue;
       }
       for (final symbol in removalSymbols) {
+        // The delivery coordinator only interprets the result of the E4 port
+        // (`completePendingLocalRemoval`). It still cannot name the removal
+        // call or the mutation driver, and `removeInternal` stays confined by
+        // the assertions above.
+        if (entry.key == deliveryCoordinatorPath &&
+            deliveryResultSymbols.contains(symbol)) {
+          continue;
+        }
         expect(
           entry.value,
           isNot(contains(symbol)),

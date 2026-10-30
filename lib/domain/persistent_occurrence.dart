@@ -77,6 +77,25 @@ final class ReconstructedPendingOccurrence {
   PersistedImageProjection get image => record.image;
 }
 
+/// Durable reference of the last accepted occurrence, kept for the cooldown.
+///
+/// It survives the removal of every pending occurrence. It carries only the
+/// canonical operational values the cooldown rule needs, never image data or
+/// identifiers, and is not exposed by [QueueSnapshot].
+final class AcceptedOccurrenceAnchor {
+  const AcceptedOccurrenceAnchor({
+    required this.queueSequence,
+    required this.detectedAtIso8601,
+    required this.latitude,
+    required this.longitude,
+  });
+
+  final int queueSequence;
+  final String detectedAtIso8601;
+  final double latitude;
+  final double longitude;
+}
+
 /// Sanitized immutable state published to observers and presentation.
 ///
 /// It exposes only queue health and aggregate counts, never records, paths,

@@ -94,6 +94,7 @@ final class _ContractQueue implements PersistentOccurrenceQueue {
   final StreamController<QueueSnapshot> _snapshots =
       StreamController<QueueSnapshot>.broadcast(sync: true);
   final List<QueueRecordProjection> _records = <QueueRecordProjection>[];
+  AcceptedOccurrenceAnchor? _anchor;
   var _nextSequence = 1;
   var _closed = false;
 
@@ -121,6 +122,12 @@ final class _ContractQueue implements PersistentOccurrenceQueue {
       return OccurrenceAlreadyPersistedEquivalent(_snapshot());
     }
 
+    _anchor = AcceptedOccurrenceAnchor(
+      queueSequence: _nextSequence,
+      detectedAtIso8601: occurrence.detectedAtIso8601,
+      latitude: occurrence.latitude,
+      longitude: occurrence.longitude,
+    );
     _records.add(
       QueueRecordProjection(
         queueSequence: _nextSequence++,
@@ -154,6 +161,9 @@ final class _ContractQueue implements PersistentOccurrenceQueue {
       List<ReconstructedPendingOccurrence>.unmodifiable(
         _records.map(ReconstructedPendingOccurrence.new),
       );
+
+  @override
+  Future<AcceptedOccurrenceAnchor?> readAcceptedAnchor() async => _anchor;
 
   @override
   Future<int> countPending() async => _records.length;

@@ -2,9 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pavimenta_ai_mobile/application/delivery/occurrence_delivery_coordinator.dart'
+    show DeliveryManualRetryResult;
+import 'package:pavimenta_ai_mobile/application/delivery/operation_delivery_port.dart';
 import 'package:pavimenta_ai_mobile/application/e1_ports.dart';
 import 'package:pavimenta_ai_mobile/application/post_candidate_processor.dart';
 import 'package:pavimenta_ai_mobile/candidate/occurrence_candidate_source.dart';
+import 'package:pavimenta_ai_mobile/domain/delivery/delivery_presentation_state.dart';
 import 'package:pavimenta_ai_mobile/domain/in_memory_occurrence.dart';
 import 'package:pavimenta_ai_mobile/domain/location_snapshot.dart';
 import 'package:pavimenta_ai_mobile/domain/persistent_occurrence.dart';
@@ -547,6 +551,166 @@ void main() {
       expect(harness.screenAwake.calls, [true, false, true]);
     });
   });
+
+  group('OperationScreen delivery panel', () {
+    // **Validates: Requirements RF-05.1–7, RF-13.14–16, RNF-02**
+    testWidgets('titles the panel "Envio" and explains every delivery phase',
+        (tester) async {
+      final delivery = _FakeDelivery();
+      final harness = _ScreenHarness(delivery: delivery);
+      addTearDown(harness.controller.dispose);
+      await _pumpScreen(tester, harness.controller);
+
+      expect(find.text('Envio futuro'), findsNothing);
+      expect(find.text('Envio'), findsOneWidget);
+
+      for (final phase in DeliveryPhase.values) {
+        final presentation = DeliveryPresentationState(phase: phase);
+        delivery.emit(presentation);
+        await tester.pump();
+
+        expect(find.byKey(const Key('delivery-panel')), findsOneWidget);
+        expect(
+          tester.widget<Text>(find.byKey(const Key('delivery-message'))).data,
+          presentation.message,
+        );
+      }
+    });
+
+    // **Validates: Requirements RNF-02, RNF-05.5**
+    testWidgets('exposes only the closed message, status and retry label',
+        (tester) async {
+      final handle = tester.ensureSemantics();
+      final delivery = _FakeDelivery();
+      final harness = _ScreenHarness(delivery: delivery);
+      addTearDown(harness.controller.dispose);
+      await _pumpScreen(tester, harness.controller);
+
+      delivery.emit(
+        DeliveryPresentationState(
+          phase: DeliveryPhase.pausedUnexpected,
+          canRetry: true,
+        ),
+      );
+      await tester.pump();
+
+      final panel = find.byKey(const Key('delivery-panel'));
+      final rendered = tester
+          .widgetList<Text>(
+            find.descendant(of: panel, matching: find.byType(Text)),
+          )
+          .map((text) => text.data ?? '')
+          .join('|');
+      expect(
+        rendered,
+        'Envio|Resposta inesperada|'
+        'Resposta inesperada da API. Revise a configuração ou tente '
+        'novamente.|Tentar envio novamente',
+      );
+      expect(
+        find.bySemanticsLabel(
+          'Envio: Resposta inesperada. Resposta inesperada da API. Revise a '
+          'configuração ou tente novamente.',
+        ),
+        findsOneWidget,
+      );
+      handle.dispose();
+    });
+
+    // **Validates: Requirements RF-16.2, RF-16.4, RF-18.3**
+    testWidgets('offers retry only when the projection allows it',
+        (tester) async {
+      final delivery = _FakeDelivery();
+      final harness = _ScreenHarness(delivery: delivery);
+      addTearDown(harness.controller.dispose);
+      await _pumpScreen(tester, harness.controller);
+      final retry = find.byKey(const Key('retry-delivery-button'));
+
+      for (final phase in DeliveryPhase.values) {
+        final presentation = DeliveryPresentationState(
+          phase: phase,
+          canRetry: switch (phase) {
+            DeliveryPhase.ready ||
+            DeliveryPhase.pausedAuthentication ||
+            DeliveryPhase.pausedAccess ||
+            DeliveryPhase.pausedUnexpected ||
+            DeliveryPhase.pausedLocalFailure =>
+              true,
+            _ => false,
+          },
+        );
+        delivery.emit(presentation);
+        await tester.pump();
+        expect(retry, presentation.canRetry ? findsOneWidget : findsNothing);
+      }
+
+      delivery.emit(
+        DeliveryPresentationState(
+          phase: DeliveryPhase.pausedAccess,
+          canRetry: true,
+        ),
+      );
+      await tester.pump();
+      await tester.ensureVisible(retry);
+      await tester.tap(retry);
+      await tester.pump();
+
+      expect(delivery.retryCalls, 1);
+    });
+
+    // **Validates: Requirements RF-05.7, RF-13.15, RNF-04.2–3**
+    testWidgets(
+        'keeps manual registration enabled without configuration, while '
+        'sending, waiting, paused or cleaning', (tester) async {
+      final delivery = _FakeDelivery();
+      final harness = _ScreenHarness(delivery: delivery);
+      harness.makeReady();
+      addTearDown(harness.controller.dispose);
+      await _pumpScreen(tester, harness.controller);
+      final register = find.byKey(const Key('register-pothole-button'));
+
+      for (final phase in DeliveryPhase.values) {
+        if (phase == DeliveryPhase.queueUnavailable) {
+          continue;
+        }
+        delivery.emit(DeliveryPresentationState(phase: phase));
+        await tester.pump();
+        expect(harness.controller.state.canRegister, isTrue, reason: '$phase');
+        expect(tester.widget<ElevatedButton>(register).onPressed, isNotNull);
+      }
+    });
+  });
+}
+
+final class _FakeDelivery implements OperationDeliveryPort {
+  final StreamController<DeliveryPresentationState> _controller =
+      StreamController<DeliveryPresentationState>.broadcast();
+  DeliveryPresentationState _presentation =
+      DeliveryPresentationState(phase: DeliveryPhase.idle);
+  int retryCalls = 0;
+
+  void emit(DeliveryPresentationState state) {
+    _presentation = state;
+    _controller.add(state);
+  }
+
+  @override
+  DeliveryPresentationState get presentation => _presentation;
+
+  @override
+  Stream<DeliveryPresentationState> get presentations => _controller.stream;
+
+  @override
+  void start() {}
+
+  @override
+  void onQueueChanged() {}
+
+  @override
+  Future<DeliveryManualRetryResult> retryManually() async {
+    retryCalls++;
+    return DeliveryManualRetryResult.evaluationRequested;
+  }
 }
 
 final class _ControlledDiagnosticPage extends StatefulWidget {
@@ -614,6 +778,7 @@ final class _ScreenHarness {
   _ScreenHarness({
     PostCandidateProcessor<InMemoryOccurrence>? processor,
     OperationState? initialState,
+    OperationDeliveryPort? delivery,
   }) : processor = processor ??
             const _ImmediateProcessor(
               CandidateBlockedByCooldown(
@@ -628,6 +793,7 @@ final class _ScreenHarness {
       location: location,
       screenAwake: screenAwake,
       clock: clock,
+      delivery: delivery,
       initialState: initialState,
     );
   }

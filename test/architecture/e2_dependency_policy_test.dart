@@ -13,6 +13,8 @@ const _approvedHostedPins = <String, String>{
   'flutter_secure_storage': '9.2.4',
   'sqflite': '2.4.1',
   'crypto': '3.0.7',
+  // E4 transport dependency (task 62.4); the only direct addition over E3.
+  'http': '1.6.0',
   'glados': '1.1.7',
   'sqflite_common_ffi': '2.3.4+4',
 };
@@ -29,6 +31,7 @@ const _approvedMainDependencies = <String>{
   'flutter_secure_storage',
   'sqflite',
   'crypto',
+  'http',
 };
 
 const _approvedDevDependencies = <String>{

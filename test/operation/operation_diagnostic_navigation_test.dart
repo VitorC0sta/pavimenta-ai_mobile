@@ -1,10 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pavimenta_ai_mobile/application/delivery/occurrence_delivery_coordinator.dart'
+    show DeliveryManualRetryResult;
+import 'package:pavimenta_ai_mobile/application/delivery/operation_delivery_port.dart';
 import 'package:pavimenta_ai_mobile/application/e1_ports.dart';
 import 'package:pavimenta_ai_mobile/application/e3_storage_ports.dart';
 import 'package:pavimenta_ai_mobile/application/post_candidate_processor.dart';
 import 'package:pavimenta_ai_mobile/candidate/occurrence_candidate_source.dart';
 import 'package:pavimenta_ai_mobile/domain/cooldown_policy.dart';
+import 'package:pavimenta_ai_mobile/domain/delivery/delivery_presentation_state.dart';
 import 'package:pavimenta_ai_mobile/domain/in_memory_occurrence.dart';
 import 'package:pavimenta_ai_mobile/domain/location_snapshot.dart';
 import 'package:pavimenta_ai_mobile/domain/operational_configuration.dart';
@@ -276,6 +282,182 @@ void main() {
       }
     });
   });
+
+  group('Delivery across routes and lifecycle', () {
+    // **Validates: Requirements RF-16.2, RF-21.1–7, RNF-04.2–3, RNF-07.10**
+    testWidgets(
+        'keeps one delivery untouched by Settings and Diagnostic routes',
+        (tester) async {
+      final delivery = _LifecycleDelivery();
+      final harness = _NavigationHarness(delivery: delivery);
+      addTearDown(harness.dispose);
+
+      await tester.pumpWidget(
+        harness.buildApp(
+          settingsPageBuilder: (context) =>
+              const Scaffold(body: Text('Configurações E3')),
+        ),
+      );
+      await _settleRouteAndResources(tester);
+      expect(delivery.calls, isEmpty);
+      expect(find.byKey(const Key('delivery-panel')), findsOneWidget);
+
+      delivery.emit(DeliveryPresentationState(phase: DeliveryPhase.sending));
+      await tester.tap(find.byKey(const Key('open-settings-button')));
+      await _settleRouteAndResources(tester);
+      expect(find.text('Configurações E3'), findsOneWidget);
+      expect(harness.controller.state.deliveryPresentation?.phase,
+          DeliveryPhase.sending);
+      Navigator.of(tester.element(find.text('Configurações E3'))).pop();
+      await _settleRouteAndResources(tester);
+
+      await tester.tap(find.byKey(const Key('open-diagnostic-button')));
+      await _settleRouteAndResources(tester);
+      expect(harness.controller.state.deliveryPresentation?.phase,
+          DeliveryPhase.sending);
+      Navigator.of(tester.element(find.text('Diagnóstico sessão 1'))).pop();
+      await _settleRouteAndResources(tester);
+
+      // Neither route started, stopped, notified or retried the delivery, and
+      // the camera and GPS kept their own one-owner protocol.
+      expect(delivery.calls, isEmpty);
+      expect(harness.controller.state.deliveryPresentation?.phase,
+          DeliveryPhase.sending);
+      expect(harness.tracker.violations, isEmpty);
+      expect(harness.tracker.maxConcurrentCameraOwners, 1);
+      expect(harness.tracker.maxConcurrentLocationOwners, 1);
+    });
+
+    // **Validates: Requirements RF-13–18, RF-21–23, RNF-04.6, RNF-05**
+    testWidgets(
+        'Operation→Settings→Operation→Diagnostic→Operation keeps one resource '
+        'set, one delivery and the E0–E3 surface', (tester) async {
+      final delivery = _LifecycleDelivery();
+      final harness = _NavigationHarness(delivery: delivery);
+      addTearDown(harness.dispose);
+
+      await tester.pumpWidget(
+        harness.buildApp(
+          settingsPageBuilder: (context) =>
+              const Scaffold(body: Text('Configurações E3')),
+        ),
+      );
+      await _settleRouteAndResources(tester);
+
+      void expectE0ToE3Surface() {
+        for (final key in const [
+          'operation-screen',
+          'camera-panel',
+          'location-panel',
+          'session-panel',
+          'queue-panel',
+          'delivery-panel',
+          'register-pothole-button',
+          'manual-confirmation-label',
+          'open-settings-button',
+          'open-diagnostic-button',
+        ]) {
+          expect(find.byKey(Key(key)), findsOneWidget, reason: key);
+        }
+        expect(harness.controller.state.canRegister, isTrue);
+      }
+
+      expectE0ToE3Surface();
+
+      await tester.tap(find.byKey(const Key('open-settings-button')));
+      await _settleRouteAndResources(tester);
+      Navigator.of(tester.element(find.text('Configurações E3'))).pop();
+      await _settleRouteAndResources(tester);
+      expectE0ToE3Surface();
+      expect(harness.tracker.activeCameraOwner, 'operation-2');
+
+      await tester.tap(find.byKey(const Key('open-diagnostic-button')));
+      await _settleRouteAndResources(tester);
+      Navigator.of(tester.element(find.text('Diagnóstico sessão 1'))).pop();
+      await _settleRouteAndResources(tester);
+      expectE0ToE3Surface();
+
+      expect(harness.tracker.activeCameraOwner, 'operation-3');
+      expect(harness.tracker.activeLocationOwner, 'operation-3');
+      expect(harness.operationCamera.acquireCount, 3);
+      expect(harness.operationCamera.releaseCount, 2);
+      expect(harness.operationLocation.streamStartCount, 3);
+      expect(harness.operationLocation.streamStopCount, 2);
+      expect(harness.diagnosticBuildCount, 1);
+      expect(harness.diagnosticDisposeCount, 1);
+      expect(harness.tracker.maxConcurrentCameraOwners, 1);
+      expect(harness.tracker.maxConcurrentLocationOwners, 1);
+      expect(harness.tracker.maxConcurrentLocationStreams, 1);
+      expect(harness.tracker.violations, isEmpty);
+      expect(harness.screenAwake.calls, [true, false, true, false, true]);
+      expect(delivery.calls, isEmpty);
+    });
+
+    testWidgets('forwards only the global lifecycle, even outside Operation',
+        (tester) async {
+      final delivery = _LifecycleDelivery();
+      final harness = _NavigationHarness(delivery: delivery);
+      addTearDown(harness.dispose);
+
+      await tester.pumpWidget(
+        harness.buildApp(
+          settingsPageBuilder: (context) =>
+              const Scaffold(body: Text('Configurações E3')),
+        ),
+      );
+      await _settleRouteAndResources(tester);
+      await tester.tap(find.byKey(const Key('open-settings-button')));
+      await _settleRouteAndResources(tester);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await _settleRouteAndResources(tester);
+      expect(delivery.calls, ['left', 'left', 'left']);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await _settleRouteAndResources(tester);
+
+      expect(delivery.calls.last, 'resumed');
+      expect(delivery.calls.where((call) => call == 'resumed'), hasLength(1));
+      expect(delivery.calls.where((call) => call == 'start'), isEmpty);
+      expect(harness.tracker.violations, isEmpty);
+    });
+
+    testWidgets(
+        'stops observing and leaves the delivery to its owner on dispose',
+        (tester) async {
+      final delivery = _LifecycleDelivery();
+      final harness = _NavigationHarness(delivery: delivery);
+      addTearDown(harness.dispose);
+
+      await tester.pumpWidget(harness.buildApp());
+      await _settleRouteAndResources(tester);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+
+      expect(harness.disposeResourcesCount, 1);
+      final before = List<String>.of(delivery.calls);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+
+      expect(delivery.calls, before);
+
+      // A reopened shell observes the same delivery again, once.
+      final reopened = _NavigationHarness(delivery: delivery);
+      addTearDown(reopened.dispose);
+      await tester.pumpWidget(reopened.buildApp());
+      await _settleRouteAndResources(tester);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await _settleRouteAndResources(tester);
+
+      expect(delivery.calls.skip(before.length), ['left', 'resumed']);
+    });
+  });
 }
 
 Future<void> _settleRouteAndResources(WidgetTester tester) async {
@@ -287,6 +469,7 @@ final class _NavigationHarness {
     OperationalConfigurationRepository? configurationRepository,
     DeviceCredentialStatusPort? credentialStore,
     CooldownConfigurationUpdater? cooldownConfigurationUpdater,
+    this.delivery,
   }) {
     operationCamera = _TrackedOperationCamera(tracker);
     operationLocation = _TrackedOperationLocation(
@@ -304,9 +487,12 @@ final class _NavigationHarness {
       configurationRepository: configurationRepository,
       credentialStore: credentialStore,
       cooldownConfigurationUpdater: cooldownConfigurationUpdater,
+      delivery: delivery,
     );
   }
 
+  final _LifecycleDelivery? delivery;
+  var disposeResourcesCount = 0;
   final _ResourceOwnershipTracker tracker = _ResourceOwnershipTracker();
   late final _TrackedOperationCamera operationCamera;
   late final _TrackedOperationLocation operationLocation;
@@ -320,6 +506,8 @@ final class _NavigationHarness {
       operationController: controller,
       previewBuilder: (context, preview) => Text(preview),
       settingsPageBuilder: settingsPageBuilder,
+      deliveryLifecycle: delivery,
+      disposeResources: () async => disposeResourcesCount++,
       diagnosticPageBuilder: (context, disposal) {
         final session = ++diagnosticBuildCount;
         return _TrackedDiagnosticSession(
@@ -335,6 +523,45 @@ final class _NavigationHarness {
   void dispose() {
     controller.dispose();
   }
+}
+
+/// One delivery shared by Operation and the shell, counting every entry.
+final class _LifecycleDelivery
+    implements OperationDeliveryPort, DeliveryLifecyclePort {
+  final StreamController<DeliveryPresentationState> _controller =
+      StreamController<DeliveryPresentationState>.broadcast();
+  DeliveryPresentationState _presentation =
+      DeliveryPresentationState(phase: DeliveryPhase.idle);
+  final List<String> calls = <String>[];
+
+  void emit(DeliveryPresentationState state) {
+    _presentation = state;
+    _controller.add(state);
+  }
+
+  @override
+  DeliveryPresentationState get presentation => _presentation;
+
+  @override
+  Stream<DeliveryPresentationState> get presentations => _controller.stream;
+
+  @override
+  void start() => calls.add('start');
+
+  @override
+  void onQueueChanged() => calls.add('queue');
+
+  @override
+  Future<DeliveryManualRetryResult> retryManually() async {
+    calls.add('retry');
+    return DeliveryManualRetryResult.evaluationRequested;
+  }
+
+  @override
+  void onAppResumed() => calls.add('resumed');
+
+  @override
+  Future<void> onAppLeftForeground() async => calls.add('left');
 }
 
 final class _TrackedDiagnosticSession extends StatefulWidget {

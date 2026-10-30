@@ -2,12 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
+import '../application/delivery/occurrence_delivery_coordinator.dart'
+    show DeliveryManualRetryResult;
+import '../application/delivery/operation_delivery_port.dart';
 import '../application/e1_ports.dart';
 import '../application/e2_persistence_ports.dart';
 import '../application/e3_storage_ports.dart';
 import '../application/post_candidate_processor.dart';
 import '../candidate/occurrence_candidate_source.dart';
 import '../domain/cooldown_policy.dart';
+import '../domain/delivery/delivery_presentation_state.dart';
 import '../domain/in_memory_occurrence.dart';
 import '../domain/location_snapshot.dart';
 import '../domain/persistent_occurrence.dart';
@@ -30,6 +34,7 @@ final class OperationController<TPreview extends Object>
     AppSettingsPort? appSettings,
     OperationalConfigurationRepository? configurationRepository,
     DeviceCredentialStatusPort? credentialStore,
+    OperationDeliveryPort? delivery,
     OperationState? initialState,
   })  : _candidateSource = candidateSource,
         _postCandidateProcessor = postCandidateProcessor,
@@ -43,6 +48,7 @@ final class OperationController<TPreview extends Object>
         _appSettings = appSettings ?? const _UnavailableAppSettings(),
         _configurationRepository = configurationRepository,
         _credentialStore = credentialStore,
+        _delivery = delivery,
         _state = initialState ??
             OperationState.initial(
               queueSnapshot: queue == null
@@ -51,7 +57,7 @@ final class OperationController<TPreview extends Object>
                       pendingCount: 0,
                     )
                   : const QueueSnapshot.initializing(),
-            );
+            ).copyWith(deliveryPresentation: delivery?.presentation);
 
   final OccurrenceCandidateSource _candidateSource;
   final PostCandidateProcessor<InMemoryOccurrence> _postCandidateProcessor;
@@ -66,7 +72,14 @@ final class OperationController<TPreview extends Object>
   final OperationalConfigurationRepository? _configurationRepository;
   final DeviceCredentialStatusPort? _credentialStore;
 
+  /// Aggregate projection and minimal actions of the occurrence delivery. The
+  /// composition root owns the delivery; this controller never disposes it.
+  final OperationDeliveryPort? _delivery;
+
   OperationState _state;
+  StreamSubscription<DeliveryPresentationState>? _deliverySubscription;
+  Future<DeliveryManualRetryResult>? _deliveryRetry;
+  int _lastDeliveryPendingCount = 0;
   Future<void> _resourceTransitions = Future<void>.value();
   Future<void>? _queueBootstrap;
   Future<void>? _queueRetry;
@@ -182,8 +195,8 @@ final class OperationController<TPreview extends Object>
       try {
         snapshot = await queue.bootstrap();
         if (snapshot.isReady) {
-          final pending = await queue.listPending();
-          _cooldownRestorer?.restoreRecoveredPending(pending);
+          final anchor = await queue.readAcceptedAnchor();
+          _cooldownRestorer?.restoreAcceptedAnchor(anchor);
         }
       } catch (_) {
         snapshot = const QueueSnapshot(
@@ -193,11 +206,83 @@ final class OperationController<TPreview extends Object>
       }
       _queueBootstrapCompleted = true;
       if (!_disposed) {
-        _publish(
-          _state.withQueueSnapshot(_latestConfirmedQueueSnapshot ?? snapshot),
-        );
+        final confirmed = _latestConfirmedQueueSnapshot ?? snapshot;
+        _publish(_state.withQueueSnapshot(confirmed));
+        _startDeliveryAfterBootstrap(confirmed);
       }
     }();
+  }
+
+  /// Subscribes once to the aggregate delivery projection. The delivery itself
+  /// is owned by the composition root and is not touched by capture, camera,
+  /// GPS or the Diagnostic.
+  void _startDeliveryObservationIfNeeded() {
+    final delivery = _delivery;
+    if (delivery == null || _deliverySubscription != null) {
+      return;
+    }
+    _deliverySubscription = delivery.presentations.listen(_observeDelivery);
+    _observeDelivery(delivery.presentation);
+  }
+
+  void _observeDelivery(DeliveryPresentationState presentation) {
+    if (_disposed || _state.deliveryPresentation == presentation) {
+      return;
+    }
+    _publish(_state.copyWith(deliveryPresentation: presentation));
+  }
+
+  /// Allows delivery only once the local queue is confirmed fully usable. A
+  /// degraded or unavailable queue keeps delivery stopped.
+  void _startDeliveryAfterBootstrap(QueueSnapshot confirmed) {
+    _lastDeliveryPendingCount = confirmed.pendingCount;
+    if (confirmed.isReady) {
+      _delivery?.start();
+    }
+  }
+
+  /// Tells the delivery about a new pending item from a confirmed aggregate.
+  /// Removals and unchanged counts need no notification.
+  void _notifyDeliveryOfQueueSnapshot(QueueSnapshot snapshot) {
+    final previous = _lastDeliveryPendingCount;
+    _lastDeliveryPendingCount = snapshot.pendingCount;
+    if (snapshot.isReady && snapshot.pendingCount > previous) {
+      _delivery?.onQueueChanged();
+    }
+  }
+
+  /// Manual "try sending again", offered only while the projection allows it.
+  ///
+  /// It neither creates an occurrence, nor changes the credential, nor removes
+  /// an item, and it never touches camera, GPS or the Diagnostic. Concurrent
+  /// calls share one request.
+  Future<DeliveryManualRetryResult> retryDeliveryManually() {
+    final active = _deliveryRetry;
+    if (active != null) {
+      return active;
+    }
+    final delivery = _delivery;
+    if (_disposed || delivery == null || !_state.canRetryDelivery) {
+      return Future<DeliveryManualRetryResult>.value(
+        DeliveryManualRetryResult.notApplied,
+      );
+    }
+    final retry = () async {
+      try {
+        return await delivery.retryManually();
+      } catch (_) {
+        return DeliveryManualRetryResult.notApplied;
+      }
+    }();
+    _deliveryRetry = retry;
+    unawaited(
+      retry.whenComplete(() {
+        if (identical(_deliveryRetry, retry)) {
+          _deliveryRetry = null;
+        }
+      }),
+    );
+    return retry;
   }
 
   /// Applies only confirmed queue aggregates after bootstrap has restored
@@ -209,6 +294,7 @@ final class OperationController<TPreview extends Object>
     _latestConfirmedQueueSnapshot = snapshot;
     if (_queueBootstrapCompleted) {
       _publish(_state.withQueueSnapshot(snapshot));
+      _notifyDeliveryOfQueueSnapshot(snapshot);
     }
   }
 
@@ -223,6 +309,7 @@ final class OperationController<TPreview extends Object>
       return _resourceTransitions;
     }
     _startQueueBootstrapIfNeeded();
+    _startDeliveryObservationIfNeeded();
     unawaited(refreshSendingConfigurationStatus());
     if (_lifecycleStarted) {
       if (lifecycleState != null ||
@@ -403,8 +490,8 @@ final class OperationController<TPreview extends Object>
     try {
       snapshot = await queue.retryBootstrap();
       if (snapshot.isReady) {
-        final pending = await queue.listPending();
-        _cooldownRestorer?.restoreRecoveredPending(pending);
+        final anchor = await queue.readAcceptedAnchor();
+        _cooldownRestorer?.restoreAcceptedAnchor(anchor);
       }
     } catch (_) {
       snapshot = const QueueSnapshot(
@@ -419,6 +506,7 @@ final class OperationController<TPreview extends Object>
     if (!_disposed) {
       _latestConfirmedQueueSnapshot = snapshot;
       _publish(_state.withQueueSnapshot(snapshot));
+      _startDeliveryAfterBootstrap(snapshot);
     }
   }
 
@@ -1257,6 +1345,11 @@ final class OperationController<TPreview extends Object>
     _queueSnapshotSubscription = null;
     if (queueSnapshotSubscription != null) {
       unawaited(queueSnapshotSubscription.cancel());
+    }
+    final deliverySubscription = _deliverySubscription;
+    _deliverySubscription = null;
+    if (deliverySubscription != null) {
+      unawaited(deliverySubscription.cancel());
     }
     _enqueueResourceTransition(
       transitionGeneration: _generation,

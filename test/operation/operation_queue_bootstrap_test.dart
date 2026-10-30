@@ -60,9 +60,44 @@ void main() {
     ));
     await harness.controller.queueBootstrapSettled;
 
-    expect(restorer.recovered, <ReconstructedPendingOccurrence>[pending]);
+    expect(restorer.anchorRestoreCount, 1);
+    expect(restorer.restoredAnchor?.queueSequence, 7);
     expect(harness.controller.state.sessionOccurrenceCount, 0);
     expect(harness.controller.state.isQueueReady, isTrue);
+  });
+
+  // **Validates: Requirements RF-09.1–4, RF-12.3**
+  test('restores the cooldown from the anchor when the queue is empty',
+      () async {
+    final queue = _ControlledQueue(
+      anchor: AcceptedOccurrenceAnchor(
+        queueSequence: 12,
+        detectedAtIso8601: DateTime.utc(2025, 1, 1, 12).toIso8601String(),
+        latitude: -23.5505,
+        longitude: -46.6333,
+      ),
+    );
+    final cooldown = CooldownPolicy(distanceCalculator: _FixedDistance());
+    final harness = _Harness(queue: queue, cooldownRestorer: cooldown);
+    addTearDown(harness.dispose);
+
+    await harness.controller.startOperationalLifecycle();
+    queue.complete(const QueueSnapshot(
+      health: QueueHealth.ready,
+      pendingCount: 0,
+    ));
+    await harness.controller.queueBootstrapSettled;
+
+    expect(harness.controller.state.pendingCount, 0);
+    expect(
+      cooldown
+          .evaluate(
+            DateTime.utc(2025, 1, 1, 12).add(const Duration(seconds: 1)),
+            const _Point(),
+          )
+          .isBlocked,
+      isTrue,
+    );
   });
 
   // **Validates: Requirements 03.6, 12.3, 12.5, 20.7**
@@ -265,13 +300,18 @@ final class _Harness {
 }
 
 final class _ControlledQueue implements PersistentOccurrenceQueue {
+  /// [anchor] defaults to the pending occurrence with the greatest sequence,
+  /// as the real v1 to v2 migration seeds it.
   _ControlledQueue({
     List<ReconstructedPendingOccurrence> pending =
         const <ReconstructedPendingOccurrence>[],
-  }) : _pending = List<ReconstructedPendingOccurrence>.unmodifiable(pending);
+    AcceptedOccurrenceAnchor? anchor,
+  })  : _pending = List<ReconstructedPendingOccurrence>.unmodifiable(pending),
+        _anchor = anchor ?? _greatestSequenceAnchor(pending);
 
   final Completer<QueueSnapshot> _bootstrap = Completer<QueueSnapshot>();
   final List<ReconstructedPendingOccurrence> _pending;
+  final AcceptedOccurrenceAnchor? _anchor;
 
   @override
   Stream<QueueSnapshot> get snapshots => const Stream<QueueSnapshot>.empty();
@@ -293,6 +333,9 @@ final class _ControlledQueue implements PersistentOccurrenceQueue {
   Future<List<ReconstructedPendingOccurrence>> listPending() async => _pending;
 
   @override
+  Future<AcceptedOccurrenceAnchor?> readAcceptedAnchor() async => _anchor;
+
+  @override
   Future<int> countPending() async => 0;
 
   @override
@@ -303,15 +346,41 @@ final class _ControlledQueue implements PersistentOccurrenceQueue {
   Future<void> close() async {}
 }
 
+AcceptedOccurrenceAnchor? _greatestSequenceAnchor(
+  List<ReconstructedPendingOccurrence> pending,
+) {
+  ReconstructedPendingOccurrence? greatest;
+  for (final occurrence in pending) {
+    if (greatest == null || occurrence.queueSequence > greatest.queueSequence) {
+      greatest = occurrence;
+    }
+  }
+  if (greatest == null) {
+    return null;
+  }
+  return AcceptedOccurrenceAnchor(
+    queueSequence: greatest.queueSequence,
+    detectedAtIso8601: greatest.detectedAtIso8601,
+    latitude: greatest.latitude,
+    longitude: greatest.longitude,
+  );
+}
+
 final class _RecordingCooldownRestorer implements CooldownReferenceRestorer {
-  List<ReconstructedPendingOccurrence> recovered =
-      const <ReconstructedPendingOccurrence>[];
+  AcceptedOccurrenceAnchor? restoredAnchor;
+  var anchorRestoreCount = 0;
 
   @override
   void restoreRecoveredPending(
     Iterable<ReconstructedPendingOccurrence> pending,
   ) {
-    recovered = List<ReconstructedPendingOccurrence>.unmodifiable(pending);
+    fail('The cooldown must be restored from the anchor, not pending rows.');
+  }
+
+  @override
+  void restoreAcceptedAnchor(AcceptedOccurrenceAnchor? anchor) {
+    restoredAnchor = anchor;
+    anchorRestoreCount++;
   }
 }
 

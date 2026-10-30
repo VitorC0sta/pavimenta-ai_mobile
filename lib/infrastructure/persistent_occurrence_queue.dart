@@ -8,6 +8,7 @@ import '../domain/persistent_occurrence.dart';
 import 'durable_image_store.dart';
 import 'image_artifacts.dart';
 import 'queue_database.dart';
+import 'queue_delivery_schema.dart';
 import 'queue_record_mapper.dart';
 
 typedef QueueDatabaseOpener = Future<QueueDatabase> Function();
@@ -49,6 +50,12 @@ final class InitialQueueBootstrapRecovery implements QueueBootstrapRecovery {
     QueueDatabase database,
     DurableImageStore imageStore,
   ) async {
+    // Orphan delivery state is dropped first and idempotently, so it can never
+    // be read as state of an occurrence that no longer exists.
+    await removeOrphanDeliveryStates(
+      database.database,
+      pendingTable: e2QueueTable,
+    );
     final rows = await database.database.query(
       e2QueueTable,
       orderBy: QueueRecordColumns.queueSequence,
@@ -232,7 +239,7 @@ final class CrashConsistentQueueMutationDriver implements QueueMutationDriver {
         // a rename operation that rejects replacement before this insert.
         final image = await staging!.publishWithoutOverwrite();
         publishedImage = image;
-        await transaction.insert(
+        final queueSequence = await transaction.insert(
           e2QueueTable,
           mapper.toInsertMap(
             QueueRecordProjection(
@@ -248,6 +255,15 @@ final class CrashConsistentQueueMutationDriver implements QueueMutationDriver {
               image: image,
             ),
           ),
+        );
+        // Same transaction as the insert: the cooldown anchor and the
+        // accepted row commit or roll back together.
+        await recordAcceptedAnchor(
+          transaction,
+          queueSequence: queueSequence,
+          detectedAtIso8601: occurrence.detectedAtIso8601,
+          latitude: occurrence.latitude,
+          longitude: occurrence.longitude,
         );
       });
       transactionCommitted = !existingKeyFoundInTransaction;
@@ -608,6 +624,12 @@ final class UnavailablePersistentOccurrenceQueue
       );
 
   @override
+  Future<AcceptedOccurrenceAnchor?> readAcceptedAnchor() =>
+      Future<AcceptedOccurrenceAnchor?>.error(
+        const QueueUnavailableException(),
+      );
+
+  @override
   Future<int> countPending() => Future<int>.error(
         const QueueUnavailableException(),
       );
@@ -851,6 +873,23 @@ final class CoordinatedPersistentOccurrenceQueue
   }
 
   @override
+  Future<AcceptedOccurrenceAnchor?> readAcceptedAnchor() async {
+    await _requireOperationalBootstrap();
+    try {
+      return await _singleWriter.run<AcceptedOccurrenceAnchor?>(() async {
+        _throwIfClosing();
+        return loadAcceptedAnchor(_requireDatabase().database);
+      });
+    } catch (error) {
+      _logFailure('anchor', error);
+      if (error is StateError) {
+        rethrow;
+      }
+      throw const QueueUnavailableException();
+    }
+  }
+
+  @override
   Future<int> countPending() async {
     await _requireOperationalBootstrap();
     try {
@@ -911,6 +950,25 @@ final class CoordinatedPersistentOccurrenceQueue
       _logFailure('remove', error);
       return const QueueOccurrenceRemovalFailed();
     }
+  }
+
+  /// Runs [action] inside the same single-writer region used by bootstrap,
+  /// recovery, persistence, reads, and removal.
+  ///
+  /// It waits for a confirmed operational bootstrap first. The handles passed
+  /// to [action] must not escape it: callers return immutable projections (or
+  /// a lazily consumed stream) so the region is never held during network use.
+  /// Throws [QueueUnavailableException] while the queue is unavailable and
+  /// [StateError] once it is closing or closed.
+  Future<T> runInSerialRegion<T>(
+    Future<T> Function(QueueDatabase database, DurableImageStore imageStore)
+        action,
+  ) async {
+    await _requireOperationalBootstrap();
+    return _singleWriter.run<T>(() async {
+      _throwIfClosing();
+      return action(_requireDatabase(), _imageStore);
+    });
   }
 
   @override

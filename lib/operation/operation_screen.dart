@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../domain/delivery/delivery_presentation_state.dart';
 import '../domain/location_snapshot.dart';
 import '../domain/persistent_occurrence.dart';
 import 'operation_controller.dart';
@@ -126,6 +127,9 @@ final class _OperationScreenState<TPreview extends Object>
                   },
                   onRetryQueue: () {
                     unawaited(controller.retryQueueBootstrap());
+                  },
+                  onRetryDelivery: () {
+                    unawaited(controller.retryDeliveryManually());
                   },
                   onRetryLocation: () {
                     unawaited(controller.retryLocationReadiness());
@@ -419,6 +423,7 @@ final class _OperationDetails extends StatelessWidget {
     required this.state,
     required this.onRegister,
     required this.onRetryQueue,
+    required this.onRetryDelivery,
     required this.onRetryLocation,
     required this.onOpenLocationSettings,
   });
@@ -426,6 +431,7 @@ final class _OperationDetails extends StatelessWidget {
   final OperationState state;
   final VoidCallback onRegister;
   final VoidCallback onRetryQueue;
+  final VoidCallback onRetryDelivery;
   final VoidCallback onRetryLocation;
   final VoidCallback onOpenLocationSettings;
 
@@ -445,7 +451,7 @@ final class _OperationDetails extends StatelessWidget {
         const SizedBox(height: 12),
         _QueuePanel(state: state, onRetry: onRetryQueue),
         const SizedBox(height: 12),
-        _SendingConfigurationPanel(state: state),
+        _SendingConfigurationPanel(state: state, onRetry: onRetryDelivery),
         const SizedBox(height: 12),
         _ProcessingPanel(state: state),
         if (lifecycleMessage != null) ...[
@@ -747,13 +753,32 @@ final class _QueuePanel extends StatelessWidget {
   }
 }
 
+/// "Envio" panel (design E4.11).
+///
+/// With a composed delivery it shows only the closed message of the aggregate
+/// phase and, when a new evaluation can be requested, the retry action. It
+/// never renders a destination, credential, response, identifier, coordinate,
+/// occurrence time, sequence, file name, path or digest. Without a composed
+/// delivery it falls back to the sanitized configuration readiness.
 final class _SendingConfigurationPanel extends StatelessWidget {
-  const _SendingConfigurationPanel({required this.state});
+  const _SendingConfigurationPanel({
+    required this.state,
+    required this.onRetry,
+  });
 
   final OperationState state;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
+    final presentation = state.deliveryPresentation;
+    if (presentation != null) {
+      return _DeliveryPanel(
+        state: state,
+        presentation: presentation,
+        onRetry: onRetry,
+      );
+    }
     final isReady = state.sendingConfigurationStatus ==
         OperationSendingConfigurationStatus.ready;
     final label = isReady
@@ -765,7 +790,7 @@ final class _SendingConfigurationPanel extends StatelessWidget {
 
     return _Panel(
       key: const Key('sending-configuration-panel'),
-      title: 'Envio futuro',
+      title: 'Envio',
       status: isReady ? 'Pronta' : 'Pendente',
       statusKind: isReady ? _VisualStatus.success : _VisualStatus.neutral,
       child: Semantics(
@@ -792,6 +817,61 @@ final class _SendingConfigurationPanel extends StatelessWidget {
     );
   }
 }
+
+final class _DeliveryPanel extends StatelessWidget {
+  const _DeliveryPanel({
+    required this.state,
+    required this.presentation,
+    required this.onRetry,
+  });
+
+  final OperationState state;
+  final DeliveryPresentationState presentation;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final status = presentation.statusLabel;
+    final message = presentation.message;
+    return _Panel(
+      key: const Key('delivery-panel'),
+      title: 'Envio',
+      status: status,
+      statusKind: _deliveryStatusKind(presentation.tone),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            container: true,
+            excludeSemantics: true,
+            liveRegion: true,
+            label: 'Envio: $status. $message',
+            child: Text(
+              message,
+              key: const Key('delivery-message'),
+              softWrap: true,
+            ),
+          ),
+          if (state.canRetryDelivery) ...[
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              key: const Key('retry-delivery-button'),
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Tentar envio novamente'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+_VisualStatus _deliveryStatusKind(DeliveryTone tone) => switch (tone) {
+      DeliveryTone.neutral => _VisualStatus.neutral,
+      DeliveryTone.active => _VisualStatus.active,
+      DeliveryTone.attention => _VisualStatus.error,
+    };
 
 final class _ProcessingPanel extends StatelessWidget {
   const _ProcessingPanel({required this.state});

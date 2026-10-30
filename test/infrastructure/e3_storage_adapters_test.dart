@@ -1,5 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pavimenta_ai_mobile/application/delivery/device_credential_read_port.dart';
 import 'package:pavimenta_ai_mobile/application/e3_storage_ports.dart';
+import 'package:pavimenta_ai_mobile/domain/delivery/delivery_configuration.dart';
+import 'package:pavimenta_ai_mobile/domain/delivery/non_printable_secret.dart';
 import 'package:pavimenta_ai_mobile/infrastructure/device_credential_store.dart';
 import 'package:pavimenta_ai_mobile/infrastructure/shared_preferences_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -82,7 +87,82 @@ void main() {
         throwsA(isA<StateError>()),
       );
     });
+
+    // **Validates: Requirements RF-13.6–8,22–24, RF-16.6–8, RNF-02.4–6, RNF-03.10**
+    test('readForDelivery returns the stored credential as a redacted secret',
+        () async {
+      final secret = _submittedCredential(1);
+      final backend = _FakeSecureCredentialBackend(storedValue: secret);
+      final DeviceCredentialReadPort store =
+          DeviceCredentialStore(backend: backend);
+
+      final result = await store.readForDelivery();
+
+      expect(result, isA<CredentialAvailable>());
+      expect((result as CredentialAvailable).secret.reveal(), secret);
+      expect(backend.readCount, 1);
+      _expectNoLeak(result, secret);
+      _expectNoLeak(result.secret, secret);
+    });
+
+    test('readForDelivery reports a missing credential', () async {
+      final store = DeviceCredentialStore(
+        backend: _FakeSecureCredentialBackend(),
+      );
+
+      final result = await store.readForDelivery();
+
+      expect(result, isA<CredentialMissing>());
+    });
+
+    test('readForDelivery reports invalid formats without the value', () async {
+      for (final stored in <String>[
+        '',
+        'semseparador',
+        '.segredo',
+        'prefixo.',
+        ' .segredo',
+        'prefixo. ',
+      ]) {
+        final store = DeviceCredentialStore(
+          backend: _FakeSecureCredentialBackend(storedValue: stored),
+        );
+
+        final result = await store.readForDelivery();
+
+        expect(result, isA<CredentialInvalidFormat>(), reason: 'for "$stored"');
+        if (stored.isNotEmpty) {
+          _expectNoLeak(result, stored);
+        }
+      }
+    });
+
+    test('readForDelivery maps backend failures without raw exceptions',
+        () async {
+      final secret = _submittedCredential(2);
+      final store = DeviceCredentialStore(
+        backend: _FakeSecureCredentialBackend(
+          storedValue: secret,
+          failReads: true,
+        ),
+      );
+
+      final result = await store.readForDelivery();
+
+      expect(result, isA<CredentialStorageUnavailable>());
+      _expectNoLeak(result, secret);
+      _expectNoLeak(result, 'StateError');
+    });
   });
+}
+
+/// Asserts that no implicit rendering of [object] exposes [fragment].
+void _expectNoLeak(Object object, String fragment) {
+  expect(object.toString(), isNot(contains(fragment)));
+  expect('$object', isNot(contains(fragment)));
+  if (object is NonPrintableSecret) {
+    expect(jsonEncode(object), isNot(contains(fragment)));
+  }
 }
 
 String _submittedCredential(int suffix) => String.fromCharCodes(<int>[
@@ -107,12 +187,17 @@ final class _FakeSecureCredentialBackend implements SecureCredentialBackend {
     this.failContains = false,
     this.failWrites = false,
     this.failDeletes = false,
-  });
+    this.failReads = false,
+    String? storedValue,
+  })  : _storedValue = storedValue,
+        _hasCredential = storedValue != null;
 
   final bool failContains;
   final bool failWrites;
   final bool failDeletes;
-  bool _hasCredential = false;
+  final bool failReads;
+  String? _storedValue;
+  bool _hasCredential;
   bool receivedValue = false;
   int readCount = 0;
   int writeCount = 0;
@@ -131,7 +216,10 @@ final class _FakeSecureCredentialBackend implements SecureCredentialBackend {
   @override
   Future<String?> read(String key) async {
     readCount++;
-    return null;
+    if (failReads) {
+      throw StateError('secure storage unavailable $_storedValue');
+    }
+    return _storedValue;
   }
 
   @override
@@ -141,6 +229,7 @@ final class _FakeSecureCredentialBackend implements SecureCredentialBackend {
     }
     deleteCount++;
     lastDeleteKey = key;
+    _storedValue = null;
     _hasCredential = false;
   }
 
@@ -152,6 +241,7 @@ final class _FakeSecureCredentialBackend implements SecureCredentialBackend {
     writeCount++;
     lastWriteKey = key;
     receivedValue = value.isNotEmpty;
+    _storedValue = value;
     _hasCredential = true;
   }
 }

@@ -63,6 +63,11 @@ abstract interface class CooldownReferenceRestorer {
   void restoreRecoveredPending(
     Iterable<ReconstructedPendingOccurrence> pending,
   );
+
+  /// Restores the reference from the durable last-accept anchor, which outlives
+  /// the removal of the last pending occurrence. A `null` anchor means nothing
+  /// was ever accepted.
+  void restoreAcceptedAnchor(AcceptedOccurrenceAnchor? anchor);
 }
 
 /// Updates cooldown thresholds without changing the accepted reference.
@@ -225,6 +230,24 @@ final class CooldownPolicy
       point: ImmutableGeoPoint(
         latitude: lastAccepted.latitude,
         longitude: lastAccepted.longitude,
+      ),
+    );
+  }
+
+  /// Restores the last durable acceptance from the queue anchor, even when no
+  /// pending occurrence remains.
+  @override
+  void restoreAcceptedAnchor(AcceptedOccurrenceAnchor? anchor) {
+    if (anchor == null) {
+      _lastCreated = null;
+      return;
+    }
+
+    _lastCreated = _CooldownReference(
+      detectedAt: DateTime.parse(anchor.detectedAtIso8601),
+      point: ImmutableGeoPoint(
+        latitude: anchor.latitude,
+        longitude: anchor.longitude,
       ),
     );
   }

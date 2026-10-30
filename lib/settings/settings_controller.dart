@@ -16,6 +16,7 @@ final class SettingsController extends ChangeNotifier {
     required OperationalConfigurationRepository configurationRepository,
     required DeviceCredentialStatusPort credentialStore,
     ConfigurationBuildVariant? buildVariant,
+    ConfigurationChangeGuard? deliveryChange,
   })  : _configurationRepository = configurationRepository,
         _credentialStore = credentialStore,
         _saveParameters = SaveOperationalParameters(
@@ -24,12 +25,15 @@ final class SettingsController extends ChangeNotifier {
               (kDebugMode
                   ? ConfigurationBuildVariant.debug
                   : ConfigurationBuildVariant.release),
+          deliveryChange: deliveryChange,
         ),
         _saveCredential = SaveOrReplaceDeviceCredential(
           credentialStore: credentialStore,
+          deliveryChange: deliveryChange,
         ),
         _removeCredential = RemoveDeviceCredential(
           credentialStore: credentialStore,
+          deliveryChange: deliveryChange,
         ),
         _state = SettingsState.loading();
 

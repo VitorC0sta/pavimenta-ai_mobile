@@ -2,7 +2,10 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pavimenta_ai_mobile/domain/persistent_occurrence.dart';
+import 'package:pavimenta_ai_mobile/infrastructure/durable_image_store.dart';
+import 'package:pavimenta_ai_mobile/infrastructure/persistent_occurrence_queue.dart';
 import 'package:pavimenta_ai_mobile/infrastructure/queue_database.dart';
+import 'package:pavimenta_ai_mobile/infrastructure/queue_delivery_schema.dart';
 import 'package:pavimenta_ai_mobile/infrastructure/queue_record_mapper.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -288,7 +291,7 @@ void main() {
       final futureDatabase = await databaseFactoryFfi.openDatabase(
         databasePath,
         options: OpenDatabaseOptions(
-          version: 2,
+          version: 3,
           onCreate: (database, version) async {
             await database.execute(
               'CREATE TABLE futureMarker (value TEXT NOT NULL)',
@@ -315,7 +318,7 @@ void main() {
         options: OpenDatabaseOptions(singleInstance: false),
       );
       addTearDown(verificationDatabase.close);
-      expect(await verificationDatabase.getVersion(), 2);
+      expect(await verificationDatabase.getVersion(), 3);
       expect(
         await verificationDatabase.query('futureMarker'),
         <Map<String, Object?>>[
@@ -328,6 +331,298 @@ void main() {
       expect(tables.map((row) => row['name']), isNot(contains(e2QueueTable)));
     });
   });
+
+  group('E4 additive schema v2', () {
+    // **Validates: Requirements RF-12.9–11, RF-15.10–12, RNF-05, RNF-06.2–5**
+    test('creates the E4 structures on a fresh database', () async {
+      queueDatabase = await QueueDatabase.open(
+        factory: databaseFactoryFfi,
+        path: databasePath,
+      );
+      final database = queueDatabase!.database;
+
+      expect(await database.getVersion(), 2);
+      expect(await _tableNames(database), containsAll(_e4Tables));
+      expect(await _count(database, e4AcceptedAnchorTable), 0);
+      expect(await _count(database, e4DeliveryControlTable), 0);
+      expect(
+        (await database.rawQuery('PRAGMA table_info($e2QueueTable)'))
+            .map((row) => row['name']),
+        QueueRecordColumns.all,
+      );
+    });
+
+    // **Validates: Requirements RF-09, RF-12.9–11, RNF-05, RNF-06.9–11**
+    test(
+        'migrates a real v1 database keeping rows and JPEGs and seeding '
+        'the anchor with the greatest sequence', () async {
+      final jpeg = File('${sandbox.path}${Platform.pathSeparator}opaque_a.jpg');
+      await jpeg.writeAsBytes(<int>[0xff, 0xd8, 0xff, 0xd9]);
+      final v1 = await databaseFactoryFfi.openDatabase(
+        databasePath,
+        options: OpenDatabaseOptions(
+          version: 1,
+          onCreate: (database, version) => createE2QueueSchemaV1(database),
+          singleInstance: false,
+        ),
+      );
+      await v1.insert(
+        e2QueueTable,
+        mapper.toInsertMap(_record(imageRelativeName: 'opaque_a.jpg')),
+      );
+      await v1.insert(
+        e2QueueTable,
+        mapper.toInsertMap(
+          _record(
+            idempotencyKey: '123e4567-e89b-42d3-a456-426614174001',
+            detectedAtIso8601: '2025-01-02T03:05:00.000Z',
+            imageRelativeName: 'opaque_b.jpg',
+          ),
+        ),
+      );
+      final rowsBefore = await v1.query(
+        e2QueueTable,
+        orderBy: QueueRecordColumns.queueSequence,
+      );
+      await v1.close();
+
+      queueDatabase = await QueueDatabase.open(
+        factory: databaseFactoryFfi,
+        path: databasePath,
+      );
+      final database = queueDatabase!.database;
+
+      expect(await database.getVersion(), 2);
+      expect(await _tableNames(database), containsAll(_e4Tables));
+      expect(
+        await database.query(
+          e2QueueTable,
+          orderBy: QueueRecordColumns.queueSequence,
+        ),
+        rowsBefore,
+      );
+      expect(await jpeg.exists(), isTrue);
+      expect(await _count(database, e4DeliveryStateTable), 0);
+      expect(await _count(database, e4DeliveryControlTable), 0);
+      expect(
+        await database.query(e4AcceptedAnchorTable),
+        <Map<String, Object?>>[
+          <String, Object?>{
+            'singleton_id': 1,
+            'queue_sequence': 2,
+            'detected_at': '2025-01-02T03:05:00.000Z',
+            'latitude': -23.55052,
+            'longitude': -46.633308,
+          },
+        ],
+      );
+
+      // The anchor outlives its source row.
+      await database.delete(e2QueueTable);
+      expect(await _count(database, e4AcceptedAnchorTable), 1);
+    });
+
+    // **Validates: Requirements RF-12.9–11, RNF-05**
+    test('migrating an empty v1 database leaves the anchor empty', () async {
+      final v1 = await databaseFactoryFfi.openDatabase(
+        databasePath,
+        options: OpenDatabaseOptions(
+          version: 1,
+          onCreate: (database, version) => createE2QueueSchemaV1(database),
+          singleInstance: false,
+        ),
+      );
+      await v1.close();
+
+      queueDatabase = await QueueDatabase.open(
+        factory: databaseFactoryFfi,
+        path: databasePath,
+      );
+
+      expect(await queueDatabase!.database.getVersion(), 2);
+      expect(await _count(queueDatabase!.database, e4AcceptedAnchorTable), 0);
+    });
+
+    // **Validates: Requirements RF-15.10–12, RF-16, RNF-06.2–5**
+    test('constrains the pause control and the singleton anchor', () async {
+      queueDatabase = await QueueDatabase.open(
+        factory: databaseFactoryFfi,
+        path: databasePath,
+      );
+      final database = queueDatabase!.database;
+
+      Future<void> insertControl(Map<String, Object?> values) =>
+          database.insert(e4DeliveryControlTable, <String, Object?>{
+            'singleton_id': 1,
+            'updated_at': '2025-01-02T03:04:05.000Z',
+            ...values,
+          });
+
+      await expectLater(
+        insertControl(<String, Object?>{'pause_reason': 'bogus'}),
+        throwsA(isA<DatabaseException>()),
+      );
+      await expectLater(
+        insertControl(<String, Object?>{
+          'pause_reason': 'access',
+          'unexpected_status': 418,
+        }),
+        throwsA(isA<DatabaseException>()),
+      );
+      await insertControl(<String, Object?>{
+        'pause_reason': 'unexpectedResponse',
+        'unexpected_status': 302,
+      });
+      await expectLater(
+        database.insert(e4DeliveryControlTable, <String, Object?>{
+          'singleton_id': 2,
+          'pause_reason': 'none',
+          'updated_at': '2025-01-02T03:04:05.000Z',
+        }),
+        throwsA(isA<DatabaseException>()),
+      );
+      await expectLater(
+        database.insert(e4AcceptedAnchorTable, <String, Object?>{
+          'singleton_id': 2,
+          'queue_sequence': 1,
+          'detected_at': '2025-01-02T03:04:05.000Z',
+          'latitude': 0.0,
+          'longitude': 0.0,
+        }),
+        throwsA(isA<DatabaseException>()),
+      );
+    });
+
+    // **Validates: Requirements RF-12.9–11, RNF-06.2–5**
+    test('enforces foreign keys on every open and cascades delivery state',
+        () async {
+      queueDatabase = await QueueDatabase.open(
+        factory: databaseFactoryFfi,
+        path: databasePath,
+      );
+      expect(
+        await queueDatabase!.database.rawQuery('PRAGMA foreign_keys'),
+        <Map<String, Object?>>[
+          <String, Object?>{'foreign_keys': 1},
+        ],
+      );
+      await queueDatabase!.close();
+      queueDatabase = await QueueDatabase.open(
+        factory: databaseFactoryFfi,
+        path: databasePath,
+      );
+      final database = queueDatabase!.database;
+      expect(
+        await database.rawQuery('PRAGMA foreign_keys'),
+        <Map<String, Object?>>[
+          <String, Object?>{'foreign_keys': 1},
+        ],
+      );
+      await expectLater(
+        database.insert(e4DeliveryStateTable, <String, Object?>{
+          'idempotency_key': '123e4567-e89b-42d3-a456-426614174000',
+          'attempt_count': 1,
+        }),
+        throwsA(isA<DatabaseException>()),
+      );
+      await database.insert(
+        e2QueueTable,
+        mapper.toInsertMap(_record(imageRelativeName: 'opaque_a.jpg')),
+      );
+      await database.insert(e4DeliveryStateTable, <String, Object?>{
+        'idempotency_key': '123e4567-e89b-42d3-a456-426614174000',
+        'attempt_count': 1,
+      });
+      expect(await database.rawQuery('PRAGMA foreign_key_check'), isEmpty);
+
+      await database.delete(e2QueueTable);
+
+      expect(await _count(database, e4DeliveryStateTable), 0);
+    });
+
+    // **Validates: Requirements RF-12.9–11, RNF-05, RNF-06.2–5**
+    test('removes only orphan delivery state, idempotently', () async {
+      queueDatabase = await QueueDatabase.open(
+        factory: databaseFactoryFfi,
+        path: databasePath,
+      );
+      final database = queueDatabase!.database;
+      const keptKey = '123e4567-e89b-42d3-a456-426614174000';
+      const orphanKey = '223e4567-e89b-42d3-a456-426614174000';
+      await database.insert(
+        e2QueueTable,
+        mapper.toInsertMap(_record(imageRelativeName: 'opaque_a.jpg')),
+      );
+      await database.insert(e4DeliveryStateTable, <String, Object?>{
+        'idempotency_key': keptKey,
+        'attempt_count': 2,
+      });
+      // Simulates a row left behind by a connection without enforcement.
+      await database.execute('PRAGMA foreign_keys = OFF');
+      await database.insert(e4DeliveryStateTable, <String, Object?>{
+        'idempotency_key': orphanKey,
+        'attempt_count': 1,
+      });
+      await database.execute('PRAGMA foreign_keys = ON');
+      final pendingBefore = await database.query(e2QueueTable);
+
+      expect(
+        await removeOrphanDeliveryStates(database, pendingTable: e2QueueTable),
+        1,
+      );
+      expect(
+        await removeOrphanDeliveryStates(database, pendingTable: e2QueueTable),
+        0,
+      );
+
+      final remaining = await database.query(e4DeliveryStateTable);
+      expect(remaining.map((row) => row['idempotency_key']), [keptKey]);
+      expect(remaining.single['attempt_count'], 2);
+      expect(await database.query(e2QueueTable), pendingBefore);
+    });
+
+    // **Validates: Requirements RF-12.9–11, RNF-05, RNF-06.9–11**
+    test('bootstrap recovery drops orphan delivery state and is repeatable',
+        () async {
+      queueDatabase = await QueueDatabase.open(
+        factory: databaseFactoryFfi,
+        path: databasePath,
+      );
+      final database = queueDatabase!.database;
+      await database.execute('PRAGMA foreign_keys = OFF');
+      await database.insert(e4DeliveryStateTable, <String, Object?>{
+        'idempotency_key': '223e4567-e89b-42d3-a456-426614174000',
+        'attempt_count': 1,
+      });
+      await database.execute('PRAGMA foreign_keys = ON');
+      final store = PrivateDurableImageStore.at(sandbox);
+
+      for (var run = 0; run < 2; run++) {
+        final result = await const InitialQueueBootstrapRecovery()
+            .recover(queueDatabase!, store);
+        expect(result.records, isEmpty);
+        expect(await _count(database, e4DeliveryStateTable), 0);
+      }
+    });
+  });
+}
+
+const List<String> _e4Tables = <String>[
+  e4DeliveryStateTable,
+  e4DeliveryControlTable,
+  e4AcceptedAnchorTable,
+];
+
+Future<List<Object?>> _tableNames(Database database) async {
+  final rows = await database.rawQuery(
+    "SELECT name FROM sqlite_master WHERE type = 'table'",
+  );
+  return rows.map((row) => row['name']).toList(growable: false);
+}
+
+Future<int> _count(Database database, String table) async {
+  final rows = await database.rawQuery('SELECT COUNT(*) AS c FROM $table');
+  return rows.single['c']! as int;
 }
 
 QueueRecordProjection _record({

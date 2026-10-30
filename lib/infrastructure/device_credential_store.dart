@@ -1,6 +1,10 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../application/delivery/device_credential_read_port.dart';
 import '../application/e3_storage_ports.dart';
+import '../domain/configuration_validators.dart';
+import '../domain/delivery/delivery_configuration.dart';
+import '../domain/delivery/non_printable_secret.dart';
 
 /// Minimal backend seam for the Android secure-storage plugin.
 ///
@@ -67,8 +71,26 @@ final class DeviceCredentialStore
   @override
   Future<bool> hasCredential() => _backend.containsKey(credentialKey);
 
+  /// Reads the credential only for the E4 boundary and classifies the outcome.
+  ///
+  /// Any backend failure maps to [CredentialStorageUnavailable]; the caught
+  /// object is discarded so neither it nor the value can reach a result.
   @override
-  Future<String?> readCredential() => _backend.read(credentialKey);
+  Future<CredentialReadResult> readForDelivery() async {
+    final String? stored;
+    try {
+      stored = await _backend.read(credentialKey);
+    } on Object {
+      return const CredentialStorageUnavailable();
+    }
+    if (stored == null) {
+      return const CredentialMissing();
+    }
+    if (!ConfigurationValidators.requiredCredential(stored).isValid) {
+      return const CredentialInvalidFormat();
+    }
+    return CredentialAvailable(NonPrintableSecret(stored));
+  }
 
   @override
   Future<void> removeCredential() => _backend.delete(credentialKey);

@@ -337,6 +337,9 @@ final class _RetryQueue implements PersistentOccurrenceQueue {
       const <ReconstructedPendingOccurrence>[];
 
   @override
+  Future<AcceptedOccurrenceAnchor?> readAcceptedAnchor() async => null;
+
+  @override
   Future<int> countPending() async => 0;
 
   @override

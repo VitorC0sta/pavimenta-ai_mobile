@@ -2,10 +2,13 @@ import 'dart:io';
 
 import 'package:sqflite/sqflite.dart';
 
+import 'queue_delivery_schema.dart';
 import 'queue_record_mapper.dart';
 
 const String e2QueueDatabaseName = 'e2_occurrence_queue_v1.db';
-const int e2QueueDatabaseVersion = 1;
+
+/// Schema v2 adds the E4 delivery structures; v1 stays the E2 layout.
+const int e2QueueDatabaseVersion = 2;
 const String e2QueueTable = 'pendingOccurrences';
 const int e2MaximumImageByteLength = 2 * 1024 * 1024;
 
@@ -22,6 +25,32 @@ final class UnsupportedQueueSchemaVersion implements Exception {
   @override
   String toString() =>
       'Unsupported queue schema version: found $found, supported $supported.';
+}
+
+/// Raised when SQLite does not report `PRAGMA foreign_keys` as active, so the
+/// delivery-state cascade could not be relied upon.
+final class QueueForeignKeysUnavailable implements Exception {
+  const QueueForeignKeysUnavailable();
+
+  @override
+  String toString() => 'SQLite foreign key enforcement is not active.';
+}
+
+/// Enables foreign key enforcement on [database] and validates that it is on.
+///
+/// SQLite scopes the pragma to the connection and ignores it inside a
+/// transaction, so it must run on every connection from `onConfigure`.
+Future<void> enableQueueForeignKeys(Database database) async {
+  await database.execute('PRAGMA foreign_keys = ON');
+  await verifyQueueForeignKeys(database);
+}
+
+/// Throws [QueueForeignKeysUnavailable] unless foreign keys are enforced.
+Future<void> verifyQueueForeignKeys(Database database) async {
+  final rows = await database.rawQuery('PRAGMA foreign_keys');
+  if (rows.length != 1 || rows.single.values.single != 1) {
+    throw const QueueForeignKeysUnavailable();
+  }
 }
 
 /// Opens and owns the private SQLite database used by the E2 queue.
@@ -49,6 +78,8 @@ final class QueueDatabase {
       selectedPath,
       options: OpenDatabaseOptions(
         version: e2QueueDatabaseVersion,
+        onConfigure: enableQueueForeignKeys,
+        onOpen: verifyQueueForeignKeys,
         onCreate: (database, version) async {
           if (version != e2QueueDatabaseVersion) {
             throw UnsupportedQueueSchemaVersion(
@@ -57,13 +88,28 @@ final class QueueDatabase {
             );
           }
           await createE2QueueSchemaV1(database);
+          await createE4DeliverySchemaV2(
+            database,
+            pendingTable: e2QueueTable,
+          );
         },
+        // sqflite runs this callback and the version bump in one transaction,
+        // so a failed migration leaves the v1 database untouched.
         onUpgrade: (database, oldVersion, newVersion) async {
+          if (oldVersion == 1 && newVersion == e2QueueDatabaseVersion) {
+            await migrateQueueSchemaV1ToV2(
+              database,
+              pendingTable: e2QueueTable,
+            );
+            return;
+          }
           throw UnsupportedQueueSchemaVersion(
-            found: newVersion,
+            found: oldVersion,
             supported: e2QueueDatabaseVersion,
           );
         },
+        // A newer schema is refused before any statement runs: the database
+        // is never reset, downgraded or rewritten, and image files stay put.
         onDowngrade: (database, oldVersion, newVersion) async {
           throw UnsupportedQueueSchemaVersion(
             found: oldVersion,

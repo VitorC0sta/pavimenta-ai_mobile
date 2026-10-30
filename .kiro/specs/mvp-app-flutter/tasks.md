@@ -242,117 +242,117 @@ As tarefas 16–34 cobrem exclusivamente a E1 aprovada. Todas permanecem pendent
 
 - [x] 16. Verificar o baseline aprovado da E0 e os limites da E1
   - **Depende de:** histórico aprovado das tarefas 1–15.
-  - [ ] 16.1 Confirmar que o Diagnóstico E0 permanece acessível, funcionalmente preservado e com evidências históricas intactas antes de qualquer alteração E1.
-  - [ ] 16.2 Registrar o baseline de arquivos, dependências diretas, análise, testes e configuração Android necessários para detectar somente regressões introduzidas pela E1.
-  - [ ] 16.3 Delimitar a E1 à tela Operação, captura manual, ocorrência em memória, arquivos temporários, permissões operacionais, lifecycle, navegação e tela ligada.
-  - [ ] 16.4 Confirmar por inspeção negativa a ausência de implementação antecipada de fila, banco, API de ocorrências, multipart, credencial, envio, background, modelo ou inferência.
+  - [x] 16.1 Confirmar que o Diagnóstico E0 permanece acessível, funcionalmente preservado e com evidências históricas intactas antes de qualquer alteração E1.
+  - [x] 16.2 Registrar o baseline de arquivos, dependências diretas, análise, testes e configuração Android necessários para detectar somente regressões introduzidas pela E1.
+  - [x] 16.3 Delimitar a E1 à tela Operação, captura manual, ocorrência em memória, arquivos temporários, permissões operacionais, lifecycle, navegação e tela ligada.
+  - [x] 16.4 Confirmar por inspeção negativa a ausência de implementação antecipada de fila, banco, API de ocorrências, multipart, credencial, envio, background, modelo ou inferência.
   - **Verificação:** baseline E0 e fronteira E1 estão registrados sem reabrir tarefas, alterar evidências ou iniciar funcionalidade posterior.
   - **Requisitos:** RF-00.2–5, RF-00.17–22, RF-01.1–3, RF-23.1–8, RNF-07.1.
 
 - [x] 17. Fixar somente as dependências aprovadas da E1
   - **Depende de:** tarefa 16.
-  - [ ] 17.1 Manter `camera: 0.11.0+2` e `geolocator: 13.0.2` como dependências diretas exatas, sem `^` ou intervalo aberto.
-  - [ ] 17.2 Adicionar exatamente `image: 4.2.0`, `uuid: 4.6.0`, `wakelock_plus: 1.2.8` e `path_provider: 2.1.4`, sem `^` ou intervalo aberto.
-  - [ ] 17.3 Resolver as dependências com a toolchain aprovada e inspecionar a árvore resultante quanto à compatibilidade Android.
-  - [ ] 17.4 Confirmar que nenhuma dependência de gerenciamento de estado, DI, mocks, permissões genéricas ou funcionalidade de E2–E5 foi adicionada.
-  - [ ] 17.5 Registrar os pins diretos efetivos e preservar a ausência de pacote HTTP, banco, armazenamento seguro e visão computacional.
+  - [x] 17.1 Manter `camera: 0.11.0+2` e `geolocator: 13.0.2` como dependências diretas exatas, sem `^` ou intervalo aberto.
+  - [x] 17.2 Adicionar exatamente `image: 4.2.0`, `uuid: 4.6.0`, `wakelock_plus: 1.2.8` e `path_provider: 2.1.4`, sem `^` ou intervalo aberto.
+  - [x] 17.3 Resolver as dependências com a toolchain aprovada e inspecionar a árvore resultante quanto à compatibilidade Android.
+  - [x] 17.4 Confirmar que nenhuma dependência de gerenciamento de estado, DI, mocks, permissões genéricas ou funcionalidade de E2–E5 foi adicionada.
+  - [x] 17.5 Registrar os pins diretos efetivos e preservar a ausência de pacote HTTP, banco, armazenamento seguro e visão computacional.
   - **Verificação:** somente os seis pins diretos aprovados para câmera, localização e E1 estão presentes e resolvidos sem dependência direta fora do escopo.
   - **Requisitos:** RF-01.1–3, RF-10.1–8, RF-21.1–2, RF-23.7–8, RNF-01.12–13, RNF-03.10, RNF-06.6–12.
 
 - [x] 18. Criar a estrutura arquitetural e os contratos da E1
   - **Depende de:** tarefas 16 e 17.
-  - [ ] 18.1 Criar somente a estrutura E1 aprovada para apresentação, candidato, aplicação, domínio e infraestrutura, preservando `lib/e0/`.
-  - [ ] 18.2 Definir `CandidateSeed`, `CandidateInput`, aquisição de imagem diferida e o contrato genérico `OccurrenceCandidateSource` sem identidade de rede da fonte.
-  - [ ] 18.3 Definir o contrato genérico do `PostCandidateProcessor` e os resultados de criação, cooldown, pré-condição, cancelamento e falha controlada.
-  - [ ] 18.4 Definir portas pequenas para câmera, localização, imagem, relógio, UUID, distância e wake lock, sem interfaces espelho sem necessidade concreta.
-  - [ ] 18.5 Compor dependências explicitamente no composition root com recursos nativos do Flutter, sem framework de DI ou gerenciamento de estado.
-  - [ ] 18.6 Confirmar que a estrutura contém apenas pontos de extensão exigidos para troca futura da fonte, sem implementar fila, API, persistência ou detector.
+  - [x] 18.1 Criar somente a estrutura E1 aprovada para apresentação, candidato, aplicação, domínio e infraestrutura, preservando `lib/e0/`.
+  - [x] 18.2 Definir `CandidateSeed`, `CandidateInput`, aquisição de imagem diferida e o contrato genérico `OccurrenceCandidateSource` sem identidade de rede da fonte.
+  - [x] 18.3 Definir o contrato genérico do `PostCandidateProcessor` e os resultados de criação, cooldown, pré-condição, cancelamento e falha controlada.
+  - [x] 18.4 Definir portas pequenas para câmera, localização, imagem, relógio, UUID, distância e wake lock, sem interfaces espelho sem necessidade concreta.
+  - [x] 18.5 Compor dependências explicitamente no composition root com recursos nativos do Flutter, sem framework de DI ou gerenciamento de estado.
+  - [x] 18.6 Confirmar que a estrutura contém apenas pontos de extensão exigidos para troca futura da fonte, sem implementar fila, API, persistência ou detector.
   - **Verificação:** contratos compiláveis separam widgets, aplicação, domínio e plugins, e nenhum componente pertencente a E2–E5 foi criado.
   - **Requisitos:** RF-03.12, RF-07.1, RF-07.11–13, RF-23.7–8, RNF-01.1–13, RNF-03.10.
 
 - [x] 19. Implementar ocorrência em memória, horário, UUID, localização e velocidade
   - **Depende de:** tarefa 18.
-  - [ ] 19.1 Implementar modelos imutáveis de ponto, snapshot e ocorrência em memória e uma fábrica que aceite somente dados obrigatórios válidos.
-  - [ ] 19.2 Implementar `Clock`/`SystemClock` e geração de UUID v4, preservando o instante original e validando formato e versão do identificador.
-  - [ ] 19.3 Implementar validação de latitude/longitude e conversão `m/s * 3.6`, incluindo zero e omitindo velocidade ausente, negativa, não finita ou acima de 300 km/h.
-  - [ ] 19.4 Escrever testes com `FakeClock` e gerador fake para `detectedAt` lido uma vez, UUID v4, `confidence = 1.0`, `defectClass = pothole` e ausência de `source`, `highway` e `km`.
-  - [ ] 19.5 Escrever testes para limites válidos e inválidos de latitude/longitude, conversão de m/s para km/h, inclusão entre 0 e 300 e omissão dos demais casos.
+  - [x] 19.1 Implementar modelos imutáveis de ponto, snapshot e ocorrência em memória e uma fábrica que aceite somente dados obrigatórios válidos.
+  - [x] 19.2 Implementar `Clock`/`SystemClock` e geração de UUID v4, preservando o instante original e validando formato e versão do identificador.
+  - [x] 19.3 Implementar validação de latitude/longitude e conversão `m/s * 3.6`, incluindo zero e omitindo velocidade ausente, negativa, não finita ou acima de 300 km/h.
+  - [x] 19.4 Escrever testes com `FakeClock` e gerador fake para `detectedAt` lido uma vez, UUID v4, `confidence = 1.0`, `defectClass = pothole` e ausência de `source`, `highway` e `km`.
+  - [x] 19.5 Escrever testes para limites válidos e inválidos de latitude/longitude, conversão de m/s para km/h, inclusão entre 0 e 300 e omissão dos demais casos.
   - **Verificação:** a fábrica só produz ocorrência manual completa e imutável com horário, identidade, localização e velocidade opcional conformes, e todos os testes da tarefa passam.
   - **Requisitos:** RF-06.2–8, RF-07.2–10, RF-08.1–9, RF-11.1, RF-11.5–7, RNF-01.1, RNF-03.2, RNF-03.4, RNF-03.10.
 
 - [x] 20. Implementar cooldown por tempo OU distância
   - **Depende de:** tarefas 18 e 19.
-  - [ ] 20.1 Implementar Haversine em Dart puro atrás de `DistanceCalculator` e `CooldownPolicy` com defaults de 5 segundos e 15 metros.
-  - [ ] 20.2 Implementar decisão que permite a primeira ocorrência, permite tempo ou distância no limite e rejeita somente quando ambos estão abaixo dos mínimos.
-  - [ ] 20.3 Tratar relógio regressivo como tempo abaixo do limiar e atualizar a referência somente por `commit` após ocorrência criada.
-  - [ ] 20.4 Escrever testes para primeira ocorrência, tempo, distância, limites inclusivos, regra OR, rejeição com ambos abaixo, relógio regressivo e ausência de commit após falha ou rejeição.
+  - [x] 20.1 Implementar Haversine em Dart puro atrás de `DistanceCalculator` e `CooldownPolicy` com defaults de 5 segundos e 15 metros.
+  - [x] 20.2 Implementar decisão que permite a primeira ocorrência, permite tempo ou distância no limite e rejeita somente quando ambos estão abaixo dos mínimos.
+  - [x] 20.3 Tratar relógio regressivo como tempo abaixo do limiar e atualizar a referência somente por `commit` após ocorrência criada.
+  - [x] 20.4 Escrever testes para primeira ocorrência, tempo, distância, limites inclusivos, regra OR, rejeição com ambos abaixo, relógio regressivo e ausência de commit após falha ou rejeição.
   - **Verificação:** decisões de cooldown são determinísticas e testáveis, seguem tempo OU distância e somente uma criação válida altera a referência.
   - **Requisitos:** RF-09.1–11, RF-23.7, RNF-01.1, RNF-03.1, RNF-03.10.
 
 - [x] 21. Implementar imagem privada, ownership, JPEG e limpeza
   - **Depende de:** tarefas 17 e 18.
-  - [ ] 21.1 Implementar armazenamento temporário no diretório privado do aplicativo, namespace E1 e lease de ownership idempotente, sem gravação na galeria.
-  - [ ] 21.2 Implementar decode, correção de orientação EXIF quando disponível, proporção preservada e redução inicial para no máximo `1280x720` sem ampliação.
-  - [ ] 21.3 Implementar codificação JPEG sempre com qualidade 85 e laço finito que reduz estritamente somente dimensões até no máximo 2 MiB ou rejeição.
-  - [ ] 21.4 Implementar limpeza em falha, rejeição, cancelamento, substituição, descarte e fim de sessão, além de varredura restrita de órfãos reconhecíveis e logs sanitizados.
-  - [ ] 21.5 Escrever testes para qualidade 85 em todas as tentativas, orientação quando testável, proporção, `1280x720`, 2 MiB, redução somente de dimensões, monotonicidade e terminação.
-  - [ ] 21.6 Escrever testes para rejeição e limpeza de fonte/derivados/órfãos, transferência única de ownership, substituição, `dispose`, falha de limpeza sanitizada e ausência de galeria; manter somente o ponto futuro de transferência E2, sem fila.
+  - [x] 21.1 Implementar armazenamento temporário no diretório privado do aplicativo, namespace E1 e lease de ownership idempotente, sem gravação na galeria.
+  - [x] 21.2 Implementar decode, correção de orientação EXIF quando disponível, proporção preservada e redução inicial para no máximo `1280x720` sem ampliação.
+  - [x] 21.3 Implementar codificação JPEG sempre com qualidade 85 e laço finito que reduz estritamente somente dimensões até no máximo 2 MiB ou rejeição.
+  - [x] 21.4 Implementar limpeza em falha, rejeição, cancelamento, substituição, descarte e fim de sessão, além de varredura restrita de órfãos reconhecíveis e logs sanitizados.
+  - [x] 21.5 Escrever testes para qualidade 85 em todas as tentativas, orientação quando testável, proporção, `1280x720`, 2 MiB, redução somente de dimensões, monotonicidade e terminação.
+  - [x] 21.6 Escrever testes para rejeição e limpeza de fonte/derivados/órfãos, transferência única de ownership, substituição, `dispose`, falha de limpeza sanitizada e ausência de galeria; manter somente o ponto futuro de transferência E2, sem fila.
   - **Verificação:** cada captura aceita resulta em JPEG privado conforme o contrato ou rejeição explícita, sem arquivo órfão conhecido ou vazamento em log, e todos os testes da tarefa passam.
   - **Requisitos:** RF-10.1–15, RF-11.6–8, RF-23.7–8, RNF-03.3, RNF-03.10, RNF-06.1–12.
 
 - [x] 22. Implementar a fonte manual substituível
   - **Depende de:** tarefas 18 e 19.
-  - [ ] 22.1 Implementar `ManualCandidateSource` que preserve `attemptedAt` e localização e produza `CandidateInput` com `pothole` e `1.0`.
-  - [ ] 22.2 Encapsular a captura associada como aquisição diferida, sem invocá-la durante a emissão do candidato e sem chamar cooldown, UUID, fábrica ou preparador.
-  - [ ] 22.3 Escrever testes com fakes Dart para emissão do candidato manual, preservação de instante/localização, classe/confiança exatas, aquisição não invocada e ausência de `source`, API ou persistência.
+  - [x] 22.1 Implementar `ManualCandidateSource` que preserve `attemptedAt` e localização e produza `CandidateInput` com `pothole` e `1.0`.
+  - [x] 22.2 Encapsular a captura associada como aquisição diferida, sem invocá-la durante a emissão do candidato e sem chamar cooldown, UUID, fábrica ou preparador.
+  - [x] 22.3 Escrever testes com fakes Dart para emissão do candidato manual, preservação de instante/localização, classe/confiança exatas, aquisição não invocada e ausência de `source`, API ou persistência.
   - **Verificação:** a fonte manual produz somente o candidato normalizado e substituível, e a câmera permanece intocada até o processor autorizar a aquisição.
   - **Requisitos:** RF-03.4–5, RF-07.1–4, RF-07.11–13, RF-08.2, RF-08.6, RF-08.9, RNF-01.2–6, RNF-01.9–11, RNF-03.2, RNF-03.10.
 
 - [x] 23. Implementar o pós-candidato genérico
   - **Depende de:** tarefas 19, 20, 21 e 22.
-  - [ ] 23.1 Implementar a ordem normativa: validar candidato e snapshot, avaliar cooldown, adquirir imagem, preparar JPEG, gerar UUID, criar ocorrência e fazer commit.
-  - [ ] 23.2 Garantir que bloqueio por cooldown não invoque captura nem UUID e que qualquer falha limpe temporários sem commit, contador ou ocorrência parcial.
-  - [ ] 23.3 Manter o processor independente da origem do candidato e sem ramo manual, widget, persistência ou rede.
-  - [ ] 23.4 Escrever testes com fakes simples para ordem completa, única aquisição após aprovação, bloqueio sem efeitos, limpeza em cada falha, commit somente no sucesso e processamento fonte-independente.
+  - [x] 23.1 Implementar a ordem normativa: validar candidato e snapshot, avaliar cooldown, adquirir imagem, preparar JPEG, gerar UUID, criar ocorrência e fazer commit.
+  - [x] 23.2 Garantir que bloqueio por cooldown não invoque captura nem UUID e que qualquer falha limpe temporários sem commit, contador ou ocorrência parcial.
+  - [x] 23.3 Manter o processor independente da origem do candidato e sem ramo manual, widget, persistência ou rede.
+  - [x] 23.4 Escrever testes com fakes simples para ordem completa, única aquisição após aprovação, bloqueio sem efeitos, limpeza em cada falha, commit somente no sucesso e processamento fonte-independente.
   - **Verificação:** o processor transforma qualquer candidato válido em uma única ocorrência completa ou termina sem efeitos residuais, conforme testes de ordem e falha.
   - **Requisitos:** RF-03.13–15, RF-07.5–13, RF-08.2–9, RF-09.7–11, RF-10.1, RF-10.7–15, RF-11.1, RF-11.5–7, RNF-01.4–11, RNF-03.2–4, RNF-06.1, RNF-06.6–8.
 
 - [x] 24. Adaptar câmera e GPS operacionais preservando a E0
   - **Depende de:** tarefas 18 e 19.
-  - [ ] 24.1 Implementar adaptador operacional de câmera traseira com preview e `takePicture()`, usando o mesmo controlador válido e sem stream contínuo de frames.
-  - [ ] 24.2 Implementar adaptador operacional de localização precisa em primeiro plano com snapshot imutável mais recente e invalidação por serviço, permissão, precisão, rota ou lifecycle.
-  - [ ] 24.3 Coordenar câmera antes de localização quando uma permissão puder ser solicitada, impedindo diálogos concorrentes e mantendo falhas independentes.
-  - [ ] 24.4 Escrever testes com fakes Dart para câmera indisponível, captura, GPS sem serviço/permissão/precisão/posição, snapshot válido e coordenação serial das permissões.
-  - [ ] 24.5 Executar testes regressivos automatizados aplicáveis à E0 sem modificar seu comportamento, responsabilidades ou `DiagnosticHttpClient`.
+  - [x] 24.1 Implementar adaptador operacional de câmera traseira com preview e `takePicture()`, usando o mesmo controlador válido e sem stream contínuo de frames.
+  - [x] 24.2 Implementar adaptador operacional de localização precisa em primeiro plano com snapshot imutável mais recente e invalidação por serviço, permissão, precisão, rota ou lifecycle.
+  - [x] 24.3 Coordenar câmera antes de localização quando uma permissão puder ser solicitada, impedindo diálogos concorrentes e mantendo falhas independentes.
+  - [x] 24.4 Escrever testes com fakes Dart para câmera indisponível, captura, GPS sem serviço/permissão/precisão/posição, snapshot válido e coordenação serial das permissões.
+  - [x] 24.5 Executar testes regressivos automatizados aplicáveis à E0 sem modificar seu comportamento, responsabilidades ou `DiagnosticHttpClient`.
   - **Verificação:** preview, captura e snapshot operacional funcionam por portas independentes; falhas são controladas; coordenação é serial; regressão automatizável da E0 permanece aprovada.
   - **Requisitos:** RF-00.2, RF-00.4–16, RF-00.19–22, RF-03.1, RF-03.5–7, RF-05.1–2, RF-06.1–5, RF-20.1–7, RNF-01.12, RNF-03.10, RNF-04.1–3.
 
 - [x] 25. Implementar estado, controlador e single-flight da Operação
   - **Depende de:** tarefas 19, 20 e 22–24.
-  - [ ] 25.1 Implementar `OperationState` imutável com rota/lifecycle, câmera, GPS, processamento, readiness, feedback, resumo da ocorrência, contador e wake lock.
-  - [ ] 25.2 Implementar `OperationController` para adquirir single-flight, validar readiness e capturar `attemptedAt` e snapshot antes do primeiro `await`.
-  - [ ] 25.3 Entregar o seed à fonte e o candidato ao processor, preservar `detectedAt`, incrementar contador somente no sucesso e liberar single-flight em todos os caminhos.
-  - [ ] 25.4 Implementar geração monotônica para ignorar callbacks obsoletos sem publicar estado, commit, contador ou ownership.
-  - [ ] 25.5 Escrever testes para estados, botão habilitado/bloqueado, uma captura sob toques concorrentes, `detectedAt` preservado após atrasos, contador e ausência de efeito de callback obsoleto.
+  - [x] 25.1 Implementar `OperationState` imutável com rota/lifecycle, câmera, GPS, processamento, readiness, feedback, resumo da ocorrência, contador e wake lock.
+  - [x] 25.2 Implementar `OperationController` para adquirir single-flight, validar readiness e capturar `attemptedAt` e snapshot antes do primeiro `await`.
+  - [x] 25.3 Entregar o seed à fonte e o candidato ao processor, preservar `detectedAt`, incrementar contador somente no sucesso e liberar single-flight em todos os caminhos.
+  - [x] 25.4 Implementar geração monotônica para ignorar callbacks obsoletos sem publicar estado, commit, contador ou ownership.
+  - [x] 25.5 Escrever testes para estados, botão habilitado/bloqueado, uma captura sob toques concorrentes, `detectedAt` preservado após atrasos, contador e ausência de efeito de callback obsoleto.
   - **Verificação:** no máximo uma operação manual é processada, readiness é objetivo, horário não é recalculado e resultados antigos não alteram o estado; todos os testes passam.
   - **Requisitos:** RF-03.5–10, RF-05.1–5, RF-06.3–4, RF-08.2, RF-08.6–9, RF-09.11, RF-21.3–5, RNF-01.1, RNF-01.7, RNF-03.4, RNF-04.2–3.
 
 - [x] 26. Implementar a tela Operação, tema e feedbacks
   - **Depende de:** tarefa 25.
-  - [ ] 26.1 Implementar tema com `#111827`, `#1F2937`, `#F59E0B`, `#22C55E`, `#EF4444` e `#F9FAFB`, usando foreground contrastante e significado além da cor.
-  - [ ] 26.2 Implementar preview, banner permanente “Modo manual — YOLO ainda não configurado”, botão “Registrar buraco” com indicação de confirmação manual, GPS, precisão, velocidade, contador e processamento.
-  - [ ] 26.3 Implementar botão habilitado somente pelo readiness, desabilitado durante busy e feedback explícito quando tempo e distância do cooldown estiverem simultaneamente abaixo dos mínimos.
-  - [ ] 26.4 Implementar mensagens controladas de câmera, localização, captura, imagem e lifecycle com `SafeArea`, rolagem, quebra de texto, semântica e layout responsivo.
-  - [ ] 26.5 Escrever widget tests para banner, labels, paleta/contraste sem estado somente por cor, botão enabled/disabled, busy, cooldown, status, erros, acessibilidade e dimensões/escala de texto representativas.
+  - [x] 26.1 Implementar tema com `#111827`, `#1F2937`, `#F59E0B`, `#22C55E`, `#EF4444` e `#F9FAFB`, usando foreground contrastante e significado além da cor.
+  - [x] 26.2 Implementar preview, banner permanente “Modo manual — YOLO ainda não configurado”, botão “Registrar buraco” com indicação de confirmação manual, GPS, precisão, velocidade, contador e processamento.
+  - [x] 26.3 Implementar botão habilitado somente pelo readiness, desabilitado durante busy e feedback explícito quando tempo e distância do cooldown estiverem simultaneamente abaixo dos mínimos.
+  - [x] 26.4 Implementar mensagens controladas de câmera, localização, captura, imagem e lifecycle com `SafeArea`, rolagem, quebra de texto, semântica e layout responsivo.
+  - [x] 26.5 Escrever widget tests para banner, labels, paleta/contraste sem estado somente por cor, botão enabled/disabled, busy, cooldown, status, erros, acessibilidade e dimensões/escala de texto representativas.
   - **Verificação:** a única tela operacional comunica modo manual, readiness, processamento e falhas de forma legível e responsiva, e os widget tests passam.
   - **Requisitos:** RF-03.1–4, RF-03.6–10, RF-03.14–16, RF-05.1–4, RF-05.9–11, RF-20.3–7, RNF-03.4, RNF-04.2–3, RNF-08.1–14.
 
 - [x] 27. Implementar lifecycle operacional e tela ligada
   - **Depende de:** tarefas 24 e 25.
-  - [ ] 27.1 Calcular Operação ativa por `visible && foreground && resumed && currentRoute` e habilitar o wake lock somente nessa condição.
-  - [ ] 27.2 Invalidar geração, bloquear registros, desabilitar wake lock, cancelar localização, liberar câmera e limpar captura/ocorrência conforme pausa, ocultação, detach e `dispose`.
-  - [ ] 27.3 Implementar cancelamento lógico e limpeza de conclusões assíncronas inevitáveis, readquirindo recursos somente após limpeza e retomada válidas.
-  - [ ] 27.4 Escrever testes de lifecycle, bloqueios fora de `resumed`, callbacks tardios, limpeza e sequência/balanceamento idempotente de enable/disable do wake lock, inclusive em falhas.
+  - [x] 27.1 Calcular Operação ativa por `visible && foreground && resumed && currentRoute` e habilitar o wake lock somente nessa condição.
+  - [x] 27.2 Invalidar geração, bloquear registros, desabilitar wake lock, cancelar localização, liberar câmera e limpar captura/ocorrência conforme pausa, ocultação, detach e `dispose`.
+  - [x] 27.3 Implementar cancelamento lógico e limpeza de conclusões assíncronas inevitáveis, readquirindo recursos somente após limpeza e retomada válidas.
+  - [x] 27.4 Escrever testes de lifecycle, bloqueios fora de `resumed`, callbacks tardios, limpeza e sequência/balanceamento idempotente de enable/disable do wake lock, inclusive em falhas.
   - **Verificação:** recursos e tela ligada acompanham exclusivamente a Operação ativa, sem captura segura fora de `resumed`, vazamento ou chamada desbalanceada; testes passam.
   - **Requisitos:** RF-03.9, RF-21.1–7, RF-23.7, RNF-03.4, RNF-03.10, RNF-04.2–3, RNF-06.7–8.
 
@@ -520,7 +520,7 @@ A E2 adiciona persistência local de ocorrências e JPEGs, recuperação após r
 
 ## Tarefas
 
-- [ ] 35. Registrar o baseline aprovado E0/E1 e delimitar a E2
+- [x] 35. Registrar o baseline aprovado E0/E1 e delimitar a E2
   - **Depende de:** tarefa 34 aprovada explicitamente.
   - [x] 35.1 Registrar `git status`, árvore relevante, dependências diretas, versões da toolchain, manifesto, regras Android existentes e resultados reproduzíveis de `flutter analyze` e `flutter test`, sem modificar nem descartar alterações preexistentes.
   - [x] 35.2 Confirmar o acesso ao Diagnóstico E0, o fluxo Operação E1, a aprovação do Gate E1 e a integridade das evidências históricas antes de qualquer alteração E2.
@@ -905,12 +905,12 @@ A E2 adiciona persistência local de ocorrências e JPEGs, recuperação após r
 
 ## 61. Validation Gate E3 no Samsung Galaxy S25+
 
-- [ ] 61.1 Apresentar análise/testes/build, inspeção de dependências/manifests/backup, APK e hash E3.
-- [ ] 61.2 Apresentar evidência de validação/persistência de parâmetros, secure storage, status sanitizado, troca/remoção e ausência de configuração sem bloqueio E1/E2.
-- [ ] 61.3 Apresentar atualização segura de cooldown/distância, permissões e regressões E0/E1/E2, incluindo Diagnóstico.
-- [ ] 61.4 Apresentar inspeção negativa comprovando ausência de HTTP de ocorrência, autenticação, multipart, worker, backoff, YOLO/TFLite/modelo/inferência.
-- [ ] 61.5 Reunir o roteiro e registrar decisão do usuário exatamente como `Aprovação explícita do Validation Gate E3` ou `Reprovação explícita do Validation Gate E3`.
-- [ ] 61.6 Parar obrigatoriamente após a decisão: reprovação permite somente correções E3; aprovação encerra E3 e aguarda solicitação posterior para novo ciclo E4.
+- [x] 61.1 Apresentar análise/testes/build, inspeção de dependências/manifests/backup, APK e hash E3.
+- [x] 61.2 Apresentar evidência de validação/persistência de parâmetros, secure storage, status sanitizado, troca/remoção e ausência de configuração sem bloqueio E1/E2.
+- [x] 61.3 Apresentar atualização segura de cooldown/distância, permissões e regressões E0/E1/E2, incluindo Diagnóstico.
+- [x] 61.4 Apresentar inspeção negativa comprovando ausência de HTTP de ocorrência, autenticação, multipart, worker, backoff, YOLO/TFLite/modelo/inferência.
+- [x] 61.5 Reunir o roteiro e registrar decisão do usuário exatamente como `Aprovação explícita do Validation Gate E3` ou `Reprovação explícita do Validation Gate E3`.
+- [x] 61.6 Parar obrigatoriamente após a decisão: reprovação permite somente correções E3; aprovação encerra E3 e aguarda solicitação posterior para novo ciclo E4.
 - **Depende de:** 60.
 - **Verificação:** todos os critérios E3 possuem evidência sanitizada, limitações estão declaradas e há decisão explícita do usuário.
 - **Requisitos:** RF-23.1–10, RNF-07.4,10.
@@ -939,3 +939,246 @@ A E2 adiciona persistência local de ocorrências e JPEGs, recuperação após r
 - Não adicionar modelo, asset, detector, stream de frames, inferência, FPS real ou substituição da fonte manual; são E5.
 - Não gravar URL de produção ou API key em código, testes, documentação, assets, logs, screenshots ou evidências.
 - Não alterar a propriedade, recuperação ou política de backup dos dados E2 fora do ajuste mínimo e testado necessário para excluir a credencial segura.
+
+
+---
+
+# Plano de tarefas — E4: Entrega autenticada e confiável de ocorrências
+
+> **Pré-condição atendida:** E3 foi aprovada explicitamente no Gate 61. Este plano implementa exclusivamente a E4 sobre a captura manual E1, a fila E2 e a configuração protegida E3. O desenvolvimento pode usar fakes ou servidor simulado; integração real e aprovação do gate exigem back-end acessível e credencial válida de dispositivo de teste. Nenhuma tarefa inicia E5.
+
+## 62. Preparar a baseline E4, dependência HTTP e fronteiras
+
+- [x] 62.1 Registrar a aprovação do Gate E3 e executar a baseline de formatação, análise, suíte completa e build Android sem alterar comportamento E0–E3.
+- [x] 62.2 Inventariar composition root, fila/SQLite/filesystem E2, restauração do cooldown, configuração E3, secure storage, lifecycle, painel de Operação e cliente HTTP exclusivo do Diagnóstico.
+- [x] 62.3 Substituir a inspeção negativa global E3 por teste arquitetural positivo E4: permitir transporte, multipart, leitura completa da credencial e backoff somente nas fronteiras E4; continuar proibindo-os em widgets, domínio da ocorrência, fonte manual, pós-candidato e Diagnóstico.
+- [x] 62.4 Verificar compatibilidade e fixar uma versão exata do pacote `http`; atualizar `pubspec.yaml`/lockfile sem adicionar `dio`, conectividade, worker ou biblioteca de estado.
+- [x] 62.5 Definir fakes mínimos de transporte, timer, snapshot de configuração e fila E4, preservando o `Clock` já existente e sem depender de hardware/API real nos testes.
+- **Depende de:** Gate 61 aprovado.
+- **Verificação:** baseline registrada, dependência reproduzível e fronteiras automatizadas antes de introduzir tráfego de ocorrência.
+- **Requisitos:** RF-23.1–12, RNF-01.6–13, RNF-03.7–10, RNF-07.1,5,10.
+
+## 63. Implementar contratos, resultados e políticas puras E4
+
+- [x] 63.1 Criar modelos imutáveis de cabeça da fila, configuração de entrega, segredo não imprimível, request, resultado de transporte, decisão definitiva/recuperável e estado sanitizado de apresentação.
+- [x] 63.2 Implementar `HttpDeliveryDecisionPolicy` para `200`, `201`, `400`, `401`, `403`, `409`, `413`, `415`, todo `5xx`, demais códigos e redirects `3xx`, sem depender do corpo da resposta.
+- [x] 63.3 Implementar `DeliveryBackoffPolicy` como `min(5 s × 3^(n-1), 15 min)`, com proteção de overflow e cálculo reutilizável para retry remoto e limpeza local.
+- [x] 63.4 Definir `OccurrenceDeliveryQueuePort`, `DeliveryConfigurationSnapshotPort`, `OccurrenceTransportPort`, `DeliveryTimerPort` e `DeliveryTechnicalLogger` sem importar Flutter, SQLite, filesystem, secure storage ou cliente HTTP concreto.
+- [x] 63.5 Implementar logger/sink sanitizado com categorias fixas para rejeições definitivas, resposta inesperada, falha recuperável e falha de limpeza; proibir API key, header, URL completa, body, multipart, imagem, UUID, coordenadas, horário da ocorrência, filename, path, digest e exceção bruta.
+- [x] 63.6 Cobrir matriz HTTP, monotonicidade/teto do backoff, overflow, emissão das categorias obrigatórias, serialização sanitizada e ausência de segredo/exceção bruta nos resultados/logs.
+- **Depende de:** 62.
+- **Verificação:** políticas determinísticas e portas mínimas permitem testar E4 sem banco, rede, timer real ou widgets.
+- **Requisitos:** RF-15–18, RF-23.11–12, RNF-01.6–13, RNF-02.1–3, RNF-03.8–10.
+
+## 64. Evoluir a fila para schema v2 e preservar o cooldown
+
+- [x] 64.1 Implementar migração aditiva v1→v2 para estado por ocorrência, controle global de pausa e âncora singleton de último aceite, sem recriar/apagar `occurrence_queue` nem JPEGs.
+- [x] 64.2 Habilitar e validar foreign key/cascade entre estado de entrega e ocorrência; remover estados órfãos de forma idempotente na recuperação e recusar versão futura sem downgrade destrutivo.
+- [x] 64.3 Semear a âncora pela maior `queueSequence` existente na migração e atualizá-la na mesma transação de cada novo aceite; restaurar cooldown pela âncora mesmo após remover a última pendência.
+- [x] 64.4 Implementar seleção FIFO da cabeça, elegibilidade por backoff, leitura privada do JPEG e snapshots agregados usando a mesma região serial de bootstrap, persistência, recuperação, leitura e remoção.
+- [x] 64.5 Persistir atomicamente `attemptCount`, instantes de cálculo/vencimento, pausa global e resposta inesperada sanitizada; reconciliar timestamp inválido, vencido e regressão do relógio sem adiamento indefinido.
+- [x] 64.6 Implementar marca durável de decisão definitiva antes da remoção; após crash, concluir somente limpeza local sem exigir URL/chave nem repetir HTTP.
+- [x] 64.7 Em falha de remoção, persistir tentativa/próximo instante de limpeza com backoff limitado; impedir loop, novo HTTP e antecipação pelo retry manual.
+- [x] 64.8 Cobrir banco v1 real temporário, migração, pendências/JPEGs preservados, cascade, recovery, crash antes/depois da decisão, limpeza sem configuração, relógio regressivo com reabertura e cooldown após fila vazia.
+- **Depende de:** 63.
+- **Verificação:** schema v2 é não destrutivo, retry/pausa sobrevivem a force-stop e toda decisão definitiva termina em limpeza recuperável sem perder a âncora E1/E2.
+- **Requisitos:** RF-09, RF-12.9–11, RF-15.10–12, RF-16, RF-17, RF-18, RNF-03.9–10, RNF-05, RNF-06.2–5,9–11.
+
+## 65. Implementar snapshot consistente de destino e credencial
+
+- [x] 65.1 Ampliar a leitura restrita E4 da credencial para resultado tipado: disponível, ausente, formato inválido ou secure storage indisponível, sem devolver segredo em mensagens/estado.
+- [x] 65.2 Implementar `DeliveryConfigurationSnapshotPort` com revisão local monotônica e exclusão entre início da tentativa e mutações de `BASE_URL`/credencial.
+- [x] 65.3 Integrar salvamento/substituição de `BASE_URL` ou credencial para cancelar/suspender tentativa antiga antes da escrita; após confirmação, limpar de forma persistente somente pausas `authentication`, `access` e `unexpectedResponse` e solicitar uma única avaliação imediata.
+- [x] 65.4 Integrar remoção de URL/credencial para publicar `configurationRequired` sem rede; mudanças apenas em cooldown, distância, confiança ou FPS não limpam pausa nem disparam envio.
+- [x] 65.5 Revalidar URI e formato `prefixo.segredo` imediatamente antes do transporte; ausência/invalidez impede imagem/socket, e falha de keystore produz estado local controlado.
+- [x] 65.6 Cobrir trocas/remoções intercaladas entre leitura, preparação e socket, retomada de cada pausa aplicável após correção inclusive após reabertura, remoção sem rede e mudanças operacionais que preservam pausa.
+- **Depende de:** 63.
+- **Verificação:** toda tentativa usa um snapshot coerente, lê a chave somente no limite E4 e nunca envia credencial nova a destino antigo nem o inverso.
+- **Requisitos:** RF-13.1–17,22–26, RF-16.6–8, RF-18.5–6, RNF-02, RNF-03.6,10, RNF-05.5.
+
+## 66. Implementar o multipart canônico por streaming
+
+- [x] 66.1 Implementar encoder multipart determinístico/testável com boundary seguro, CRLF, textos UTF-8 e `Content-Length` calculado sem carregar o JPEG inteiro em memória.
+- [x] 66.2 Mapear somente `idempotencyKey`, latitude, longitude, confidence, defectClass, detectedAt, speedKmh opcional e arquivo `image` com filename genérico e `Content-Type: image/jpeg`.
+- [x] 66.3 Preservar representação persistida em retries: mesma chave, dados e bytes; incluir velocidade zero, omitir velocidade nula e proibir `highway`, `km`, `source`, `accuracyMeters`, digest, sequência e estado de retry.
+- [x] 66.4 Revalidar tamanho máximo de 2 MiB, MIME e metadados antes do socket; falha de imagem/montagem conserva a ocorrência e retorna erro local sanitizado.
+- [x] 66.5 Cobrir bytes/delimitadores, nomes das partes, tipos, campos obrigatórios/opcionais, omissões, `Content-Length`, chunks de imagem e estabilidade lógica entre tentativas.
+- **Depende de:** 63.
+- **Verificação:** payload cumpre integralmente RF-14 e transmite o JPEG privado por stream sem arquivo multipart temporário.
+- **Requisitos:** RF-10, RF-14, RF-17.6, RNF-01.8–12, RNF-03.7,9–10, RNF-04.2, RNF-06.4–5,10–12.
+
+## 67. Implementar transporte HTTP autenticado e limitado
+
+- [x] 67.1 Implementar adaptador `package:http` com `StreamedRequest`/`IOClient` restrito à infraestrutura E4 e injeção de cliente para testes; manter `DiagnosticHttpClient` E0 intacto.
+- [x] 67.2 Construir exatamente `POST {BASE_URL}/api/v1/occurrences` e `Authorization: ApiKey {DEVICE_API_KEY}`; proibir `Bearer`, `X-API-Key`, cookies e redirects.
+- [x] 67.3 Aplicar conexão de 10 s, tentativa até headers de 45 s, corpo descartado até 64 KiB/5 s, um upload por vez, TLS padrão e exceção HTTP somente `localhost:3000`/debug já protegida por E3.
+- [x] 67.4 Diferenciar resposta com status, rede/DNS/socket/TLS, timeout antes dos headers, cancelamento e falha local; depois dos headers, preservar o status mesmo se corpo/cancelamento falhar.
+- [x] 67.5 Implementar cancelamento idempotente e liberação de referências da credencial sem alegar zeroização da memória gerenciada; impedir header/URL/body/request em logs e erros.
+- [x] 67.6 Cobrir cliente fake e servidor HTTP local controlado para endpoint, método, auth exata, multipart transmitido, matriz de status, redirect, timeout, corpo lento/grande, rede e cancelamento.
+- **Depende de:** 62, 66.
+- **Verificação:** transporte testável envia somente ao destino permitido, classifica sem ler conteúdo sensível e nunca altera o cliente diagnóstico.
+- **Requisitos:** RF-13.2–16, RF-14, RF-15–18, RNF-02.1–10, RNF-03.7–10, RNF-04.2, RNF-05.5.
+
+## 68. Implementar o coordenador serial de entrega
+
+- [x] 68.1 Implementar `OccurrenceDeliveryCoordinator` single-flight com notificações coalescidas e seleção estritamente FIFO, sem manter a região serial do banco durante HTTP.
+- [x] 68.2 Priorizar limpeza definitiva pendente antes de configuração, pausa ou backoff; fila vazia fica ociosa e configuração ausente não abre imagem/socket.
+- [x] 68.3 Orquestrar snapshot coerente, integridade/stream do JPEG, envio e persistência da decisão; revalidar revisão imediatamente antes do socket.
+- [x] 68.4 Aplicar a matriz e emitir categorias técnicas fixas/sanitizadas: `200/201` sucesso, `400/409/413/415` descarte, `401/403` pausa, rede/timeout/`5xx` backoff, demais status pausa conservadora e falha de limpeza sem novo HTTP.
+- [x] 68.5 Impedir retry automático durante pausa/backoff; correção confirmada de URL/chave limpa persistentemente apenas pausas aplicáveis, e retry manual limpa somente pausas explícitas sem antecipar backoff remoto ou de limpeza.
+- [x] 68.6 Reagir a bootstrap, snapshot de nova pendência, timer vencido, mudança relevante de configuração e `resumed`; remoção de configuração publica `configurationRequired`, mudança operacional irrelevante preserva pausa, e saída do primeiro plano cancela timer/transporte sem perder item.
+- [x] 68.7 Cobrir concorrência de eventos, uma tentativa ativa, persistência durante upload, FIFO, idempotência após cancelamento/crash, categorias de log sem dados proibidos, pausas/restarts, retomada por correção/manual, progressão até teto e ausência de busy loop.
+- **Depende de:** 64, 65, 67.
+- **Ordem interna:** 68.4 → 68.5 → 68.6 → 68.7, em sequência e nunca em paralelo (todas alteram o coordenador).
+- **Arquivos (alterar):** `lib/application/delivery/occurrence_delivery_coordinator.dart`, `test/application/delivery/occurrence_delivery_coordinator_test.dart`; fakes em `test/support/e4/` somente se faltar capacidade.
+- **Arquivos (consultar):** `lib/domain/delivery/http_delivery_decision_policy.dart`, `lib/domain/delivery/delivery_backoff_policy.dart`, `lib/domain/delivery/delivery_decision.dart`, `lib/application/delivery/delivery_technical_logger.dart`, `lib/application/delivery/delivery_configuration_change_service.dart`, `lib/application/delivery/occurrence_delivery_queue_port.dart`, `lib/application/delivery/delivery_timer_port.dart`.
+- **Design:** E4.6, E4.9, E4.10, E4.13.
+- **Verificação:** coordenador entrega ou preserva cada cabeça com decisão durável, sem bloquear registro manual, banco durante rede ou lifecycle do Diagnóstico.
+- **Requisitos:** RF-05.7, RF-13.14–17, RF-15–18, RF-21, RNF-01.6–13, RNF-03.8–10, RNF-04.2–3, RNF-05, RNF-06.2–5,9–11.
+
+## 69. Integrar composição, lifecycle e apresentação da Operação
+
+- [x] 69.1 Compor uma única instância do coordenador, fila E4, image store, snapshot de configuração, transporte, logger/sink técnico, relógio e timer; disponibilizar somente projeção/ações mínimas ao `OperationController`.
+- [x] 69.2 Transformar “Envio futuro” em painel “Envio” com todas as fases do design: configuração necessária, ocioso, pronto, enviando, backoff, autenticação, acesso, resposta inesperada, falha local, limpeza e fila indisponível.
+- [x] 69.3 Exibir somente mensagem agregada, pendências e retry quando permitido; omitir URL, chave, status body, UUID, coordenada, horário, sequência, filename, path e digest da UI/semântica.
+- [x] 69.4 Manter registro manual, câmera, GPS, cooldown e persistência habilitados durante ausência de configuração, envio, backoff e pausas; somente saúde da fila mantém autoridade sobre aceite.
+- [x] 69.5 Integrar lifecycle global e rotas sem duplicar coordenador/cliente: envio pode continuar entre rotas enquanto `resumed`, mas câmera/GPS/wake lock e Diagnóstico preservam seus protocolos próprios.
+- [x] 69.6 Cobrir controller/widgets, acessibilidade, botão de retry, contagem somente após remoção confirmada, Configurações → Operação, Diagnóstico → Operação e dispose/reabertura.
+- **Depende de:** 68.
+- **Ordem interna:** 69.1 → 69.2 → 69.3 → 69.4 → 69.5 → 69.6, em sequência e nunca em paralelo (compartilham controller, estado e tela da Operação).
+- **Arquivos (alterar):** `lib/main.dart`, `lib/operation/e1_composition.dart`, `lib/operation/operation_controller.dart`, `lib/operation/operation_state.dart`, `lib/operation/operation_screen.dart`; novo adaptador real de `DeliveryTimerPort` em `lib/infrastructure/delivery/` (ainda não existe); testes em `test/operation/` (`operation_controller_test.dart`, `operation_screen_test.dart`, `operation_state_test.dart`, `operation_queue_screen_test.dart`, `operation_diagnostic_navigation_test.dart`).
+- **Arquivos (consultar):** `lib/application/delivery/occurrence_delivery_coordinator.dart`, `lib/domain/delivery/delivery_presentation_state.dart`, `lib/operation/diagnostic_session_disposal.dart`, `lib/settings/settings_screen.dart`.
+- **Design:** E4.3, E4.11, E4.13.
+- **Verificação:** UI explica o estado real sem dados sensíveis e a integração não acopla rede ao registro, aos recursos operacionais ou ao Diagnóstico.
+- **Requisitos:** RF-03, RF-05.1–7, RF-13.14–16, RF-16.2,4,8, RF-18.3, RF-20, RF-21, RNF-02, RNF-04.2–3,6, RNF-07.10.
+
+## 70. Consolidar integração, recuperação e segurança E4
+
+- [x] 70.1 Executar testes integrados de fila v2 + configuração + encoder + transporte fake + coordenador + UI, incluindo múltiplas pendências e todos os estados definitivos/recuperáveis.
+- [x] 70.2 Injetar crashes/falhas antes e depois do status, decisão durável, transação de remoção e limpeza de JPEG; provar ausência de perda, reenvio indevido após decisão e estado órfão.
+- [x] 70.3 Verificar force-stop/reabertura com backoff, pausa, limpeza pendente e fila vazia; confirmar relógio regressivo persistido e âncora de cooldown restaurada.
+- [x] 70.4 Inspecionar fontes, testes, logs e estado renderizado para confirmar emissão das categorias técnicas exigidas e ausência de API key, headers, URL completa, body, multipart, imagem, UUID, coordenadas, horário da ocorrência, filename, paths, digest e exceção bruta.
+- [x] 70.5 Confirmar por testes arquiteturais que E0–E3 permanecem íntegros e que não existem conectividade, worker/background service, YOLO, TFLite, modelo, inferência ou alteração da fonte manual.
+- **Depende de:** 69.
+- **Ordem interna:** 70.1, 70.2 e 70.3 podem rodar em paralelo somente se cada uma criar seu próprio arquivo de teste; 70.4 e 70.5 rodam depois, uma por vez.
+- **Arquivos (alterar):** novos testes separados por task: `test/infrastructure/delivery/e4_delivery_integration_test.dart` (70.1), `test/infrastructure/delivery/e4_delivery_crash_consistency_test.dart` (70.2), `test/infrastructure/delivery/e4_delivery_restart_test.dart` (70.3), `test/infrastructure/delivery/e4_delivery_sanitization_inspection_test.dart` (70.4); `test/architecture/e4_delivery_boundaries_test.dart` (70.5). Código de produção só para corrigir falha encontrada.
+- **Arquivos (consultar):** `test/support/e4/`, `test/infrastructure/fault_injected_queue_mutation_driver_test.dart`, `lib/infrastructure/delivery/persistent_delivery_queue.dart`, `lib/infrastructure/queue_delivery_schema.dart`, `lib/infrastructure/durable_image_store.dart`, `lib/infrastructure/sanitized_delivery_technical_logger.dart`, `lib/application/delivery/occurrence_delivery_coordinator.dart`.
+- **Design:** E4.5, E4.9, E4.12, E4.14.
+- **Verificação:** cenários cruzados e de interrupção preservam fila, idempotência, segredo, cooldown e fronteiras E0–E4.
+- **Requisitos:** RF-05, RF-08–18, RF-21, RF-23.7–12, RNF-01–07.
+
+## 71. Atualizar documentação operacional E4
+
+- [x] 71.1 Documentar instalação do Flutter usado, dependências, análise, testes, build Android, instalação e execução em aparelho físico.
+- [x] 71.2 Documentar `BASE_URL` sem sufixo, provisão manual da chave e header exato `Authorization: ApiKey {DEVICE_API_KEY}` usando apenas exemplos fictícios.
+- [x] 71.3 Documentar multipart fixo, campos omitidos, idempotência, respostas, backoff, pausas, retry manual e ausência de garantia com o app fechado.
+- [x] 71.4 Documentar desenvolvimento local com Analytics real, `adb reverse tcp:3000 tcp:3000` e `http://localhost:3000` somente em debug, sem sugerir deploy de produção obrigatório.
+- [x] 71.5 Documentar separação entre gate simulado e gate real, exigindo no real URL acessível, chave válida de dispositivo de teste e evidência sanitizada do recebimento.
+- [x] 71.6 Inspecionar README para eliminar URL real, API key real, header preenchido, UUID, coordenada, imagem ou outro dado sensível.
+- **Depende de:** 69.
+- **Ordem interna:** 71.1 → 71.2 → 71.3 → 71.4 → 71.5 → 71.6, em sequência (todas alteram o README).
+- **Arquivos (alterar):** `README.md`.
+- **Design:** E4.7, E4.10, E4.13, E4.15.
+- **Verificação:** avaliador consegue reproduzir build e integração sem segredo versionado e entende os limites de background e dos dois gates.
+- **Requisitos:** RF-13, RF-14, RF-22, RF-23.12–14, RNF-02, RNF-07.5–6.
+
+## 72. Executar gate de desenvolvimento e gerar artefato E4
+
+- [x] 72.1 Executar formatação, análise, suíte completa e testes dirigidos de políticas, migração, fila, configuração, multipart, transporte, coordenador, widgets, lifecycle e arquitetura; corrigir somente falhas E4/regressões introduzidas.
+- [x] 72.2 Executar servidor simulado/controlado e registrar resultados sanitizados da matriz HTTP, autenticação exata, payload, backoff, pausas, retomada, crash consistency e ausência de configuração sem socket.
+- [x] 72.3 Gerar APK debug E4, registrar Flutter/Dart/Java/Gradle, versões pinadas, identidade, tamanho e SHA-256; inspecionar manifests debug/release e regras de backup/transferência.
+- [x] 72.4 Inspecionar fontes, dependências, assets, logs de teste e APK para segredo/URL real ausentes, HTTP release bloqueado, localhost limitado ao debug e ausência integral de E5/worker.
+- [x] 72.5 Reunir evidências do gate de desenvolvimento e declarar explicitamente que aprovação simulada não substitui recebimento pelo back-end real.
+- **Depende de:** 70, 71.
+- **Arquivos (alterar):** nenhum previsto; corrigir somente o arquivo E4 que falhar.
+- **Design:** E4.14, E4.15.
+- **Verificação:** implementação E4 está reproduzível e aprovada contra fakes/servidor simulado, com APK rastreável e sem declarar o gate real concluído.
+- **Requisitos:** RF-13–18, RF-22, RF-23.11–12,19–20, RNF-01–07.
+
+## 73. Executar checkpoint, roteiro físico e integração real no Samsung Galaxy S25+
+
+- [x] 73.1 Confirmar a disponibilidade de URL de teste acessível, API key válida de dispositivo de teste e meio de verificar recebimento no back-end. Se qualquer insumo faltar, registrar exatamente `Validation Gate E4 não executado`, preservar o gate de desenvolvimento e parar neste ramo sem executar 73.2–74.8.
+- [x] 73.2 Com os insumos confirmados, instalar o APK E4 como atualização preservadora, registrar dispositivo/hash e confirmar configuração, pendências, cooldown, preview, GPS, modo manual e Diagnóstico.
+- [x] 73.3 Preparar o Analytics real acessível por ambiente de teste hospedado ou servidor local com `adb reverse`, mantendo URL e chave fora do repositório/evidências.
+- [x] 73.4 Validar ausência de URL/chave: ocorrência permanece na fila, painel orienta configuração, captura continua e nenhum request é aberto.
+- [x] 73.5 Registrar uma ocorrência manual, confirmar aceite/persistência local anterior à rede, enviar com autenticação real e coletar evidência sanitizada de recebimento pelo back-end. Se a evidência real não puder ser obtida após a tentativa, registrar exatamente `Validation Gate E4 não executado` e parar sem executar 73.6–74.8.
+- [x] 73.6 Executar repetição idempotente controlada com a mesma chave e comprovar ausência de duplicação indevida, sem expor UUID, chave, coordenada, imagem, URL completa ou body na evidência.
+- [x] 73.7 Verificar, quando controlavelmente disponível, falha temporária/backoff, pausa por autenticação/acesso ou resposta inesperada e retomada; classificar cenário indisponível como não executado, nunca como aprovado presumido.
+- [x] 73.8 Confirmar redução da contagem e remoção do JPEG somente após decisão definitiva, force-stop/reabertura sem perda e responsividade durante upload.
+- [x] 73.9 Regressar Operação → Configurações → Operação e Operação → Diagnóstico → Operação, confirmando ausência de recursos/coordenadores duplicados e preservação E0–E3.
+- **Depende de:** 72. O ramo 73.2–74.8 depende adicionalmente da confirmação positiva de 73.1.
+- **Verificação:** ausência de insumos termina de forma honesta como gate real não executado; com insumos, o aparelho preserva E0–E3 e o back-end confirma ocorrência autenticada com evidência sanitizada.
+- **Requisitos:** RF-13–18, RF-21–23, RNF-02.7, RNF-04.6, RNF-05, RNF-06, RNF-07.5–6,10.
+
+## 74. Validation Gate E4 no Samsung Galaxy S25+
+
+- [x] 74.1 Apresentar análise, suíte, servidor simulado, build, inspeções, APK/hash e evidências sanitizadas do gate de desenvolvimento.
+- [x] 74.2 Apresentar migração/recovery v2, âncora de cooldown, estado durável de backoff/pausa, limpeza crash-consistent e preservação da fila em interrupções.
+- [x] 74.3 Apresentar contrato multipart/auth, matriz de status, timeouts, redirects bloqueados, segredo protegido e ausência de request sem configuração.
+- [x] 74.4 Apresentar roteiro no S25+, presença sanitizada de URL/chave de teste e evidência real de recebimento/idempotência no back-end.
+- [x] 74.5 Apresentar estados da Operação, retry permitido, responsividade e regressões E0/E1/E2/E3, incluindo Configurações e Diagnóstico.
+- [x] 74.6 Apresentar inspeção negativa comprovando ausência de worker/background service, conectividade, YOLO/TFLite/modelo/inferência e qualquer segredo/URL real versionado.
+- [x] 74.7 Somente após 74.1–74.6 e evidência real completa, reunir o roteiro e registrar decisão do usuário exatamente como `Aprovação explícita do Validation Gate E4` ou `Reprovação explícita do Validation Gate E4`.
+- [x] 74.8 Parar obrigatoriamente após a decisão: reprovação permite somente correções E4; aprovação encerra E4 e aguarda solicitação posterior para novo ciclo E5, que continua condicionado a modelo treinado compatível.
+- **Depende de:** 73.2–73.9 concluídas e evidência real confirmada; o ramo `Validation Gate E4 não executado` de 73.1 não libera esta tarefa.
+- **Verificação:** todos os critérios E4 possuem evidência sanitizada real, limitações estão declaradas e há decisão explícita do usuário antes de qualquer E5.
+- **Requisitos:** RF-23.1–20, RNF-07.1,5–10.
+
+## Grafo de dependências — E4
+
+```json
+{
+  "waves": [
+    { "id": 0, "tasks": ["62.1", "62.2"] },
+    { "id": 1, "tasks": ["62.3", "62.4", "62.5"] },
+    { "id": 2, "tasks": ["63.1", "63.2", "63.3", "63.4", "63.5"] },
+    { "id": 3, "tasks": ["63.6"] },
+    { "id": 4, "tasks": ["64.1", "64.2", "64.3", "64.4", "64.5", "64.6", "64.7", "65.1", "65.2", "65.3", "65.4", "65.5", "66.1", "66.2", "66.3", "66.4"] },
+    { "id": 5, "tasks": ["64.8", "65.6", "66.5"] },
+    { "id": 6, "tasks": ["67.1", "67.2", "67.3", "67.4", "67.5"] },
+    { "id": 7, "tasks": ["67.6"] },
+    { "id": 8, "tasks": ["68.1", "68.2", "68.3"] },
+    { "id": 9, "tasks": ["68.4"] },
+    { "id": 10, "tasks": ["68.5"] },
+    { "id": 11, "tasks": ["68.6"] },
+    { "id": 12, "tasks": ["68.7"] },
+    { "id": 13, "tasks": ["69.1"] },
+    { "id": 14, "tasks": ["69.2"] },
+    { "id": 15, "tasks": ["69.3"] },
+    { "id": 16, "tasks": ["69.4"] },
+    { "id": 17, "tasks": ["69.5"] },
+    { "id": 18, "tasks": ["69.6"] },
+    { "id": 19, "tasks": ["70.1", "70.2", "70.3", "71.1"] },
+    { "id": 20, "tasks": ["70.4", "71.2"] },
+    { "id": 21, "tasks": ["70.5", "71.3"] },
+    { "id": 22, "tasks": ["71.4"] },
+    { "id": 23, "tasks": ["71.5"] },
+    { "id": 24, "tasks": ["71.6"] },
+    { "id": 25, "tasks": ["72.1", "72.2"] },
+    { "id": 26, "tasks": ["72.3"] },
+    { "id": 27, "tasks": ["72.4"] },
+    { "id": 28, "tasks": ["72.5"] },
+    { "id": 29, "tasks": ["73.1"] },
+    { "id": 30, "tasks": ["73.2", "73.3"] },
+    { "id": 31, "tasks": ["73.4"] },
+    { "id": 32, "tasks": ["73.5"] },
+    { "id": 33, "tasks": ["73.6", "73.7"] },
+    { "id": 34, "tasks": ["73.8", "73.9"] },
+    { "id": 35, "tasks": ["74.1", "74.2", "74.3", "74.4", "74.5", "74.6"] },
+    { "id": 36, "tasks": ["74.7"] },
+    { "id": 37, "tasks": ["74.8"] }
+  ]
+}
+```
+
+**Ramos condicionais do gate real:** se 73.1 registrar `Validation Gate E4 não executado`, o plano para na wave 29 e as waves 30–37 permanecem bloqueadas. Se 73.5 não obtiver evidência real, o plano para na wave 32 com a mesma classificação e as waves 33–37 permanecem bloqueadas. Somente a confirmação positiva dos insumos e da evidência libera o Validation Gate 74.
+
+## Limites explícitos da E4
+
+- Não enviar ocorrência antes do commit local E2 nem acoplar rede ao registro manual/pós-candidato.
+- Não criar lista, detalhe, mapa, histórico, remoção manual, prioridade ou paralelismo de ocorrências.
+- Não adicionar monitor de conectividade, `WorkManager`, foreground service, execução contínua ou promessa de entrega com o app fechado.
+- Não alterar o `DiagnosticHttpClient` E0 nem compartilhar cliente, request, lifecycle ou estado de ocorrência com o Diagnóstico.
+- Não adicionar modelo, asset, detector, stream de frames, inferência, FPS real, `ultralytics_yolo`, TFLite ou substituição da fonte manual; são E5.
+- Não gravar URL real, API key, header preenchido, body, multipart, imagem, UUID, coordenada, filename, path ou digest em código, testes, README, logs, screenshots ou evidências.
+- Não declarar o Validation Gate E4 aprovado usando apenas fakes/servidor simulado; o gate real exige URL acessível, chave válida de dispositivo de teste e evidência do back-end.
