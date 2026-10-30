@@ -1236,12 +1236,12 @@ A E2 adiciona persistência local de ocorrências e JPEGs, recuperação após r
 
 ## 78. Implementar o domínio e o pipeline de detecção
 
-- [ ] 78.1 Criar `DetectionBox`, `DetectionFrame` (com `imageWidth`/`imageHeight`), `ConfirmedDetection`, `DetectionModelStatus` e `DetectionParameters` (limiar e FPS efetivos; FPS fora de 1–15 vira 5; janela 2 de 3 e área máxima lidas de `OperationalConfiguration`). Adicionar a `OperationalConfiguration` os campos `confirmationRequiredFrames = 2`, `confirmationWindowFrames = 3` e `maximumBoxAreaRatio = 0.20`, com padrão no código, sem persistência, sem tela e sem mudar a versão de armazenamento E3.
-- [ ] 78.2 Implementar `DetectionFilter` para índice 0, nome `buraco`, confiança finita ≥ limiar, coordenadas normalizadas válidas e área normalizada ≤ `maximumBoxAreaRatio` (20%).
-- [ ] 78.3 Implementar `InferenceRateGate` com tolerância `0,85 × (1 / FPS)` e `InferenceFpsMeter` com janela deslizante de 2 s.
-- [ ] 78.4 Implementar `TemporalConfirmationTracker`: compatibilidade quando a distância entre os centros (em pixels do frame) é menor que o maior lado entre as duas caixas, associação gulosa pela menor distância, confirmação 2 de 3, maior confiança da janela, supressão até 3 frames sem caixa e reinício.
-- [ ] 78.5 Definir `AutomaticDetectionPort` e `ModelPreflightPort` e implementar `DetectionPipeline`, que compõe gate, medidor, filtro e tracker e publica `ConfirmedDetection` e FPS medido.
-- [ ] 78.6 Cobrir filtro, gate, medidor, tracker e pipeline com testes de exemplo e de propriedade (`glados`), incluindo frames vazios, jitter, troca de parâmetros e reinício.
+- [x] 78.1 Criar `DetectionBox`, `DetectionFrame` (com `imageWidth`/`imageHeight`), `ConfirmedDetection`, `DetectionModelStatus` e `DetectionParameters` (limiar e FPS efetivos; FPS fora de 1–15 vira 5; janela 2 de 3 e área máxima lidas de `OperationalConfiguration`). Adicionar a `OperationalConfiguration` os campos `confirmationRequiredFrames = 2`, `confirmationWindowFrames = 3` e `maximumBoxAreaRatio = 0.20`, com padrão no código, sem persistência, sem tela e sem mudar a versão de armazenamento E3.
+- [x] 78.2 Implementar `DetectionFilter` para índice 0, nome `buraco`, confiança finita ≥ limiar, coordenadas normalizadas válidas e área normalizada ≤ `maximumBoxAreaRatio` (20%).
+- [x] 78.3 Implementar `InferenceRateGate` com tolerância `0,85 × (1 / FPS)` e `InferenceFpsMeter` com janela deslizante de 2 s.
+- [x] 78.4 Implementar `TemporalConfirmationTracker`: compatibilidade quando a distância entre os centros (em pixels do frame) é menor que o maior lado entre as duas caixas, associação gulosa pela menor distância, confirmação 2 de 3, maior confiança da janela, supressão até 3 frames sem caixa e reinício.
+- [x] 78.5 Definir `AutomaticDetectionPort` e `ModelPreflightPort` e implementar `DetectionPipeline`, que compõe gate, medidor, filtro e tracker e publica `ConfirmedDetection` e FPS medido.
+- [x] 78.6 Cobrir filtro, gate, medidor, tracker e pipeline com testes de exemplo e de propriedade (`glados`), incluindo frames vazios, jitter, troca de parâmetros e reinício.
 - **Depende de:** 77.
 - **Ordem interna:** 78.1 → (78.2, 78.3 e 78.4 em paralelo, arquivos distintos) → 78.5 → 78.6.
 - **Arquivos (alterar):** novos em `lib/domain/detection/` (`detection_frame.dart`, `detection_parameters.dart`, `detection_filter.dart`, `inference_rate_gate.dart`, `inference_fps_meter.dart`, `temporal_confirmation_tracker.dart`) e `lib/application/detection/` (`automatic_detection_port.dart`, `model_preflight_port.dart`, `detection_pipeline.dart`); testes correspondentes em `test/domain/detection/` e `test/application/detection/`.

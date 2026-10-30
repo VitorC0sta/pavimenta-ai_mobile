@@ -11,16 +11,23 @@ final class InMemoryOccurrence {
     required this.detectedAt,
     required this.location,
     required this.speedKmh,
+    required this.confidence,
     required this.image,
   });
 
   static const double manualConfidence = 1.0;
   static const String potholeDefectClass = 'pothole';
 
+  /// E5 (design E5.9): manual candidates keep [manualConfidence]; model
+  /// candidates carry any finite confidence in [0, 1].
+  static bool isValidConfidence(double value) =>
+      value.isFinite && value >= 0 && value <= 1;
+
   final String idempotencyKey;
   final DateTime detectedAt;
   final ImmutableLocationSnapshot location;
   final double? speedKmh;
+  final double confidence;
   final OwnedPreparedImage image;
 
   double get latitude => location.point.latitude;
@@ -28,8 +35,6 @@ final class InMemoryOccurrence {
   double get longitude => location.point.longitude;
 
   double? get accuracyMeters => location.accuracyMeters;
-
-  double get confidence => manualConfidence;
 
   String get defectClass => potholeDefectClass;
 
@@ -63,15 +68,16 @@ final class InMemoryOccurrenceFactory implements InMemoryOccurrenceCreator {
     required OwnedPreparedImage image,
   }) {
     if (defectClass != InMemoryOccurrence.potholeDefectClass ||
-        confidence != InMemoryOccurrence.manualConfidence) {
+        !InMemoryOccurrence.isValidConfidence(confidence)) {
       throw const FormatException(
-        'E1 occurrences require pothole and confirmation 1.0.',
+        'Occurrences require pothole and a finite confidence in [0, 1].',
       );
     }
     return _createValidated(
       idempotencyKey: idempotencyKey,
       detectedAt: detectedAt,
       location: location,
+      confidence: confidence,
       image: image,
     );
   }
@@ -96,6 +102,7 @@ final class InMemoryOccurrenceFactory implements InMemoryOccurrenceCreator {
     required String idempotencyKey,
     required DateTime detectedAt,
     required LocationSnapshot location,
+    required double confidence,
     required OwnedPreparedImage image,
   }) {
     if (!isUuidV4(idempotencyKey)) {
@@ -115,6 +122,7 @@ final class InMemoryOccurrenceFactory implements InMemoryOccurrenceCreator {
       speedKmh: speedMetersPerSecondToKmh(
         immutableLocation.speedMetersPerSecond,
       ),
+      confidence: confidence,
       image: image,
     );
   }

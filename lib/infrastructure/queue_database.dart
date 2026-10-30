@@ -4,11 +4,13 @@ import 'package:sqflite/sqflite.dart';
 
 import 'queue_delivery_schema.dart';
 import 'queue_record_mapper.dart';
+import 'queue_schema_v3_migration.dart';
 
 const String e2QueueDatabaseName = 'e2_occurrence_queue_v1.db';
 
-/// Schema v2 adds the E4 delivery structures; v1 stays the E2 layout.
-const int e2QueueDatabaseVersion = 2;
+/// Schema v2 adds the E4 delivery structures; v1 stays the E2 layout. Schema
+/// v3 (E5) only widens the `confidence` CHECK to model confidences in [0, 1].
+const int e2QueueDatabaseVersion = 3;
 const String e2QueueTable = 'pendingOccurrences';
 const int e2MaximumImageByteLength = 2 * 1024 * 1024;
 
@@ -66,6 +68,7 @@ final class QueueDatabase {
   static Future<QueueDatabase> open({
     DatabaseFactory? factory,
     String? path,
+    QueueMigrationLogger migrationLogger = discardQueueMigrationLog,
   }) async {
     final selectedFactory = factory ?? databaseFactory;
     final selectedPath = path ??
@@ -73,6 +76,16 @@ final class QueueDatabase {
           await selectedFactory.getDatabasesPath(),
           e2QueueDatabaseName,
         );
+
+    // The v1/v2 to v3 rebuild runs before the regular open, on a dedicated
+    // connection with foreign keys off (design E5.9). A failure propagates
+    // and leaves the previous version untouched; the queue is then
+    // unavailable with the E2 retry.
+    await migrateQueueToSchemaV3(
+      factory: selectedFactory,
+      path: selectedPath,
+      logger: migrationLogger,
+    );
 
     final database = await selectedFactory.openDatabase(
       selectedPath,
@@ -87,22 +100,17 @@ final class QueueDatabase {
               supported: e2QueueDatabaseVersion,
             );
           }
-          await createE2QueueSchemaV1(database);
+          await createQueuePendingTableV3(database);
           await createE4DeliverySchemaV2(
             database,
             pendingTable: e2QueueTable,
           );
         },
-        // sqflite runs this callback and the version bump in one transaction,
-        // so a failed migration leaves the v1 database untouched.
+        // The pre-open migrator already brought v1 and v2 to v3. This callback
+        // runs inside a transaction with foreign keys on, where rebuilding
+        // pendingOccurrences would cascade-delete delivery states, so it never
+        // migrates: reaching it means the pre-open step did not run.
         onUpgrade: (database, oldVersion, newVersion) async {
-          if (oldVersion == 1 && newVersion == e2QueueDatabaseVersion) {
-            await migrateQueueSchemaV1ToV2(
-              database,
-              pendingTable: e2QueueTable,
-            );
-            return;
-          }
           throw UnsupportedQueueSchemaVersion(
             found: oldVersion,
             supported: e2QueueDatabaseVersion,
@@ -127,9 +135,36 @@ final class QueueDatabase {
 }
 
 /// Creates only the canonical E2 v1 pending-occurrence table.
-Future<void> createE2QueueSchemaV1(DatabaseExecutor database) async {
+///
+/// Kept for the v1 layout (manual confidence only); new databases use
+/// [createQueuePendingTableV3].
+Future<void> createE2QueueSchemaV1(DatabaseExecutor database) =>
+    _createPendingTable(
+      database,
+      table: e2QueueTable,
+      confidenceCheck: '${QueueRecordColumns.confidence} = 1.0',
+    );
+
+/// Creates the v3 pending-occurrence table: identical to v1 except that
+/// `confidence` accepts any real value in [0, 1] (design E5.9).
+Future<void> createQueuePendingTableV3(
+  DatabaseExecutor database, {
+  String table = e2QueueTable,
+}) =>
+    _createPendingTable(
+      database,
+      table: table,
+      confidenceCheck: "typeof(${QueueRecordColumns.confidence}) = 'real' AND "
+          '${QueueRecordColumns.confidence} BETWEEN 0.0 AND 1.0',
+    );
+
+Future<void> _createPendingTable(
+  DatabaseExecutor database, {
+  required String table,
+  required String confidenceCheck,
+}) async {
   await database.execute('''
-CREATE TABLE $e2QueueTable (
+CREATE TABLE $table (
   ${QueueRecordColumns.queueSequence} INTEGER PRIMARY KEY AUTOINCREMENT,
   ${QueueRecordColumns.idempotencyKey} TEXT NOT NULL COLLATE BINARY UNIQUE
     CHECK (
@@ -168,7 +203,7 @@ CREATE TABLE $e2QueueTable (
   ${QueueRecordColumns.speedKmh} REAL
     CHECK (${QueueRecordColumns.speedKmh} IS NULL OR ${QueueRecordColumns.speedKmh} BETWEEN 0.0 AND 300.0),
   ${QueueRecordColumns.confidence} REAL NOT NULL
-    CHECK (${QueueRecordColumns.confidence} = 1.0),
+    CHECK ($confidenceCheck),
   ${QueueRecordColumns.defectClass} TEXT NOT NULL COLLATE BINARY
     CHECK (${QueueRecordColumns.defectClass} = 'pothole'),
   ${QueueRecordColumns.imageRelativeName} TEXT NOT NULL COLLATE BINARY UNIQUE

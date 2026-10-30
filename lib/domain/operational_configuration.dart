@@ -10,6 +10,9 @@ final class OperationalConfiguration {
     required this.minimumDistanceMeters,
     required this.confidenceThreshold,
     required this.maximumInferenceFps,
+    this.confirmationRequiredFrames = defaultConfirmationRequiredFrames,
+    this.confirmationWindowFrames = defaultConfirmationWindowFrames,
+    this.maximumBoxAreaRatio = defaultMaximumBoxAreaRatio,
   });
 
   const OperationalConfiguration.defaults()
@@ -17,7 +20,10 @@ final class OperationalConfiguration {
         cooldown = defaultCooldown,
         minimumDistanceMeters = defaultMinimumDistanceMeters,
         confidenceThreshold = defaultConfidenceThreshold,
-        maximumInferenceFps = defaultMaximumInferenceFps;
+        maximumInferenceFps = defaultMaximumInferenceFps,
+        confirmationRequiredFrames = defaultConfirmationRequiredFrames,
+        confirmationWindowFrames = defaultConfirmationWindowFrames,
+        maximumBoxAreaRatio = defaultMaximumBoxAreaRatio;
 
   static const int currentStorageVersion = 1;
   static const Duration defaultCooldown = Duration(seconds: 5);
@@ -25,11 +31,20 @@ final class OperationalConfiguration {
   static const double defaultConfidenceThreshold = 0.5;
   static const double defaultMaximumInferenceFps = 5;
 
+  // E5 detection defaults (design D9). They live only in code: they are not
+  // persisted, not shown in Settings and do not change the storage version.
+  static const int defaultConfirmationRequiredFrames = 2;
+  static const int defaultConfirmationWindowFrames = 3;
+  static const double defaultMaximumBoxAreaRatio = 0.20;
+
   final Uri? baseUrl;
   final Duration cooldown;
   final double minimumDistanceMeters;
   final double confidenceThreshold;
   final double maximumInferenceFps;
+  final int confirmationRequiredFrames;
+  final int confirmationWindowFrames;
+  final double maximumBoxAreaRatio;
 }
 
 /// Immutable text-only draft for editing non-secret configuration.

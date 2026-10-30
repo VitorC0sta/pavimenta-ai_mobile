@@ -287,8 +287,7 @@ final class E1PostCandidateProcessor
 
   bool _hasValidCandidateFields(CandidateInput candidate) {
     return candidate.defectClass == InMemoryOccurrence.potholeDefectClass &&
-        candidate.confidence.isFinite &&
-        candidate.confidence == InMemoryOccurrence.manualConfidence;
+        InMemoryOccurrence.isValidConfidence(candidate.confidence);
   }
 
   Future<bool> _disposeArtifacts({
