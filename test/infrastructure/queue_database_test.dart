@@ -116,7 +116,9 @@ void main() {
         {QueueRecordColumns.accuracyMeters: -0.01},
         {QueueRecordColumns.speedKmh: -0.01},
         {QueueRecordColumns.speedKmh: 300.01},
-        {QueueRecordColumns.confidence: 0.99},
+        // E5 schema v3 accepts model confidences in [0, 1] (task 79).
+        {QueueRecordColumns.confidence: 1.01},
+        {QueueRecordColumns.confidence: -0.01},
         {QueueRecordColumns.defectClass: 'crack'},
         {QueueRecordColumns.imageRelativeName: '../outside.jpg'},
         {QueueRecordColumns.imageRelativeName: r'nested\outside.jpg'},
@@ -291,7 +293,7 @@ void main() {
       final futureDatabase = await databaseFactoryFfi.openDatabase(
         databasePath,
         options: OpenDatabaseOptions(
-          version: 3,
+          version: e2QueueDatabaseVersion + 1,
           onCreate: (database, version) async {
             await database.execute(
               'CREATE TABLE futureMarker (value TEXT NOT NULL)',
@@ -318,7 +320,8 @@ void main() {
         options: OpenDatabaseOptions(singleInstance: false),
       );
       addTearDown(verificationDatabase.close);
-      expect(await verificationDatabase.getVersion(), 3);
+      expect(
+          await verificationDatabase.getVersion(), e2QueueDatabaseVersion + 1);
       expect(
         await verificationDatabase.query('futureMarker'),
         <Map<String, Object?>>[
@@ -341,7 +344,7 @@ void main() {
       );
       final database = queueDatabase!.database;
 
-      expect(await database.getVersion(), 2);
+      expect(await database.getVersion(), e2QueueDatabaseVersion);
       expect(await _tableNames(database), containsAll(_e4Tables));
       expect(await _count(database, e4AcceptedAnchorTable), 0);
       expect(await _count(database, e4DeliveryControlTable), 0);
@@ -392,7 +395,7 @@ void main() {
       );
       final database = queueDatabase!.database;
 
-      expect(await database.getVersion(), 2);
+      expect(await database.getVersion(), e2QueueDatabaseVersion);
       expect(await _tableNames(database), containsAll(_e4Tables));
       expect(
         await database.query(
@@ -439,7 +442,8 @@ void main() {
         path: databasePath,
       );
 
-      expect(await queueDatabase!.database.getVersion(), 2);
+      expect(
+          await queueDatabase!.database.getVersion(), e2QueueDatabaseVersion);
       expect(await _count(queueDatabase!.database, e4AcceptedAnchorTable), 0);
     });
 

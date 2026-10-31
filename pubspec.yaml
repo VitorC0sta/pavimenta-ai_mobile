@@ -14,12 +14,13 @@ dependencies:
   image: 4.2.0
   uuid: 4.6.0
   wakelock_plus: 1.2.8
-  path_provider: 2.1.4
+  path_provider: 2.1.5
   shared_preferences: 2.5.2
   flutter_secure_storage: 9.2.4
   sqflite: 2.4.1
   crypto: 3.0.7
   http: 1.6.0
+  ultralytics_yolo: 0.6.16
 
 dev_dependencies:
   flutter_test:
@@ -30,3 +31,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/models/buraco.tflite

@@ -74,7 +74,7 @@ final class QueueRecordMapper {
       longitude: _requiredDouble(row, QueueRecordColumns.longitude),
       accuracyMeters: _nullableDouble(row, QueueRecordColumns.accuracyMeters),
       speedKmh: _nullableDouble(row, QueueRecordColumns.speedKmh),
-      confidence: _requiredDouble(row, QueueRecordColumns.confidence),
+      confidence: _requiredConfidence(row),
       defectClass: _requiredString(row, QueueRecordColumns.defectClass),
       image: PersistedImageProjection(
         relativeName:
@@ -112,6 +112,18 @@ double _requiredDouble(Map<String, Object?> row, String column) {
     throw FormatException('Invalid persisted value for $column.');
   }
   return value.toDouble();
+}
+
+/// Schema v3 (E5): manual `1.0` or a model confidence, always finite in
+/// [0, 1].
+double _requiredConfidence(Map<String, Object?> row) {
+  final value = _requiredDouble(row, QueueRecordColumns.confidence);
+  if (!value.isFinite || value < 0 || value > 1) {
+    throw const FormatException(
+      'Invalid persisted value for ${QueueRecordColumns.confidence}.',
+    );
+  }
+  return value;
 }
 
 double? _nullableDouble(Map<String, Object?> row, String column) {

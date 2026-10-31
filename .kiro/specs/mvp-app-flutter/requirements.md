@@ -116,7 +116,7 @@ Não fazem parte do MVP:
 16. O cooldown permitirá nova ocorrência quando o tempo mínimo **ou** a distância mínima tiver sido atingida.
 17. Todas as tentativas de preparação usarão JPEG com qualidade `85`; somente dimensões poderão ser reduzidas para cumprir `2 MiB`.
 18. Antes de configuração salva, serão usados cooldown de `5 segundos` e distância mínima de `15 metros`.
-19. Os valores futuros padrão de E5 serão limiar de confiança `0.5` e limite de inferência de `5 FPS`.
+19. Os valores padrão de E5 serão limiar de confiança `0.35` e limite de inferência de `5 FPS`. *(Emenda E5: o valor original `0.5` foi substituído por `0.35`, próximo do melhor F1 medido para o modelo `buraco.tflite`; valores já salvos pelo operador não são reescritos.)*
 20. O contador da sessão representa ocorrências efetivamente criadas e reinicia em uma nova execução do aplicativo.
 21. `BASE_URL` não conterá URL real de produção por padrão e não incluirá o caminho `/api/v1/occurrences`.
 22. Em produção, `BASE_URL` usará HTTPS.
@@ -124,6 +124,13 @@ Não fazem parte do MVP:
 24. HTTP sem TLS será permitido somente no manifesto Android de debug; o manifesto principal e a variante release continuarão bloqueando HTTP.
 25. O HTTP diagnóstico de E0 permanece separado do contrato de ocorrências e não utiliza credencial real nem endpoint de ocorrências.
 26. E5 somente poderá iniciar quando existir modelo TFLite treinado, disponível e compatível.
+27. *(Emenda E5.)* Em E5, a detecção YOLO é automática enquanto o modelo estiver carregado e o Modo operacional ativo vigorar; o botão “Registrar buraco” permanece como confirmação manual complementar; se o modelo não puder ser carregado, o Modo manual temporário E1–E4 continua disponível.
+28. *(Emenda E5.)* Um candidato YOLO exige confirmação temporal: uma detecção compatível em pelo menos 2 dos últimos 3 frames processados. Duas caixas são compatíveis quando a distância entre seus centros é menor que o maior lado entre as duas caixas. A região de interesse da pista, inclusive a linha de horizonte, fica adiada.
+29. *(Emenda E5.)* O FPS máximo de inferência aceita somente inteiros de `1` a `15`.
+30. *(Emenda E5.)* Admitir a confiança do modelo exige generalizar a validação de `confidence` para o intervalo [0, 1] no pós-candidato e migrar o schema local de forma não destrutiva. Esse ajuste não constitui reescrita do pós-candidato, da fila, do payload ou do envio.
+31. *(Emenda E5.)* O pré-processamento, a decodificação, o NMS e a conversão das caixas para o frame original ficam a cargo do `ultralytics_yolo`, com IoU de NMS `0.7`, igual ao padrão do Ultralytics usado na validação do modelo. O Aplicativo não acrescenta desfoque nem outro pré-processamento aos frames.
+32. *(Emenda E5.)* Após o NMS, caixas com área maior que `20%` da área do frame são descartadas.
+33. *(Emenda E5.)* A janela da confirmação temporal (N de M) e a área máxima da caixa ficam em `OperationalConfiguration` como valores padrão definidos no código, sem persistência e sem campo na tela de Configurações.
 
 ## Requirements
 
@@ -186,6 +193,8 @@ Não fazem parte do MVP:
 4. WHEN o carregamento terminar com sucesso, THE Aplicativo SHALL indicar o estado “modelo carregado”.
 5. IF o modelo não puder ser carregado, THEN THE Aplicativo SHALL impedir o início da inferência e apresentar mensagem controlada.
 6. WHERE a detecção YOLO for executada, THE Aplicativo SHALL isolar `ultralytics_yolo` atrás da abstração de Fonte de candidato de ocorrência.
+7. WHERE o modelo for carregado, THE Aplicativo SHALL usar somente o arquivo incluído nos assets, sem download ou atualização pela rede.
+8. IF o modelo não puder ser carregado, THEN THE Aplicativo SHALL manter disponível o Modo manual temporário.
 
 ### RF-03 — Tela operacional, preview e captura manual
 
@@ -211,6 +220,7 @@ Não fazem parte do MVP:
 14. WHEN o cooldown rejeitar um acionamento manual, THE Aplicativo SHALL informar brevemente que o registro foi ignorado porque tempo e distância permanecem abaixo dos mínimos vigentes.
 15. WHEN o cooldown rejeitar um acionamento manual, THE Aplicativo SHALL impedir a criação de imagem definitiva, UUID e ocorrência.
 16. WHERE a interação de cooldown for definida no design, THE Aplicativo SHALL preservar o feedback do bloqueio tanto com botão desabilitado quanto com toque destinado somente ao feedback.
+17. WHERE E5 estiver entregue com modelo carregado, THE Aplicativo SHALL manter o botão “Registrar buraco” como confirmação manual complementar, com `confidence = 1.0`.
 
 ### RF-04 — Inferência YOLO contínua e limitada
 
@@ -227,6 +237,13 @@ Não fazem parte do MVP:
 5. WHILE a inferência estiver ativa, THE Aplicativo SHALL atualizar o FPS atual ou recente na tela principal.
 6. WHERE o detector produzir classes, THE Aplicativo SHALL emitir candidatos somente para a classe `pothole`.
 7. WHEN o YOLO emitir um candidato, THE Aplicativo SHALL entregá-lo ao mesmo pós-candidato utilizado pela fonte manual.
+8. WHEN uma detecção acima do limiar vigente for observada, THE Aplicativo SHALL emitir candidato somente após detecção compatível em pelo menos 2 dos últimos 3 frames processados.
+9. WHEN um candidato YOLO for emitido, THE Aplicativo SHALL usar a confiança produzida pelo modelo e `defectClass` exatamente `pothole`, nunca `confidence = 1.0` por convenção.
+10. WHILE outro candidato estiver em processamento, THE Aplicativo SHALL descartar novas detecções sem enfileirá-las.
+11. WHEN uma detecção já tiver gerado candidato, THE Aplicativo SHALL suprimir novos candidatos da mesma detecção persistente até que ela deixe de ser observada.
+12. WHEN uma caixa detectada ocupar mais que a área máxima vigente do frame (padrão `20%`), THE Aplicativo SHALL descartá-la antes da confirmação temporal.
+13. WHERE a detecção YOLO for executada, THE Aplicativo SHALL configurar o NMS do detector com IoU `0.7` e SHALL NOT aplicar desfoque ou outro pré-processamento adicional aos frames.
+14. WHEN o checkpoint de compatibilidade do modelo for executado, THE Aplicativo SHALL produzir, para as mesmas imagens de referência e na resolução do stream da câmera, caixas e confianças praticamente iguais às obtidas na validação do modelo fora do Aplicativo, ou a divergência SHALL ser registrada e tratada antes da implementação.
 
 ### RF-05 — Indicadores da tela principal
 
@@ -524,7 +541,7 @@ Não fazem parte do MVP:
 2. WHEN o operador abrir as configurações, THE Aplicativo SHALL permitir configurar cooldown e distância mínima.
 3. WHEN o operador abrir as configurações, THE Aplicativo SHALL permitir configurar limiar de confiança e FPS máximo para uso futuro em E5.
 4. WHEN não houver valor salvo, THE Aplicativo SHALL aplicar cooldown de `5 segundos` e distância mínima de `15 metros`.
-5. WHEN não houver valor futuro salvo, THE Aplicativo SHALL aplicar confiança `0.5` e máximo de `5 FPS` em E5.
+5. WHEN não houver valor salvo, THE Aplicativo SHALL aplicar confiança `0.35` e máximo de `5 FPS` em E5. *(Emenda E5: substitui `0.5`.)*
 6. IF um valor numérico estiver vazio, não numérico ou fora do domínio, THEN THE Aplicativo SHALL impedir seu salvamento e indicar o campo inválido.
 7. WHERE o limiar de confiança for configurado, THE Aplicativo SHALL aceitar somente valor entre 0 e 1.
 8. WHERE FPS máximo, cooldown ou distância mínima forem configurados, THE Aplicativo SHALL aceitar somente valores positivos.
@@ -538,6 +555,8 @@ Não fazem parte do MVP:
 16. WHEN o operador substituir a API key, THE Aplicativo SHALL solicitar um novo valor completo no formato `prefixo.segredo`.
 17. WHEN o operador remover a API key, THE Aplicativo SHALL solicitar confirmação antes da remoção.
 18. IF o operador perder a API key completa, THEN THE Aplicativo SHALL orientar a rotação na Administração Next.js em vez de tentar recuperar o valor do back-end.
+19. WHERE E5 estiver entregue e o FPS máximo for configurado, THE Aplicativo SHALL aceitar somente inteiros de `1` a `15`. *(Emenda E5.)*
+20. IF um FPS salvo antes da E5 estiver fora do domínio E5, THEN THE Aplicativo SHALL aplicar `5 FPS` e indicar o campo para correção. *(Emenda E5.)*
 
 ### RF-20 — Permissões de câmera e localização
 
@@ -639,6 +658,7 @@ Não fazem parte do MVP:
 11. WHERE fila, idempotência, HTTP ou segurança forem implementados, THE Aplicativo SHALL mantê-los independentes da fonte de candidato.
 12. WHERE câmera, localização, persistência ou rede forem adicionadas, THE Aplicativo SHALL isolá-las atrás de interfaces adequadas.
 13. WHERE uma abstração não atender a necessidade concreta, THE Aplicativo SHALL privilegiar a solução mais simples compatível com a substituição exigida.
+14. WHERE E5 admitir confiança de modelo, THE Aplicativo SHALL limitar a alteração do pós-candidato e da fila à validação de `confidence` no intervalo [0, 1] e à migração não destrutiva do schema, preservando cooldown, preparação de imagem, UUID, payload e envio. *(Emenda E5.)*
 
 ### RNF-02 — Segurança de configurações e registros
 

@@ -3950,6 +3950,18 @@
         "chatSessionId": "sess_71ed28ae-2ac4-4ff1-a681-49b07f2c8661",
         "timestamp": 1793330045276
       }
+    ],
+    "75.1 Registrar a aprovação do Gate E4 e executar a baseline de formatação, análise, suíte completa e build Android na toolchain atual, sem alterar código.": [
+      {
+        "executionId": "fd360f67-8ea2-404c-a822-2bab7d2d1243",
+        "chatSessionId": "sess_7730bf57-07bf-42c4-9898-7fd91cef5f8e",
+        "timestamp": 1793368570916
+      },
+      {
+        "executionId": "9781dc52-236c-4b81-a339-a84929ad325d",
+        "chatSessionId": "sess_75340a39-71a1-4060-b8ff-62cec92d7100",
+        "timestamp": 1793383718776
+      }
     ]
   }
 }

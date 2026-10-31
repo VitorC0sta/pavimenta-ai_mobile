@@ -195,7 +195,9 @@ void main() {
             orderBy: QueueRecordColumns.queueSequence),
         rowsBefore,
       );
-      expect(await _tableDdl(raw), ddlBefore);
+      // E5 (task 79): the v3 rebuild only widens the confidence CHECK; the
+      // rest of the E2 DDL is unchanged.
+      expect(_asV1Ddl(await _tableDdl(raw)), ddlBefore);
       expect(await _namespaceFiles(sandbox), filesBefore);
       expect(await raw.query(e4DeliveryStateTable), isEmpty);
       expect(await raw.query(e4DeliveryControlTable), isEmpty);
@@ -789,6 +791,26 @@ InMemoryOccurrence _newOccurrence(String key, DateTime detectedAt) {
     image: _Lease(_jpeg(width: 8, height: 8, red: 3), 8, 8),
   );
 }
+
+/// Maps the v3 DDL of `pendingOccurrences` back to the v1 text: the rebuilt
+/// table is renamed (SQLite quotes the name) and only its confidence CHECK
+/// differs.
+List<Map<String, Object?>> _asV1Ddl(List<Map<String, Object?>> rows) => [
+      for (final row in rows)
+        {
+          ...row,
+          'sql': (row['sql'] as String?)
+              ?.replaceFirst(
+                'CREATE TABLE "$e2QueueTable"',
+                'CREATE TABLE $e2QueueTable',
+              )
+              .replaceFirst(
+                "CHECK (typeof(${QueueRecordColumns.confidence}) = 'real' AND "
+                    '${QueueRecordColumns.confidence} BETWEEN 0.0 AND 1.0)',
+                'CHECK (${QueueRecordColumns.confidence} = 1.0)',
+              ),
+        },
+    ];
 
 /// Table and index definitions of the E2 table, for a byte-level comparison.
 Future<List<Map<String, Object?>>> _tableDdl(Database database) {

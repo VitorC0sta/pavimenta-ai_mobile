@@ -103,15 +103,29 @@ final List<_Capability> _capabilities = <_Capability>[
   ),
 ];
 
-/// Still forbidden everywhere, including the E4 boundaries: E4 has no worker
-/// and E5 inference does not exist yet.
+/// Still forbidden everywhere, including the E4 and E5 boundaries: there is
+/// no worker.
 final RegExp _forbiddenEverywhere = RegExp(
-  r'\b(?:Workmanager|workmanager|BackgroundFetch|BackgroundService|Worker|'
-  r'ultralytics_yolo|tflite(?:_flutter)?|TFLite|inference|Inference|'
+  r'\b(?:Workmanager|workmanager|BackgroundFetch|BackgroundService|Worker)\b',
+);
+
+/// Inference vocabulary, forbidden outside the E5 detection zones. Inside them
+/// the precise E5 rules live in e5_detection_boundaries_test.dart (task 77.5).
+final RegExp _inferenceVocabulary = RegExp(
+  r'\b(?:ultralytics_yolo|tflite(?:_flutter)?|TFLite|inference|Inference|'
   r'ModelLoader|ModelRunner|ModelInterpreter)\b',
 );
 
 const String _approvedManualBanner = 'Modo manual — YOLO ainda não configurado';
+
+/// Declared E5 detection zones (design E5.5).
+const List<String> _e5DetectionPrefixes = <String>[
+  'lib/domain/detection/',
+  'lib/application/detection/',
+  'lib/infrastructure/detection/',
+];
+const String _yoloCandidateSource = 'lib/candidate/yolo_candidate_source.dart';
+const String _e5ModelAsset = 'assets/models/buraco.tflite';
 
 const Set<String> _forbiddenPackages = <String>{
   'package:dio/',
@@ -119,7 +133,6 @@ const Set<String> _forbiddenPackages = <String>{
   'package:flutter_background_service/',
   'package:background_fetch/',
   'package:connectivity_plus/',
-  'package:ultralytics_yolo/',
   'package:tflite_flutter/',
   'package:tflite_flutter_helper/',
 };
@@ -362,7 +375,9 @@ final client = HttpClient();
   // **Validates: Requirements RF-23.1–12, RNF-01.6–13, RNF-07.1, RNF-07.5,
   // RNF-07.10** (task 70.5)
   group('task 70.5 E0–E3 integrity and absent capabilities', () {
-    test('pubspec declares no connectivity, worker, YOLO or model package', () {
+    test(
+        'pubspec declares no connectivity, worker or model package beyond '
+        'the E5 plugin', () {
       final pubspec = _withoutYamlComments(
         File('pubspec.yaml').readAsStringSync(),
       );
@@ -390,7 +405,9 @@ final client = HttpClient();
           .map((match) => match.group(1)!)
           .toList();
       expect(dependencies, isNotEmpty);
-      for (final name in dependencies) {
+      // E5 (task 77.1): the pinned plugin is the only allowed YOLO package.
+      expect(dependencies, contains('ultralytics_yolo'));
+      for (final name in dependencies.where((n) => n != 'ultralytics_yolo')) {
         for (final fragment in forbidden) {
           if (fragment == 'dio') {
             expect(name, isNot('dio'));
@@ -402,14 +419,26 @@ final client = HttpClient();
       }
       // The only network package is the E4 transport's package:http.
       expect(dependencies, contains('http'));
-      expect(pubspec, isNot(contains('assets:')));
+      // E5 (task 77.2): the model is the only declared asset.
+      expect(
+        RegExp(r'^\s+- (\S+)\s*$', multiLine: true)
+            .allMatches(pubspec.substring(pubspec.indexOf('assets:')))
+            .map((match) => match.group(1))
+            .toList(),
+        <String>[_e5ModelAsset],
+      );
     });
 
     test(
         'the Android app declares no worker, service, receiver or network '
         'state permission', () {
+      // Removal markers (tools:node="remove") strip permissions merged from
+      // libraries; they do not declare them (task 77.4).
       final manifest = _withoutXmlComments(
         File('android/app/src/main/AndroidManifest.xml').readAsStringSync(),
+      ).replaceAll(
+        RegExp(r'<uses-permission\s+[^>]*tools:node="remove"\s*/>'),
+        '',
       );
 
       expect(manifest, isNot(contains('<service')));
@@ -429,7 +458,7 @@ final client = HttpClient();
       );
     });
 
-    test('no native source and no model file exists in the project', () {
+    test('no native source and no model file besides the E5 asset', () {
       final native = Directory('android/app/src')
           .listSync(recursive: true)
           .whereType<File>()
@@ -464,7 +493,10 @@ final client = HttpClient();
           continue;
         }
         for (final file in directory.listSync(recursive: true)) {
-          final path = file.path.toLowerCase();
+          final path = file.path.replaceAll('\\', '/').toLowerCase();
+          if (path == _e5ModelAsset) {
+            continue;
+          }
           for (final extension in modelExtensions) {
             expect(path.endsWith(extension), isFalse,
                 reason: '$path looks like a model file');
@@ -586,21 +618,23 @@ final client = HttpClient();
       );
     });
 
-    test('the only YOLO text in production is the approved manual banner', () {
-      final banner = <String>[];
+    test('YOLO text appears only in the E5 zones', () {
+      // The approved manual banner lives in Operation presentation, which is
+      // an E5 zone (E5.15).
       for (final entry in _productionSources().entries) {
-        final source = _withoutComments(entry.value);
-        if (RegExp(r'\b(?:YOLO|yolo)\b').hasMatch(source)) {
-          banner.add(entry.key);
-          expect(
-            RegExp(r'\b(?:YOLO|yolo)\b')
-                .hasMatch(source.replaceAll(_approvedManualBanner, '')),
-            isFalse,
-            reason: '${entry.key} mentions YOLO beyond the approved banner',
-          );
+        if (_mayMentionYolo(entry.key)) {
+          continue;
         }
+        expect(
+          RegExp(r'\b(?:YOLO|yolo)\b').hasMatch(_withoutComments(entry.value)),
+          isFalse,
+          reason: '${entry.key} mentions YOLO outside the E5 zones',
+        );
       }
-      expect(banner, isNotEmpty);
+      expect(
+        File('lib/operation/operation_screen.dart').readAsStringSync(),
+        contains(_approvedManualBanner),
+      );
     });
   });
 }
@@ -628,6 +662,11 @@ List<String> _violationsOf(Map<String, String> sources) {
         if (value.startsWith(forbidden)) {
           violations.add('$path imports forbidden package $forbidden');
         }
+      }
+      if (value.startsWith('package:ultralytics_yolo/') &&
+          !path.startsWith('lib/infrastructure/detection/') &&
+          path != 'lib/main.dart') {
+        violations.add('$path imports ultralytics_yolo outside E5 adapters');
       }
       if (value.startsWith('package:http/') &&
           !path.startsWith(_infrastructureDelivery)) {
@@ -668,10 +707,14 @@ List<String> _violationsOf(Map<String, String> sources) {
       }
     }
     if (_forbiddenEverywhere.hasMatch(source)) {
-      violations.add('$path introduces a worker or model inference');
+      violations.add('$path introduces a worker');
     }
-    if (RegExp(r'\b(?:YOLO|yolo)\b')
-        .hasMatch(source.replaceAll(_approvedManualBanner, ''))) {
+    if (!_isE5InferenceZone(path) && _inferenceVocabulary.hasMatch(source)) {
+      violations.add('$path introduces model inference outside E5 zones');
+    }
+    if (!_mayMentionYolo(path) &&
+        RegExp(r'\b(?:YOLO|yolo)\b')
+            .hasMatch(source.replaceAll(_approvedManualBanner, ''))) {
       violations.add('$path mentions YOLO beyond the approved manual banner');
     }
 
@@ -772,6 +815,17 @@ bool _isPresentation(String path) =>
 
 bool _isCompositionRoot(String path) =>
     path == 'lib/main.dart' || path == 'lib/operation/e1_composition.dart';
+
+/// E5 detection files plus the composition roots that wire them.
+bool _isE5InferenceZone(String path) =>
+    _e5DetectionPrefixes.any(path.startsWith) ||
+    path == _yoloCandidateSource ||
+    _isCompositionRoot(path);
+
+/// E5.15: YOLO text may appear in detection files, Operation presentation and
+/// composition.
+bool _mayMentionYolo(String path) =>
+    _isE5InferenceZone(path) || path.startsWith('lib/operation/');
 
 bool _isOtherInfrastructure(String path) =>
     path.startsWith('lib/infrastructure/');
